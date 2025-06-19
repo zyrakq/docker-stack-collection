@@ -1,0 +1,12 @@
+[submodule "stacks/litellm"]
+	path = stacks/ai-services/litellm
+	url = https://github.com/zyrakq/litellm-stack.git
+[submodule "stacks/open-webui"]
+	path = stacks/ai-services/open-webui
+	url = https://github.com/zyrakq/open-webui-stack.git
+[submodule "stacks/syncstorage"]
+	path = stacks/self-hosted-privacy/syncstorage
+	url = https://github.com/zyrakq/syncstorage-stack.git
+[submodule "stacks/n8n"]
+	path = stacks/ai-services/n8n
+	url = https://github.com/zyrakq/n8n-stack.git
