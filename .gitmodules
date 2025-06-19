@@ -10,3 +10,30 @@
 [submodule "stacks/n8n"]
 	path = stacks/ai-services/n8n
 	url = https://github.com/zyrakq/n8n-stack.git
+[submodule "stacks/ai-services/ollama"]
+	path = stacks/ai-services/ollama
+	url = https://github.com/zyrakq/ollama-stack.git
+[submodule "stacks/media-streaming/sunshine"]
+	path = stacks/media-streaming/sunshine
+	url = https://github.com/zyrakq/sunshine-stack.git
+[submodule "stacks/self-hosted-privacy/invidious"]
+	path = stacks/self-hosted-privacy/invidious
+	url = https://github.com/zyrakq/invidious-stack.git
+[submodule "stacks/network-privacy/nginx-proxy-manager"]
+	path = stacks/network-privacy/nginx-proxy-manager
+	url = https://github.com/zyrakq/nginx-proxy-manager-stack.git
+[submodule "stacks/network-privacy/pi-hole"]
+	path = stacks/network-privacy/pi-hole
+	url = https://github.com/zyrakq/pi-hole-stack.git
+[submodule "stacks/remote-access/webtop-desktop"]
+	path = stacks/remote-access/webtop-desktop
+	url = https://github.com/zyrakq/webtop-desktop-stack.git
+[submodule "stacks/network-privacy/dnsmasq"]
+	path = stacks/network-privacy/dnsmasq
+	url = https://github.com/zyrakq/dnsmasq-stack.git
+[submodule "stacks/blockchain-nodes/bitcoin-core-stack"]
+	path = stacks/blockchain-nodes/bitcoin-core-stack
+	url = https://github.com/zyrakq/bitcoin-core-stack.git
+[submodule "stacks/self-hosted-privacy/hledger-web"]
+	path = stacks/self-hosted-privacy/hledger-web
+	url = https://github.com/zyrakq/hledger-web-stack.git
