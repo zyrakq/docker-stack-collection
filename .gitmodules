@@ -37,3 +37,9 @@
 [submodule "stacks/self-hosted-privacy/hledger-web"]
 	path = stacks/self-hosted-privacy/hledger-web
 	url = https://github.com/zyrakq/hledger-web-stack.git
+[submodule "stacks/network-privacy/network-client"]
+	path = stacks/network-privacy/network-client
+	url = https://github.com/zyrakq/network-client-stack.git
+[submodule "stacks/network-privacy/vpn-server"]
+	path = stacks/network-privacy/vpn-server
+	url = https://github.com/zyrakq/vpn-server-stack.git
