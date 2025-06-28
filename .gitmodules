@@ -43,3 +43,18 @@
 [submodule "stacks/network-privacy/vpn-server"]
 	path = stacks/network-privacy/vpn-server
 	url = https://github.com/zyrakq/vpn-server-stack.git
+[submodule "stacks/development-tools/bagetter"]
+	path = stacks/development-tools/bagetter
+	url = https://github.com/zyrakq/bagetter-stack.git
+[submodule "stacks/monitoring/elasticsearch"]
+	path = stacks/monitoring/elasticsearch
+	url = https://github.com/zyrakq/elasticsearch-stack.git
+[submodule "stacks/monitoring/kibana"]
+	path = stacks/monitoring/kibana
+	url = https://github.com/zyrakq/kibana-stack.git
+[submodule "stacks/ssl-automation/cert-manager"]
+	path = stacks/ssl-automation/cert-manager
+	url = https://github.com/zyrakq/cert-manager-stack.git
+[submodule "stacks/identity-management/keycloak"]
+	path = stacks/identity-management/keycloak
+	url = https://github.com/zyrakq/keycloak-stack.git
