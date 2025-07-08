@@ -52,9 +52,12 @@
 [submodule "stacks/monitoring/kibana"]
 	path = stacks/monitoring/kibana
 	url = https://github.com/zyrakq/kibana-stack.git
-[submodule "stacks/ssl-automation/cert-manager"]
-	path = stacks/ssl-automation/cert-manager
-	url = https://github.com/zyrakq/cert-manager-stack.git
+[submodule "stacks/ssl-automation/letsencrypt-manager"]
+	path = stacks/ssl-automation/letsencrypt-manager
+	url = https://github.com/zyrakq/letsencrypt-manager-stack.git
 [submodule "stacks/identity-management/keycloak"]
 	path = stacks/identity-management/keycloak
 	url = https://github.com/zyrakq/keycloak-stack.git
+[submodule "stacks/ssl-automation/step-ca-manager"]
+	path = stacks/ssl-automation/step-ca-manager
+	url = https://github.com/zyrakq/step-ca-manager-stack.git
