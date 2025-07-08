@@ -32,6 +32,7 @@ A curated collection of Docker Compose stacks for self-hosted applications and s
 ### 🔒 Network Privacy (`network-privacy/`)
 
 - **DNSMasq** - DNS server and DHCP
+- **Unbound** - Secure DNS resolver with environment-based configuration
 - **Network Client** - VPN clients (WireGuard, Tor, Proxy)
 - **Nginx Proxy Manager** - Reverse proxy with SSL
 - **Pi-hole** - Network-wide ad blocking

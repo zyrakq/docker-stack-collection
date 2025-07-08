@@ -61,3 +61,6 @@
 [submodule "stacks/ssl-automation/step-ca-manager"]
 	path = stacks/ssl-automation/step-ca-manager
 	url = https://github.com/zyrakq/step-ca-manager-stack.git
+[submodule "stacks/network-privacy/unbound"]
+	path = stacks/network-privacy/unbound
+	url = https://github.com/zyrakq/unbound-stack.git
