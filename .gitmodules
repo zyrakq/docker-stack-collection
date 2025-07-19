@@ -31,8 +31,8 @@
 [submodule "stacks/network-privacy/dnsmasq"]
 	path = stacks/network-privacy/dnsmasq
 	url = https://github.com/zyrakq/dnsmasq-stack.git
-[submodule "stacks/blockchain-nodes/bitcoin-core-stack"]
-	path = stacks/blockchain-nodes/bitcoin-core-stack
+[submodule "stacks/blockchain-nodes/bitcoin-core"]
+	path = stacks/blockchain-nodes/bitcoin-core
 	url = https://github.com/zyrakq/bitcoin-core-stack.git
 [submodule "stacks/self-hosted-privacy/hledger-web"]
 	path = stacks/self-hosted-privacy/hledger-web
