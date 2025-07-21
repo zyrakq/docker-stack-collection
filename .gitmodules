@@ -64,3 +64,6 @@
 [submodule "stacks/network-privacy/unbound"]
 	path = stacks/network-privacy/unbound
 	url = https://github.com/zyrakq/unbound-stack.git
+[submodule "stacks/version-control/gitea"]
+	path = stacks/version-control/gitea
+	url = https://github.com/zyrakq/gitea-stack.git
