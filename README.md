@@ -51,6 +51,7 @@ A curated collection of Docker Compose stacks for self-hosted applications and s
 ### 🔑 Identity Management (`identity-management/`)
 
 - **Keycloak** - Identity and access management (IAM/SSO) solution
+- **Kanidm** - Modern identity management platform with strong authentication
 
 ### 🔐 SSL Automation (`ssl-automation/`)
 

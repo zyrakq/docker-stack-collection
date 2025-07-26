@@ -67,3 +67,6 @@
 [submodule "stacks/version-control/gitea"]
 	path = stacks/version-control/gitea
 	url = https://github.com/zyrakq/gitea-stack.git
+[submodule "stacks/identity-management/kanidm"]
+	path = stacks/identity-management/kanidm
+	url = https://github.com/zyrakq/kanidm-stack.git
