@@ -16,6 +16,13 @@ A curated collection of Docker Compose stacks for self-hosted applications and s
 - **Bitcoin Core Stack** - Bitcoin node with Lightning Network (LND) support
 - **Tor Integration** - Privacy-enhanced blockchain connectivity
 
+### 💬 Communication (`communication/`)
+
+#### Matrix (`matrix/`)
+
+- **Synapse** - Decentralized real-time communication server
+- **Element** - Modern Matrix client for secure messaging
+
 ### 🛠️ Development Tools (`development-tools/`)
 
 - **BaGetter** - NuGet server for .NET package management
