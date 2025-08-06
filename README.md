@@ -27,6 +27,10 @@ A curated collection of Docker Compose stacks for self-hosted applications and s
 
 - **BaGetter** - NuGet server for .NET package management
 
+### 🔗 Integration Services (`integration-services/`)
+
+- **RSSHub** - RSS feed aggregation and transformation service
+
 ### 📺 Media Streaming (`media-streaming/`)
 
 - **Sunshine** - Game streaming server

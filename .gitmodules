@@ -76,3 +76,6 @@
 [submodule "stacks/communication/matrix/element"]
 	path = stacks/communication/matrix/element
 	url = https://github.com/zyrakq/element-stack.git
+[submodule "stacks/integration-services/rsshub"]
+	path = stacks/integration-services/rsshub
+	url = https://github.com/zyrakq/rsshub-stack.git
