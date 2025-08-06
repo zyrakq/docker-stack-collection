@@ -18,10 +18,14 @@ A curated collection of Docker Compose stacks for self-hosted applications and s
 
 ### 💬 Communication (`communication/`)
 
-#### Matrix (`matrix/`)
+#### 📱 Matrix (`matrix/`)
 
 - **Synapse** - Decentralized real-time communication server
 - **Element** - Modern Matrix client for secure messaging
+
+#### 🌉 Matrix Bridges (`matrix-bridges/`)
+
+- **Maubot** - Modular bot system for Matrix with web management interface and plugin support
 
 ### 🛠️ Development Tools (`development-tools/`)
 
