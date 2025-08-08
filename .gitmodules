@@ -82,3 +82,6 @@
 [submodule "stacks/communication/matrix-bridges/maubot"]
 	path = stacks/communication/matrix-bridges/maubot
 	url = https://github.com/zyrakq/maubot-stack.git
+[submodule "stacks/communication/matrix-bridges/mautrix-telegram"]
+	path = stacks/communication/matrix-bridges/mautrix-telegram
+	url = https://github.com/zyrakq/mautrix-telegram-stack.git

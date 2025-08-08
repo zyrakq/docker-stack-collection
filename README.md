@@ -26,6 +26,7 @@ A curated collection of Docker Compose stacks for self-hosted applications and s
 #### 🌉 Matrix Bridges (`matrix-bridges/`)
 
 - **Maubot** - Modular bot system for Matrix with web management interface and plugin support
+- **Mautrix-Telegram** - Bridge between Matrix and Telegram for seamless cross-platform messaging
 
 ### 🛠️ Development Tools (`development-tools/`)
 
