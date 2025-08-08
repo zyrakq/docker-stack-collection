@@ -85,3 +85,6 @@
 [submodule "stacks/communication/matrix-bridges/mautrix-telegram"]
 	path = stacks/communication/matrix-bridges/mautrix-telegram
 	url = https://github.com/zyrakq/mautrix-telegram-stack.git
+[submodule "stacks/communication/matrix/fluffychat"]
+	path = stacks/communication/matrix/fluffychat
+	url = https://github.com/zyrakq/fluffychat-stack.git
