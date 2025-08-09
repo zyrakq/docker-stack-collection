@@ -91,3 +91,6 @@
 [submodule "stacks/communication/matrix/cinny"]
 	path = stacks/communication/matrix/cinny
 	url = https://github.com/zyrakq/cinny-stack.git
+[submodule "stacks/communication/matrix/commet"]
+	path = stacks/communication/matrix/commet
+	url = https://github.com/zyrakq/commet-stack.git

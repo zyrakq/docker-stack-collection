@@ -24,6 +24,7 @@ A curated collection of Docker Compose stacks for self-hosted applications and s
 - **Element** - Modern Matrix client for secure messaging
 - **FluffyChat** - Cross-platform Matrix client with modern UI and end-to-end encryption
 - **Cinny** - Simple, elegant and secure Matrix web client with lightweight interface
+- **Commet** - Simple and modern Matrix client with clean alternative to Element and fewer dependencies
 
 #### 🌉 Matrix Bridges (`matrix-bridges/`)
 
