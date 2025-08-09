@@ -23,6 +23,7 @@ A curated collection of Docker Compose stacks for self-hosted applications and s
 - **Synapse** - Decentralized real-time communication server
 - **Element** - Modern Matrix client for secure messaging
 - **FluffyChat** - Cross-platform Matrix client with modern UI and end-to-end encryption
+- **Cinny** - Simple, elegant and secure Matrix web client with lightweight interface
 
 #### 🌉 Matrix Bridges (`matrix-bridges/`)
 

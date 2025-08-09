@@ -88,3 +88,6 @@
 [submodule "stacks/communication/matrix/fluffychat"]
 	path = stacks/communication/matrix/fluffychat
 	url = https://github.com/zyrakq/fluffychat-stack.git
+[submodule "stacks/communication/matrix/cinny"]
+	path = stacks/communication/matrix/cinny
+	url = https://github.com/zyrakq/cinny-stack.git
