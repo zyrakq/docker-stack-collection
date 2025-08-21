@@ -20,13 +20,19 @@ A curated collection of Docker Compose stacks for self-hosted applications and s
 
 #### 📱 Matrix (`matrix/`)
 
-- **Synapse** - Decentralized real-time communication server
+##### 🖥️ Servers (`matrix/servers/`)
+
+- **Synapse** - Reference Matrix homeserver implementation with comprehensive features
+- **Conduit** - Lightweight Rust-based Matrix homeserver with minimal resource usage and RocksDB backend
+
+##### 📱 Clients (`matrix/clients/`)
+
 - **Element** - Modern Matrix client for secure messaging
 - **FluffyChat** - Cross-platform Matrix client with modern UI and end-to-end encryption
 - **Cinny** - Simple, elegant and secure Matrix web client with lightweight interface
 - **Commet** - Simple and modern Matrix client with clean alternative to Element and fewer dependencies
 
-#### 🌉 Matrix Bridges (`matrix-bridges/`)
+##### 🌉 Bridges (`matrix/bridges/`)
 
 - **Maubot** - Modular bot system for Matrix with web management interface and plugin support
 - **Mautrix-Telegram** - Bridge between Matrix and Telegram for seamless cross-platform messaging

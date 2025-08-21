@@ -94,3 +94,6 @@
 [submodule "stacks/communication/matrix/commet"]
 	path = stacks/communication/matrix/clients/commet
 	url = https://github.com/zyrakq/commet-stack.git
+[submodule "stacks/communication/matrix/servers/conduit"]
+	path = stacks/communication/matrix/servers/conduit
+	url = https://github.com/zyrakq/conduit-stack.git
