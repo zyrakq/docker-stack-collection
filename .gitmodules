@@ -71,26 +71,26 @@
 	path = stacks/identity-management/kanidm
 	url = https://github.com/zyrakq/kanidm-stack.git
 [submodule "stacks/communication/matrix/synapse"]
-	path = stacks/communication/matrix/synapse
+	path = stacks/communication/matrix/servers/synapse
 	url = https://github.com/zyrakq/synapse-stack.git
 [submodule "stacks/communication/matrix/element"]
-	path = stacks/communication/matrix/element
+	path = stacks/communication/matrix/clients/element
 	url = https://github.com/zyrakq/element-stack.git
 [submodule "stacks/integration-services/rsshub"]
 	path = stacks/integration-services/rsshub
 	url = https://github.com/zyrakq/rsshub-stack.git
-[submodule "stacks/communication/matrix-bridges/maubot"]
-	path = stacks/communication/matrix-bridges/maubot
+[submodule "stacks/communication/matrix/bridges/maubot"]
+	path = stacks/communication/matrix/bridges/maubot
 	url = https://github.com/zyrakq/maubot-stack.git
-[submodule "stacks/communication/matrix-bridges/mautrix-telegram"]
-	path = stacks/communication/matrix-bridges/mautrix-telegram
+[submodule "stacks/communication/matrix/bridges/mautrix-telegram"]
+	path = stacks/communication/matrix/bridges/mautrix-telegram
 	url = https://github.com/zyrakq/mautrix-telegram-stack.git
 [submodule "stacks/communication/matrix/fluffychat"]
-	path = stacks/communication/matrix/fluffychat
+	path = stacks/communication/matrix/clients/fluffychat
 	url = https://github.com/zyrakq/fluffychat-stack.git
 [submodule "stacks/communication/matrix/cinny"]
-	path = stacks/communication/matrix/cinny
+	path = stacks/communication/matrix/clients/cinny
 	url = https://github.com/zyrakq/cinny-stack.git
 [submodule "stacks/communication/matrix/commet"]
-	path = stacks/communication/matrix/commet
+	path = stacks/communication/matrix/clients/commet
 	url = https://github.com/zyrakq/commet-stack.git
