@@ -97,3 +97,6 @@
 [submodule "stacks/communication/matrix/servers/conduit"]
 	path = stacks/communication/matrix/servers/conduit
 	url = https://github.com/zyrakq/conduit-stack.git
+[submodule "stacks/communication/coturn"]
+	path = stacks/communication/coturn
+	url = https://github.com/zyrakq/coturn-stack.git

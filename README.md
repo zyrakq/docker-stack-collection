@@ -37,6 +37,10 @@ A curated collection of Docker Compose stacks for self-hosted applications and s
 - **Maubot** - Modular bot system for Matrix with web management interface and plugin support
 - **Mautrix-Telegram** - Bridge between Matrix and Telegram for seamless cross-platform messaging
 
+#### 🔄 TURN/STUN (`coturn/`)
+
+- **COTURN** - TURN and STUN server for WebRTC applications with NAT traversal support
+
 ### 🛠️ Development Tools (`development-tools/`)
 
 - **BaGetter** - NuGet server for .NET package management
