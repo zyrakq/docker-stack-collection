@@ -100,3 +100,6 @@
 [submodule "stacks/communication/coturn"]
 	path = stacks/communication/coturn
 	url = https://github.com/zyrakq/coturn-stack.git
+[submodule "stacks/development-tools/distribution"]
+	path = stacks/development-tools/distribution
+	url = https://github.com/zyrakq/distribution-stack.git

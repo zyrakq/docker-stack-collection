@@ -17,6 +17,7 @@ Detailed git workflow rules. Includes strict commit formatting requirements, wor
 - Each change item should start on a new line in "what" and "why" blocks
 - Use past tense verbs for "what was done" (Replaced, Added, Updated)
 - Use present tense verbs for "why it was done" (Provide, Improve, Enable)
+- Documentation changes (README updates) should not be mentioned in commits when they result from adding submodules or new components
 
 ## API request conservation
 

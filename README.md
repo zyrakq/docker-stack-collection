@@ -44,6 +44,7 @@ A curated collection of Docker Compose stacks for self-hosted applications and s
 ### 🛠️ Development Tools (`development-tools/`)
 
 - **BaGetter** - NuGet server for .NET package management
+- **Distribution** - Docker Registry for hosting private Docker images with SSL automation support
 
 ### 🔗 Integration Services (`integration-services/`)
 
