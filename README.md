@@ -9,6 +9,7 @@ A curated collection of Docker Compose stacks for self-hosted applications and s
 #### 💬 Chats (`ai-services/chats/`)
 
 - **Open WebUI** - Web interface for AI models with TTS support and identity management integration
+- **Libre WebUI** - Open-source web interface for AI models with enhanced privacy and customization features
 
 #### 🔧 Model Serving (`ai-services/model-serving/`)
 
