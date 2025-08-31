@@ -6,10 +6,18 @@ A curated collection of Docker Compose stacks for self-hosted applications and s
 
 ### 🤖 AI Services (`ai-services/`)
 
-- **LiteLLM** - Proxy server for LLM APIs
-- **N8N** - Workflow automation platform
-- **Ollama** - Local LLM inference server
-- **Open WebUI** - Web interface for AI models with TTS support
+#### 💬 Chats (`ai-services/chats/`)
+
+- **Open WebUI** - Web interface for AI models with TTS support and identity management integration
+
+#### 🔧 Model Serving (`ai-services/model-serving/`)
+
+- **LiteLLM** - Proxy server for LLM APIs with unified interface for multiple providers
+- **Ollama** - Local LLM inference server for running models on your hardware
+
+#### 🔄 Automation (`ai-services/automation/`)
+
+- **N8N** - Workflow automation platform for AI-powered business processes
 
 ### ⛓️ Blockchain Nodes (`blockchain-nodes/`)
 

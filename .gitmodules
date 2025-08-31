@@ -1,17 +1,17 @@
-[submodule "stacks/ai-services/litellm"]
-	path = stacks/ai-services/litellm
+[submodule "stacks/ai-services/model-serving/litellm"]
+	path = stacks/ai-services/model-serving/litellm
 	url = https://github.com/zyrakq/litellm-stack.git
-[submodule "stacks/ai-services/open-webui"]
-	path = stacks/ai-services/open-webui
+[submodule "stacks/ai-services/chats/open-webui"]
+	path = stacks/ai-services/chats/open-webui
 	url = https://github.com/zyrakq/open-webui-stack.git
 [submodule "stacks/self-hosted-privacy/syncstorage"]
 	path = stacks/self-hosted-privacy/syncstorage
 	url = https://github.com/zyrakq/syncstorage-stack.git
-[submodule "stacks/ai-services/n8n"]
-	path = stacks/ai-services/n8n
+[submodule "stacks/ai-services/automation/n8n"]
+	path = stacks/ai-services/automation/n8n
 	url = https://github.com/zyrakq/n8n-stack.git
-[submodule "stacks/ai-services/ollama"]
-	path = stacks/ai-services/ollama
+[submodule "stacks/ai-services/model-serving/ollama"]
+	path = stacks/ai-services/model-serving/ollama
 	url = https://github.com/zyrakq/ollama-stack.git
 [submodule "stacks/media-streaming/sunshine"]
 	path = stacks/media-streaming/sunshine
