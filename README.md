@@ -58,6 +58,7 @@ A curated collection of Docker Compose stacks for self-hosted applications and s
 
 - **Elasticsearch** - Search and analytics engine for logs and metrics
 - **Kibana** - Data visualization and exploration for Elasticsearch
+- **OpenObserve** - Cloud-native observability platform for logs, metrics, and traces with unified interface
 
 ### 🔒 Network Privacy (`network-privacy/`)
 

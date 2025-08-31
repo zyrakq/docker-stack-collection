@@ -103,3 +103,6 @@
 [submodule "stacks/development-tools/distribution"]
 	path = stacks/development-tools/distribution
 	url = https://github.com/zyrakq/distribution-stack.git
+[submodule "stacks/monitoring/openobserve"]
+	path = stacks/monitoring/openobserve
+	url = https://github.com/zyrakq/openobserve-stack.git
