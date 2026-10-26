@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Auto-clone missing stack repos after checkout (covers branch switches and
+# fresh checkouts once core.hooksPath is configured on the machine).
+root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+script="$root/tools/stack-sync.sh"
+[[ -x "$script" ]] || exit 0
+exec "$script"
