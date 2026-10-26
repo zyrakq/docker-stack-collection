@@ -102,7 +102,7 @@ stacks/devops/monitoring/grafana,https://github.com/zyrakq/grafana-stack.git,inc
 
 ## Sync mechanism
 
-- `scripts/stack-sync.sh`:
+- `.githooks/stack-sync.sh`:
   1. Reads `stacks.csv`, clones repos that are missing locally. Does nothing
      else (no pull/push/merge inside stack repos — that stays manual).
   2. Regenerates the marker-delimited `.gitignore` section from manifest paths
@@ -112,7 +112,7 @@ stacks/devops/monitoring/grafana,https://github.com/zyrakq/grafana-stack.git,inc
 - Per-machine activation (mandatory, README step after clone):
   `git config core.hooksPath .githooks`
 - Bootstrap a new machine: `git clone … && cd docker-stack-collection &&
-  git config core.hooksPath .githooks && scripts/stack-sync.sh`
+  git config core.hooksPath .githooks && .githooks/stack-sync.sh`
 - After activation, any `git pull` that changes the manifest auto-clones the
   new stacks (post-merge).
 - Limitation: post-merge fires only on real changes — but if the manifest did
@@ -134,7 +134,7 @@ stacks/devops/monitoring/grafana,https://github.com/zyrakq/grafana-stack.git,inc
 5. Generated `stacks.csv`: 37 `unverified` rows (URLs from the old
    `.gitmodules`) + 69 `incomplete` rows (URLs from each repo's `origin`;
    3 repos have no remote → url `-`, skipped by sync with a warning).
-6. Added `scripts/stack-sync.sh`, `.githooks/*`, `.gitattributes`, generated
+6. Added `.githooks/stack-sync.sh`, `.githooks/*`, `.gitattributes`, generated
    `.gitignore`.
 7. Rewrote the README for the new structure with the mandatory hooks step.
 
@@ -149,7 +149,7 @@ stacks/devops/monitoring/grafana,https://github.com/zyrakq/grafana-stack.git,inc
 
 ## Testing Strategy
 
-- Bash test suite `scripts/stack-sync.test.sh`: clone missing, header/comment
+- Bash test suite `.githooks/stack-sync.test.sh`: clone missing, header/comment
   handling, idempotency (no re-clone, `.gitignore` unchanged), collision
   warning for non-directory paths.
 - Real-tree checks: manifest has exactly 37 `unverified` + 69 `incomplete`

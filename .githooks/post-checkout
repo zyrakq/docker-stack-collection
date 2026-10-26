@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Auto-clone missing stack repos after a branch switch / fresh checkout.
 root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
-script="$root/scripts/stack-sync.sh"
+script="$root/.githooks/stack-sync.sh"
 [[ -x "$script" ]] || exit 0
 exec "$script"

@@ -11,17 +11,19 @@ repository** with its own `origin` (GitHub, `zyrakq/*`).
 git clone https://github.com/zyrakq/docker-stack-collection.git
 cd docker-stack-collection
 git config core.hooksPath .githooks   # REQUIRED — enables auto-clone hooks
-scripts/stack-sync.sh                 # clone all stacks listed in stacks.csv
+.githooks/stack-sync.sh               # clone all stacks listed in stacks.csv
 ```
 
 After activation, any `git pull` that brings manifest changes automatically
 clones newly added stacks (`post-merge` hook); `post-checkout` does the same
-after branch switches. Re-run `scripts/stack-sync.sh` anytime — it is idempotent.
+after branch switches. Re-run `.githooks/stack-sync.sh` anytime — it is
+idempotent.
 
 ## 📋 Manifest (`stacks.csv`)
 
 The full catalog lives in [`stacks.csv`](stacks.csv) — one stack per row,
-comma-separated (GitHub renders it as a table):
+semicolon-separated. A human-readable page with the same data, rendered as a
+markdown table, is auto-generated at [`stacks.md`](stacks.md):
 
 | column  | meaning                                                                    |
 |---------|----------------------------------------------------------------------------|
@@ -35,7 +37,10 @@ Notes:
   different machines merge without conflicts. **Remove rows manually** — union
   merge cannot delete lines.
 - The block between `# BEGIN stack-sync` / `# END stack-sync` markers in
-  `.gitignore` is **generated** by `scripts/stack-sync.sh` — do not edit it by hand.
+  `.gitignore` is **generated** by `.githooks/stack-sync.sh` — do not edit it by
+  hand.
+- [`stacks.md`](stacks.md) is **generated** from `stacks.csv` on every sync run
+  (including after `git pull`) — edit the CSV, not the markdown.
 - Each stack repo may contain its own nested submodules — they are part of the
   stack repo and are not managed by the catalog.
 
@@ -46,8 +51,8 @@ cd stacks/<category>/<...>/<stack>   # it is a normal independent git repo
 git pull && git push                 # sync with its own origin
 ```
 
-The catalog never pulls/pushes inside stack repos — `scripts/stack-sync.sh` only
-**clones what is missing**. Updating stacks is manual, per repo.
+The catalog never pulls/pushes inside stack repos — `.githooks/stack-sync.sh`
+only **clones what is missing**. Updating stacks is manual, per repo.
 
 Each stack includes `docker-compose.yml`, `.env.example`, and its own `README.md`:
 
