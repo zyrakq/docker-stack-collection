@@ -1,9 +1,8 @@
 # Docker Stack Collection
 
-A curated collection of Docker Compose stacks for self-hosted applications and
-services. The catalog repository tracks only a **manifest** (`stacks.csv`) and
-sync tooling — every stack lives in `stacks/` as an **independent git
-repository** with its own `origin` (GitHub, `zyrakq/*`).
+A curated collection of Docker Compose stacks. The catalog tracks only a
+manifest ([`stacks.csv`](stacks.csv) → rendered as [`stacks.md`](stacks.md)) —
+every stack lives in `stacks/` as an independent git repo with its own `origin`.
 
 ## 🚀 Setup (mandatory after clone)
 
@@ -14,65 +13,35 @@ git config core.hooksPath .githooks   # REQUIRED — enables auto-clone hooks
 .githooks/stack-sync.sh               # clone all stacks listed in stacks.csv
 ```
 
-After activation, any `git pull` that brings manifest changes automatically
-clones newly added stacks (`post-merge` hook); `post-checkout` does the same
-after branch switches. Re-run `.githooks/stack-sync.sh` anytime — it is
-idempotent.
+After that, any `git pull` / branch switch automatically clones newly added
+stacks. The script is idempotent — re-run it anytime.
 
-## 📋 Manifest (`stacks.csv`)
+## 📋 Manifest
 
-The full catalog lives in [`stacks.csv`](stacks.csv) — one stack per row,
-semicolon-separated. A human-readable page with the same data, rendered as a
-markdown table, is auto-generated at [`stacks.md`](stacks.md):
+One stack per row, semicolon-separated: `path;url;status`.
 
-| column  | meaning                                                                    |
-|---------|----------------------------------------------------------------------------|
-| `path`  | stack location under `stacks/`                                             |
-| `url`   | git remote to clone from (`-` = no remote yet; such rows are skipped)      |
-| `status`| `unverified` (likely finished, not yet confirmed) / `incomplete` / `completed` |
-
-Notes:
-
-- `.gitattributes` sets `stacks.csv merge=union`, so rows added independently on
-  different machines merge without conflicts. **Remove rows manually** — union
-  merge cannot delete lines.
-- The block between `# BEGIN stack-sync` / `# END stack-sync` markers in
-  `.gitignore` is **generated** by `.githooks/stack-sync.sh` — do not edit it by
-  hand.
-- [`stacks.md`](stacks.md) is **generated** from `stacks.csv` — on every sync
-  run and automatically by the `pre-commit` hook whenever a commit touches the
-  CSV. Edit the CSV, not the markdown.
-- Each stack repo may contain its own nested submodules — they are part of the
-  stack repo and are not managed by the catalog.
+- `url` — git remote to clone from (`-` = no remote yet, row is skipped)
+- `status` — `unverified` (likely finished, not confirmed) / `incomplete` / `completed`
+- `merge=union` in `.gitattributes` merges row additions without conflicts —
+  remove rows manually
+- generated files (do not edit by hand): the `# BEGIN stack-sync` block in
+  `.gitignore` and [`stacks.md`](stacks.md) — both regenerate from the CSV on
+  sync runs and via the `pre-commit` hook
 
 ## 🔧 Working on a stack
 
-```bash
-cd stacks/<category>/<...>/<stack>   # it is a normal independent git repo
-git pull && git push                 # sync with its own origin
-```
-
-The catalog never pulls/pushes inside stack repos — `.githooks/stack-sync.sh`
-only **clones what is missing**. Updating stacks is manual, per repo.
-
-Each stack includes `docker-compose.yml`, `.env.example`, and its own `README.md`:
+Each stack is a normal independent git repo with `docker-compose.yml`,
+`.env.example`, and its own `README.md`. The catalog only clones what is
+missing — updates are manual, per repo:
 
 ```bash
-cp .env.example .env   # edit, then:
-docker compose up -d
+cd stacks/<category>/<...>/<stack>
+git pull && git push
+cp .env.example .env && docker compose up -d
 ```
 
 ## 📝 License
 
-Dual-licensed under your choice of:
-
-- **Apache License 2.0** ([LICENSE-APACHE](LICENSE-APACHE))
-- **MIT License** ([LICENSE-MIT](LICENSE-MIT))
-
-Individual services may have their own licenses.
-
-## ⚠️ Disclaimer
-
-These stacks are provided as-is for educational and self-hosting purposes.
-Always review configurations and security settings before deploying in
-production environments.
+Dual-licensed under [Apache 2.0](LICENSE-APACHE) or [MIT](LICENSE-MIT), your
+choice. Individual services may have their own licenses. Provided as-is —
+review configurations and security settings before production use.
