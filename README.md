@@ -39,8 +39,9 @@ Notes:
 - The block between `# BEGIN stack-sync` / `# END stack-sync` markers in
   `.gitignore` is **generated** by `.githooks/stack-sync.sh` — do not edit it by
   hand.
-- [`stacks.md`](stacks.md) is **generated** from `stacks.csv` on every sync run
-  (including after `git pull`) — edit the CSV, not the markdown.
+- [`stacks.md`](stacks.md) is **generated** from `stacks.csv` — on every sync
+  run and automatically by the `pre-commit` hook whenever a commit touches the
+  CSV. Edit the CSV, not the markdown.
 - Each stack repo may contain its own nested submodules — they are part of the
   stack repo and are not managed by the catalog.
 

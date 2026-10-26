@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Regenerate stacks.md from stacks.csv before committing, but only when the
+# manifest itself is part of the commit — keeps the catalog page in sync.
+root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+gen="$root/.githooks/gen-stacks-md.sh"
+[[ -x "$gen" ]] || exit 0
+if git -C "$root" diff --cached --name-only | grep -qx 'stacks.csv'; then
+  "$gen"
+  git -C "$root" add stacks.md
+fi

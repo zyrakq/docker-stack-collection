@@ -4,14 +4,12 @@
 # Idempotent: safe to run any number of times.
 # NEVER pulls/pushes/merges inside stack repos and never deletes anything.
 #
-# Env overrides (used by tests): STACKS_ROOT, STACKS_MANIFEST, STACKS_GITIGNORE,
-# STACKS_MD
+# Env overrides (used by tests): STACKS_ROOT, STACKS_MANIFEST, STACKS_GITIGNORE
 set -euo pipefail
 
 ROOT="${STACKS_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 MANIFEST="${STACKS_MANIFEST:-$ROOT/stacks.csv}"
 GITIGNORE="${STACKS_GITIGNORE:-$ROOT/.gitignore}"
-MD="${STACKS_MD:-$ROOT/stacks.md}"
 BEGIN_MARK="# BEGIN stack-sync (generated - do not edit)"
 END_MARK="# END stack-sync"
 
@@ -45,8 +43,7 @@ done < "$MANIFEST"
 # --- 2. regenerate managed .gitignore section ------------------------------
 block_file="$(mktemp)"
 new_file="$(mktemp)"
-md_file="$(mktemp)"
-trap 'rm -f "$block_file" "$new_file" "$md_file"' EXIT
+trap 'rm -f "$block_file" "$new_file"' EXIT
 {
   printf '%s\n' "$BEGIN_MARK"
   awk -F';' '$1 != "" && $1 !~ /^#/ && $1 != "path" { print $1 "/" }' "$MANIFEST" | sort -u
@@ -68,25 +65,4 @@ fi
 mv "$new_file" "$GITIGNORE"
 
 # --- 3. regenerate stacks.md catalog page -----------------------------------
-{
-  printf '# Stack Catalog\n\n'
-  printf 'Generated from [`stacks.csv`](stacks.csv) by `.githooks/stack-sync.sh` — do not edit by hand.\n\n'
-  printf '| path | url | status |\n'
-  printf '|------|-----|--------|\n'
-  awk -F';' '
-    $1 == "" || $1 ~ /^#/ || $1 == "path" { next }
-    {
-      url_cell = "-"
-      if ($2 != "" && $2 != "-") url_cell = "[repo](" $2 ")"
-      status_cell = $3
-      if ($3 == "unverified")  status_cell = "unverified ❓"
-      if ($3 == "incomplete")  status_cell = "incomplete 🚧"
-      if ($3 == "completed")   status_cell = "completed ✅"
-      gsub(/\|/, "\\|", $1)
-      print "| `" $1 "` | " url_cell " | " status_cell " |"
-    }
-  ' "$MANIFEST"
-} > "$md_file"
-if [[ ! -f "$MD" ]] || ! diff -q "$MD" "$md_file" >/dev/null; then
-  mv "$md_file" "$MD"
-fi
+"$(dirname "${BASH_SOURCE[0]}")/gen-stacks-md.sh"
