@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tools/stack-sync.sh — clone missing stack repos from stacks.txt and regenerate
+# scripts/stack-sync.sh — clone missing stack repos from stacks.csv and regenerate
 # the managed section of .gitignore. Idempotent: safe to run any number of times.
 # NEVER pulls/pushes/merges inside stack repos and never deletes anything.
 #
@@ -7,7 +7,7 @@
 set -euo pipefail
 
 ROOT="${STACKS_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-MANIFEST="${STACKS_MANIFEST:-$ROOT/stacks.txt}"
+MANIFEST="${STACKS_MANIFEST:-$ROOT/stacks.csv}"
 GITIGNORE="${STACKS_GITIGNORE:-$ROOT/.gitignore}"
 BEGIN_MARK="# BEGIN stack-sync (generated - do not edit)"
 END_MARK="# END stack-sync"
@@ -20,8 +20,8 @@ if [[ ! -f "$MANIFEST" ]]; then
 fi
 
 # --- 1. clone missing repos ------------------------------------------------
-while IFS=$'\t' read -r path url status; do
-  [[ -z "$path" || "$path" == \#* ]] && continue
+while IFS=',' read -r path url status; do
+  [[ -z "$path" || "$path" == \#* || "$path" == "path" ]] && continue
   if [[ -z "$url" || "$url" == "-" ]]; then
     echo "stack-sync: WARN no url for '$path', skipping" >&2
     continue
@@ -45,7 +45,7 @@ new_file="$(mktemp)"
 trap 'rm -f "$block_file" "$new_file"' EXIT
 {
   printf '%s\n' "$BEGIN_MARK"
-  awk -F'\t' '$1 != "" && $1 !~ /^#/ { print $1 "/" }' "$MANIFEST" | sort -u
+  awk -F',' '$1 != "" && $1 !~ /^#/ && $1 != "path" { print $1 "/" }' "$MANIFEST" | sort -u
   printf '%s\n' "$END_MARK"
 } > "$block_file"
 

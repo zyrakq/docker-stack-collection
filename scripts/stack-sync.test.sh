@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# tools/tests/stack-sync.test.sh — tests for tools/stack-sync.sh
-# Run: bash tools/tests/stack-sync.test.sh
+# scripts/stack-sync.test.sh — tests for scripts/stack-sync.sh
+# Run: bash scripts/stack-sync.test.sh
 set -euo pipefail
-SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/stack-sync.sh"
+SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/stack-sync.sh"
 T="$(mktemp -d)"
 trap 'rm -rf "$T"' EXIT
 fail() { echo "FAIL: $*" >&2; exit 1; }
@@ -14,18 +14,22 @@ for r in a b; do
   git -C "$T/remotes/$r" -c user.email=t@t -c user.name=t commit -q --allow-empty -m init
 done
 
-# fixture: manifest (tab-separated) with normal rows, no-url row, comment
+# fixture: manifest (comma-separated CSV, with header) — normal rows, no-url row, comment
 mkdir -p "$T/work"
-printf 'stacks/x/alpha\t%s\tdone\n' "$T/remotes/a" > "$T/work/stacks.txt"
-printf 'stacks/y/beta\t%s\twip\n' "$T/remotes/b" >> "$T/work/stacks.txt"
-printf 'stacks/z/gamma\t-\tdone\n' >> "$T/work/stacks.txt"
-printf '# comment line\n\n' >> "$T/work/stacks.txt"
+{
+  printf 'path,url,status\n'
+  printf 'stacks/x/alpha,%s,unverified\n' "$T/remotes/a"
+  printf 'stacks/y/beta,%s,incomplete\n' "$T/remotes/b"
+  printf 'stacks/z/gamma,-,unverified\n'
+  printf '# comment line\n\n'
+} > "$T/work/stacks.csv"
 
-# run 1: clones happen, .gitignore generated
+# run 1: clones happen, .gitignore generated, header row not treated as a path
 STACKS_ROOT="$T/work" bash "$SCRIPT"
 [[ -d "$T/work/stacks/x/alpha/.git" ]] || fail "alpha not cloned"
 [[ -d "$T/work/stacks/y/beta/.git" ]] || fail "beta not cloned"
 [[ ! -e "$T/work/stacks/z/gamma" ]] || fail "no-url row must not be cloned"
+[[ ! -e "$T/work/path" && ! -e "$T/work/path/" ]] || fail "header row was treated as a path"
 grep -qF '# BEGIN stack-sync' "$T/work/.gitignore" || fail "gitignore missing BEGIN marker"
 grep -qF '# END stack-sync' "$T/work/.gitignore" || fail "gitignore missing END marker"
 grep -qx 'stacks/x/alpha/' "$T/work/.gitignore" || fail "gitignore missing alpha/"
@@ -39,7 +43,7 @@ diff -q "$T/work/.gitignore" "$T/work/.gitignore.before" >/dev/null || fail ".gi
 [[ -f "$T/work/stacks/x/alpha/MARKER" ]] || fail "second run touched existing clone"
 
 # run 3: collision — manifest path exists as a non-directory file → warning, no crash
-printf 'stacks/w/delta\t%s\twip\n' "$T/remotes/a" >> "$T/work/stacks.txt"
+printf 'stacks/w/delta,%s,incomplete\n' "$T/remotes/a" >> "$T/work/stacks.csv"
 mkdir -p "$T/work/stacks/w"
 echo notadir > "$T/work/stacks/w/delta"
 out="$(STACKS_ROOT="$T/work" bash "$SCRIPT" 2>&1)"
