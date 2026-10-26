@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Auto-clone missing stack repos after a merge (e.g. git pull that changed stacks.txt).
+# Auto-clone missing stack repos after a merge (e.g. git pull that changed stacks.csv).
 root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
-script="$root/tools/stack-sync.sh"
+script="$root/scripts/stack-sync.sh"
 [[ -x "$script" ]] || exit 0
 exec "$script"
