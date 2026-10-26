@@ -1,163 +1,117 @@
 # Docker Stack Collection
 
-A curated collection of Docker Compose stacks for self-hosted applications and services, organized by category for easy deployment and management.
+A curated collection of Docker Compose stacks for self-hosted applications and
+services. The catalog repository tracks only a **manifest** (`stacks.txt`) and
+sync tooling — every stack lives in `stacks/` as an **independent git
+repository** with its own `origin` (GitHub, `zyrakq/*`).
+
+## 🚀 Setup (mandatory after clone)
+
+```bash
+git clone https://github.com/zyrakq/docker-stack-collection.git
+cd docker-stack-collection
+git config core.hooksPath tools/hooks   # REQUIRED — enables auto-clone hooks
+tools/stack-sync.sh                     # clone all stacks listed in stacks.txt
+```
+
+After activation, any `git pull` that brings manifest changes automatically
+clones newly added stacks (`post-merge` hook); `post-checkout` does the same
+after branch switches. Re-run `tools/stack-sync.sh` anytime — it is idempotent.
+
+## 📋 Manifest (`stacks.txt`)
+
+Tab-separated, one stack per line:
+
+```
+path	url	status
+stacks/devops/monitoring/kibana	https://github.com/zyrakq/kibana-stack.git	done
+```
+
+- `path` — stack location under `stacks/`
+- `url` — git remote to clone from (`-` = no remote yet; such rows are skipped by sync)
+- `status` — `done` (finished stack) or `wip` (work in progress)
+
+Notes:
+
+- `.gitattributes` sets `stacks.txt merge=union`, so rows added independently on
+  different machines merge without conflicts. **Remove rows manually** — union
+  merge cannot delete lines.
+- The block between `# BEGIN stack-sync` / `# END stack-sync` markers in
+  `.gitignore` is **generated** by `tools/stack-sync.sh` — do not edit it by hand.
+- Each stack repo may contain its own nested submodules — they are part of the
+  stack repo and are not managed by the catalog.
 
 ## 📁 Categories
 
-### 🤖 AI Services (`ai-services/`)
+Stacks live under five categories. **Done** stacks are listed below; the full
+catalog (including 69 WIP stacks) is in [`stacks.txt`](stacks.txt).
 
-#### 💬 Chats (`ai-services/chats/`)
+### 🛠️ Development Tools (`stacks/development-tools/`)
 
-- **Open WebUI** - Web interface for AI models with TTS support and identity management integration
-- **Libre WebUI** - Open-source web interface for AI models with enhanced privacy and customization features
+- **Webtop Desktop** — browser-based desktop environments (`remote-access/webtop-desktop`) ✅
+- **BaGetter** — NuGet server for .NET (`registries/package-registries/bagetter`) ✅
+- **Distribution** — Docker registry with SSL automation (`registries/container-registries/distribution`) ✅
+- **Registry Admin** — distribution admin UI (`registries/container-registries/registry-admin`)
 
-#### 🔧 Model Serving (`ai-services/model-serving/`)
+### ⚙️ DevOps (`stacks/devops/`)
 
-- **LiteLLM** - Proxy server for LLM APIs with unified interface for multiple providers
-- **Ollama** - Local LLM inference server for running models on your hardware
+- **Keycloak** / **Kanidm** — identity management (`identity-management/`) ✅
+- **Elasticsearch** / **Kibana** / **OpenObserve** — monitoring (`monitoring/`) ✅
+- **SyncStorage** — Firefox Sync server (`secret-control/syncstorage`) ✅
+- **LetsEncrypt Manager** / **Step-CA Manager** — SSL automation (`ssl-automation/`) ✅
+- **Gitea** — version control (`version-control/gitea`) ✅
 
-#### 🔄 Automation (`ai-services/automation/`)
+### 🔒 Network Privacy (`stacks/network-privacy/`)
 
-- **N8N** - Workflow automation platform for AI-powered business processes
+- **Unbound** / **Pi-hole** / **DNSMasq** — DNS (`dns/`) ✅
+- **Nginx Proxy Manager** — reverse proxy (`reverse-proxy/nginx-proxy-manager`) ✅
+- **Network Client** / **VPN Server** — VPN (`vpn/`) ✅
+- **COTURN** — TURN/STUN for WebRTC (`turn/coturn`) ✅
 
-### ⛓️ Blockchain Nodes (`blockchain-nodes/`)
+### 🏠 Self-Hosting (`stacks/self-hosting/`)
 
-- **Bitcoin Core Stack** - Bitcoin node with Lightning Network (LND) support
-- **Tor Integration** - Privacy-enhanced blockchain connectivity
+- **LiteLLM** / **Ollama** — AI model serving (`ai-services/model-serving/`) ✅
+- **Open WebUI** / **Libre WebUI** — AI chats (`ai-services/chats/`) ✅
+- **N8N** — AI automation (`ai-services/automation/n8n`) ✅
+- **Synapse** / **Conduit** — Matrix servers (`communication/matrix/backend/`) ✅
+- **Maubot** / **Mautrix-Telegram** — Matrix bridges (`communication/matrix/bridges/`) ✅
+- **Element** / **FluffyChat** / **Cinny** / **Commet** — Matrix clients (`communication/matrix/frontend/`) ✅
+- **HLedger Web** — personal finance (`finance/hledger-web`) ✅
+- **RSSHub** — RSS aggregation (`integration-services/rsshub`) ✅
+- **Invidious** — YouTube frontend (`media-streaming/youtube/invidious`) ✅
 
-### 💬 Communication (`communication/`)
+### ⛓️ Blockchain Nodes (`stacks/blockchain-nodes/`)
 
-#### 📱 Matrix (`matrix/`)
+- **Bitcoin Core** — Bitcoin node with Lightning (LND) support ✅
 
-##### 🖥️ Servers (`matrix/servers/`)
+## 🔧 Working on a stack
 
-- **Synapse** - Reference Matrix homeserver implementation with comprehensive features
-- **Conduit** - Lightweight Rust-based Matrix homeserver with minimal resource usage and RocksDB backend
+```bash
+cd stacks/<category>/<...>/<stack>   # it is a normal independent git repo
+git pull && git push                 # sync with its own origin
+```
 
-##### 📱 Clients (`matrix/clients/`)
+The catalog never pulls/pushes inside stack repos — `tools/stack-sync.sh` only
+**clones what is missing**. Updating stacks is manual, per repo.
 
-- **Element** - Modern Matrix client for secure messaging
-- **FluffyChat** - Cross-platform Matrix client with modern UI and end-to-end encryption
-- **Cinny** - Simple, elegant and secure Matrix web client with lightweight interface
-- **Commet** - Simple and modern Matrix client with clean alternative to Element and fewer dependencies
+Each stack includes `docker-compose.yml`, `.env.example`, and its own `README.md`:
 
-##### 🌉 Bridges (`matrix/bridges/`)
-
-- **Maubot** - Modular bot system for Matrix with web management interface and plugin support
-- **Mautrix-Telegram** - Bridge between Matrix and Telegram for seamless cross-platform messaging
-
-#### 🔄 TURN/STUN (`coturn/`)
-
-- **COTURN** - TURN and STUN server for WebRTC applications with NAT traversal support
-
-### 🛠️ Development Tools (`development-tools/`)
-
-- **BaGetter** - NuGet server for .NET package management
-- **Distribution** - Docker Registry for hosting private Docker images with SSL automation support
-
-### 🔗 Integration Services (`integration-services/`)
-
-- **RSSHub** - RSS feed aggregation and transformation service
-
-### 📺 Media Streaming (`media-streaming/`)
-
-- **Sunshine** - Game streaming server
-
-### 📊 Monitoring (`monitoring/`)
-
-- **Elasticsearch** - Search and analytics engine for logs and metrics
-- **Kibana** - Data visualization and exploration for Elasticsearch
-- **OpenObserve** - Cloud-native observability platform for logs, metrics, and traces with unified interface
-
-### 🔒 Network Privacy (`network-privacy/`)
-
-- **DNSMasq** - DNS server and DHCP
-- **Unbound** - Secure DNS resolver with environment-based configuration
-- **Network Client** - VPN clients (WireGuard, Tor, Proxy)
-- **Nginx Proxy Manager** - Reverse proxy with SSL
-- **Pi-hole** - Network-wide ad blocking
-- **VPN Server** - L2TP/IPSec and OpenVPN servers
-
-### 🖥️ Remote Access (`remote-access/`)
-
-- **Webtop Desktop** - Browser-based desktop environments (Arch Linux)
-
-### 🏠 Self-Hosted Privacy (`self-hosted-privacy/`)
-
-- **HLedger Web** - Personal finance management
-- **Invidious** - Privacy-focused YouTube frontend
-- **SyncStorage** - Firefox Sync server
-
-### 🔑 Identity Management (`identity-management/`)
-
-- **Keycloak** - Identity and access management (IAM/SSO) solution
-- **Kanidm** - Modern identity management platform with strong authentication
-
-### 🔐 SSL Automation (`ssl-automation/`)
-
-- **LetsEncrypt Manager** - Automatic LetsEncrypt certificate management with nginx-proxy virtual host setup
-- **Step-CA Manager** - Automatic certificate management with private Step-CA and nginx-proxy distribution
-
-## 🚀 Quick Start
-
-1. **Clone the repository:**
-
-   ```bash
-   git clone https://github.com/your-username/docker-stack-collection.git
-   cd docker-stack-collection
-   ```
-
-2. **Navigate to desired stack:**
-
-   ```bash
-   cd stacks/category-name/service-name
-   ```
-
-3. **Configure environment (if needed):**
-
-   ```bash
-   cp .env.example .env
-   # Edit .env with your settings
-   ```
-
-4. **Deploy the stack:**
-
-   ```bash
-   docker-compose up -d
-   ```
-
-## 📋 Requirements
-
-- Docker Engine 20.10+
-- Docker Compose 2.0+
-- Sufficient system resources for chosen services
-
-## 🔧 Configuration
-
-Each stack includes:
-
-- `docker-compose.yml` - Main service configuration
-- `.env.example` - Environment variables template
-- `README.md` - Service-specific documentation
-- Additional configuration files as needed
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Add your stack following the existing structure
-4. Include proper documentation
-5. Submit a pull request
+```bash
+cp .env.example .env   # edit, then:
+docker compose up -d
+```
 
 ## 📝 License
 
-This project is dual-licensed under your choice of:
+Dual-licensed under your choice of:
 
 - **Apache License 2.0** ([LICENSE-APACHE](LICENSE-APACHE))
 - **MIT License** ([LICENSE-MIT](LICENSE-MIT))
 
-You may use this project under the terms of either license. Individual services may have their own licenses.
+Individual services may have their own licenses.
 
 ## ⚠️ Disclaimer
 
-These stacks are provided as-is for educational and self-hosting purposes. Always review configurations and security settings before deploying in production environments.
+These stacks are provided as-is for educational and self-hosting purposes.
+Always review configurations and security settings before deploying in
+production environments.
