@@ -221,3 +221,20 @@ the canonical format definition.
   or collection repos.
 - Clone fails (network, repo moved): report it and stop the provenance
   step — do not silently skip recording.
+
+## 14. Pitfalls ledger
+
+Recurring obstacles (sb quirks, compose, OIDC/S3/step-ca wiring, testing)
+are logged in `PITFALLS.md` at the collection root — shared across all
+stacks, one entry per problem with a `hits` counter and
+`status: open | mitigated | fixed`.
+
+- Before diagnosing any tooling/deploy/test obstacle, check the ledger:
+  walk up from cwd to find `PITFALLS.md`; if not found, use the canonical
+  path `/home/archuser/projects/docker-stack-collection/PITFALLS.md`.
+- After hitting an obstacle: already recorded → `hits +1`, update `last`;
+  new → append entry (`hits: 1`, `status: open`). Grep the file first to
+  avoid duplicate entries.
+- Fixed → `status: fixed` + `fix:` description; entries are never deleted.
+- Never end a stack session with an unrecorded obstacle. Format and
+  protocol are defined in the file's header.
