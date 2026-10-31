@@ -26,19 +26,27 @@ opportunistically.
 
 1. **Inventory** the stack: read `src/<name>/` (or `app/`), note existing
    environments, extensions, READMEs, and artifacts.
-2. **Rename** `src/<name>/` → `app/` (git mv inside the stack repo). If the
+2. **Upstream provenance backfill:** if `UPSTREAM.md` is missing, create it
+   at the stack root per stack-conventions §13 (one section per project
+   dir). Recover the current upstream commit where possible — from the
+   pinned image tag/digest, the upstream release notes/changelog, or the
+   user — otherwise record `unknown` with a note explaining why. NEVER
+   invent a hash. Append the first log row (date, commit or `unknown`,
+   image tag/digest, note `backfill at modernization`).
+
+3. **Rename** `src/<name>/` → `app/` (git mv inside the stack repo). If the
    stack has multiple projects, split into sibling dirs (`ui/`, `server/`,
    ...) per stack-conventions §1.
-3. **Modules**: move `src/ssl-automation/` → `modules/ssl-automation/` and
+4. **Modules**: move `src/ssl-automation/` → `modules/ssl-automation/` and
    declare it in the stack-root `.gitmodules` (submodule URLs:
    `https://github.com/zyrakq/{step-ca,letsencrypt}-manager-stack.git`).
-4. **Environments**: add missing ones (forwarding / letsencrypt / step-ca;
+5. **Environments**: add missing ones (forwarding / letsencrypt / step-ca;
    `internal` only when genuinely needed).
-5. **Extensions**: add `oidc` where the app supports it (include in default
+6. **Extensions**: add `oidc` where the app supports it (include in default
    build, keep a no-oidc variant) and `s3-storage` where applicable.
-6. **stackbuilder.toml**: convert to the new `[build.environments]` API.
-7. **Artifacts**: delete `.kilocode/`, `.clinerules/` everywhere in the
+7. **stackbuilder.toml**: convert to the new `[build.environments]` API.
+8. **Artifacts**: delete `.kilocode/`, `.clinerules/` everywhere in the
    stack.
-8. **READMEs**: regenerate hub + component READMEs with the `readme-gen`
+9. **READMEs**: regenerate hub + component READMEs with the `readme-gen`
    skill.
-9. **Verify** with the `stack-test` skill (step-ca variant first).
+10. **Verify** with the `stack-test` skill (step-ca variant first).
