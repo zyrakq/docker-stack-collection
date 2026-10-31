@@ -83,3 +83,33 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
   compose ссылается на готовый образ через `${IMAGE:-localhost/<image>:<tag>}`
 - fix: правило зафиксировано в stack-conventions §15, скилл `source-image`,
   шаги в stack-init/stack-modernize, секция в AGENTS.md
+
+## P-005: stackbuilder source does not compile (missing import)
+- hits: 1 | status: fixed | first: 2026-10-31 | last: 2026-10-31
+- where: sb / tools/stackbuilder
+- symptom: `cargo build --release` в tools/stackbuilder падает E0425/E0433 —
+  `BTreeMap` не найден в src/env_merger.rs
+- cause: в репозитории stackbuilder отсутствует `use std::collections::BTreeMap;`
+- fix: добавлен импорт в src/env_merger.rs; бинарник называется `stackbuilder`,
+  а не `sb` — симлинк `~/.local/bin/sb -> target/release/stackbuilder`
+
+## P-006: sb build requires external yq by default
+- hits: 1 | status: mitigated | first: 2026-10-31 | last: 2026-10-31
+- where: sb build
+- symptom: `sb build` падает "yq is required but not available" на хостах без
+  системного yq
+- workaround: `yaml_merger = "rust"` в `[build]` секции stackbuilder.toml
+  (встроенный Rust-мерджер); также зафиксировано в STASKBUILDER.md (L10)
+- fix: —
+
+## P-007: upstream release tag does not compile — build from fixed commit
+- hits: 1 | status: mitigated | first: 2026-10-31 | last: 2026-10-31
+- where: source-built images / vibe-kanban
+- symptom: сборка из релизного tarball тега v0.1.45-20260919085201 падает:
+  remote-web TS2339 — `getMatchedRoutes` деструктурируется как объект, а
+  lockfile-версия router-core (1.171.32) возвращает tuple; исправлено в 3
+  коммитах сразу после тега
+- workaround: в self-contained Dockerfile клонировать upstream на pinned
+  commit (ARG GIT_COMMIT=7c380708...) вместо релизного tarball; UPSTREAM.md
+  и так записывает коммит, а не тег
+- fix: —
