@@ -1,6 +1,6 @@
 # Stack Catalog
 
-Generated from [`stacks.csv`](stacks.csv) by `.githooks/stack-sync.sh` — do not edit by hand.
+Generated from [`stacks.csv`](stacks.csv) by `.githooks/gen-stacks-md.sh` — do not edit by hand.
 
 | path | url | status |
 |------|-----|--------|
@@ -76,7 +76,7 @@ Generated from [`stacks.csv`](stacks.csv) by `.githooks/stack-sync.sh` — do no
 | `stacks/network-privacy/vpn/wstunnel` | [repo](https://github.com/zyrakq/wstunnel-stack.git) | incomplete 🚧 |
 | `stacks/self-hosting/ai-services/automation/flowise` | [repo](https://github.com/zyrakq/flowise-stack.git) | incomplete 🚧 |
 | `stacks/self-hosting/ai-services/automation/n8n` | [repo](https://github.com/zyrakq/n8n-stack.git) | unverified ❓ |
-| `stacks/self-hosting/ai-services/automation/vibe-kanban` | [repo](https://github.com/zyrakq/vibe-kanban-stack.git) | incomplete 🚧 |
+| `stacks/self-hosting/ai-services/automation/vibe-kanban` | [repo](https://github.com/zyrakq/vibe-kanban-stack.git) | unverified ❓ |
 | `stacks/self-hosting/ai-services/automation/windmill` | [repo](https://github.com/zyrakq/windmill-stack.git) | incomplete 🚧 |
 | `stacks/self-hosting/ai-services/chats/bionic-gpt` | [repo](https://github.com/zyrakq/bionic-gpt-stack.git) | incomplete 🚧 |
 | `stacks/self-hosting/ai-services/chats/libre-webui` | [repo](https://github.com/zyrakq/libre-webui-stack.git) | unverified ❓ |
