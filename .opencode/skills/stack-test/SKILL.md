@@ -21,6 +21,28 @@ test for every stack change.
 - The letsencrypt variant is NOT tested; assume analogous to step-ca minus
   the `STEP_CA_TRUST` env.
 
+## Compat check (pre-pull)
+
+Run this BEFORE the procedure below whenever images may have changed (after
+any stack change or image update) — never verify against stale local
+images:
+
+1. Pre-pull images first, in the built environment dir:
+
+   ```bash
+   cd build/<env>/<combo>/ && docker compose pull
+   ```
+
+2. Verify the EXISTING configs still work with the freshly pulled
+   containers (health, logs, core functionality), then continue with the
+   normal procedure below.
+3. If a new container breaks with the old configs: diff the upstream repo
+   between the last recorded commit and the new one to identify what
+   changed in the configuration surface — `UPSTREAM.md` has both commits;
+   use the clone-in-tmp workflow in stack-conventions §13. Fix the configs
+   per collection rules, re-verify, then append a new provenance row to
+   `UPSTREAM.md` (append-only — never rewrite existing rows).
+
 ## Procedure
 
 Follow `references/verification-procedure.md` in order. Summary:
