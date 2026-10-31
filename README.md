@@ -40,6 +40,17 @@ git pull && git push
 cp .env.example .env && docker compose up -d
 ```
 
+To push committed work in **all** stacks at once, run the manual mass-push
+script (never fires automatically; never stashes or commits anything):
+
+```bash
+.githooks/stack-push.sh
+```
+
+It fetches every repo and pushes only the ones strictly ahead of their
+upstream. Diverged repos, repos without an upstream, and missing repos are
+reported and left for manual follow-up.
+
 ## 📝 License
 
 Dual-licensed under [Apache 2.0](LICENSE-APACHE) or [MIT](LICENSE-MIT), your
