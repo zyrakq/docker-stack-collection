@@ -39,11 +39,19 @@ service name.
       still rejects the CA, check app-specific envs (`REQUESTS_CA_BUNDLE`,
       `SSL_CERT_FILE` — open-webui example) and the RESTART flag.
 
-## 5. Integrations
+## 5. Integrations (staged — browser E2E)
 
-- [ ] OIDC (when present): login redirect reaches kanidm at
-      `https://<kanidm-domain>/oauth2/openid/<client-name>`; callback
-      completes; a test user from the right group can sign in.
+Staged per `browser-e2e.md`. Stage A MUST pass before any extension work.
+
+- [ ] Stage A (base deploy, no oidc): browser smoke test via agent-browser —
+      clean TLS, local login, one core flow, screenshot artifact
+      (`browser-e2e.md` §1).
+- [ ] OIDC (when present), per its configuration mode (`browser-e2e.md` §2):
+  - [ ] Env-based (`oidc` extension): rebuild, redeploy, browser login via
+        the SSO button → kanidm → callback → session; email-matching
+        assertions.
+  - [ ] UI-based (gitea, zerobyte): configure the provider in the app's web
+        UI first, save, then the same browser login check + email linking.
 - [ ] S3 (when present): round-trip — create bucket, put object, get object,
       delete (see `rustfs-s3` skill cookbook).
 
