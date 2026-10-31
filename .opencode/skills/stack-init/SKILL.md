@@ -22,7 +22,29 @@ Load the `stack-conventions` skill first — every step below depends on it.
    cd stacks/<category>/<...>/<stack>
    git init
    ```
-3. **Scaffold** exactly per `references/scaffold-checklist.md`:
+3. **Upstream provenance.** Ask the user for the upstream repo URL(s) — one
+   per project dir when the stack ships more than one project. Create
+   `UPSTREAM.md` at the stack root per stack-conventions §13, then clone
+   each upstream repo to inspect the source:
+
+   ```bash
+   rm -rf /tmp/opencode/upstreams/<stack>-<project>
+   git clone <upstream-url> /tmp/opencode/upstreams/<stack>-<project>
+   ```
+
+   - Inspect the clone (config files, flags, entrypoints) to inform the
+     scaffolding in the next step.
+   - Append the first log row: today's date, the current upstream commit
+     (`git -C /tmp/opencode/upstreams/<stack>-<project> rev-parse --short
+     HEAD`), the image tag/digest being dockerized, note `initial
+     dockerization`.
+   - URL unknown: create `UPSTREAM.md` with the section and an empty log —
+     the first rework session backfills it. Clone fails: report and skip
+     the clone (still create `UPSTREAM.md`).
+   - Delete the clone when done scaffolding:
+     `rm -rf /tmp/opencode/upstreams/<stack>-<project>`
+
+4. **Scaffold** exactly per `references/scaffold-checklist.md`:
    - `app/components/base/` — `docker-compose.yml`, `.env.example`, config
      examples.
    - `app/components/environments/{forwarding,letsencrypt,step-ca}/` as
@@ -35,11 +57,11 @@ Load the `stack-conventions` skill first — every step below depends on it.
    - Stack root: hub `README.md`, `.gitignore`, `.gitmessage`,
      `LICENSE-APACHE`, `LICENSE-MIT`; `.gitmodules` + `modules/ssl-automation`
      submodules ONLY if SSL integration is needed.
-4. **Register in stacks.csv** (collection root): append the row
+5. **Register in stacks.csv** (collection root): append the row
    `stacks/<category>/<...>/<stack>;-;unverified` — url is `-` when there is
    no remote yet.
-5. **Clean artifacts:** delete `.kilocode/`, `.clinerules/` if present.
-6. **Build & verify:** `cd app/ && sb build`, then follow the `stack-test`
+6. **Clean artifacts:** delete `.kilocode/`, `.clinerules/` if present.
+7. **Build & verify:** `cd app/ && sb build`, then follow the `stack-test`
    skill.
 
 ## Reference exemplars (imitate, do not copy blindly)
