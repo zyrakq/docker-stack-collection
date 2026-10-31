@@ -3,8 +3,9 @@ name: Stack Conventions
 description: >-
   Conventions for docker-stack-collection stacks: app/ layout, sb/stackbuilder
   builds, environments and extensions, no-bind-mount volume policy,
-  dockerfile_inline config patterns, OIDC/S3/step-ca integration rules, and
-  .env.example standards. Load before creating or modifying any stack.
+  dockerfile_inline config patterns, OIDC/S3/step-ca integration rules,
+  .env.example standards, and upstream provenance (UPSTREAM.md). Load before
+  creating or modifying any stack.
 ---
 
 # Stack Conventions
@@ -150,3 +151,64 @@ Standard keys, in this order where applicable:
 `stacks/` is gitignored by the collection repo and each stack is its own git
 repo. Root-level glob/grep sees NOTHING inside `stacks/` — always target a
 specific stack path, e.g. `stacks/devops/identity-management/kanidm/app/...`.
+
+## 13. Upstream provenance
+
+Every stack records WHERE its deployment configs come from in a per-stack
+`UPSTREAM.md` at the stack root. Provenance must travel with the stack repo
+(`stacks/` is gitignored by the collection repo). The `stack-init`,
+`stack-modernize`, and `stack-test` skills maintain the file; this section is
+the canonical format definition.
+
+- One `##` section per project dir (`app/`, `ui/`, `server/`, ...) —
+  multi-project stacks may track one upstream repo per project. Section
+  header: `## <project-dir> — <upstream repo URL>`.
+- Under each section header, an append-only log table with columns
+  `date | upstream commit | image tag / digest | note`. The image column is
+  required: you must always know which image version the configs were last
+  verified against. Example (rendered):
+
+  | date | upstream commit | image tag / digest | note |
+  |------|-----------------|--------------------|------|
+  | 2026-10-31 | abc1234 | v1.2.3 | initial dockerization |
+
+- IRON RULE: rows are ONLY ever appended — never rewritten, reordered, or
+  deleted. A `git diff` on `UPSTREAM.md` must ever show additions only
+  (mid-rework you would otherwise lose the base commit of the previous
+  config generation).
+- Commit unrecoverable (image tag not mappable to a commit): record
+  `unknown` in the commit column with a note explaining why. NEVER invent a
+  hash.
+- Upstream URL unknown: create the section with the URL as `unknown` and an
+  empty log; the first rework session backfills it.
+
+### Clone-in-tmp workflow (any rework session on a stack)
+
+1. Read `UPSTREAM.md` for the repo URL and the last recorded commit.
+2. Clone into a FRESH dir under `/tmp/opencode/upstreams/` — remove any
+   leftover first (idempotent against crashed sessions):
+
+   ```bash
+   rm -rf /tmp/opencode/upstreams/<stack>-<project>
+   git clone <upstream-url> /tmp/opencode/upstreams/<stack>-<project>
+   ```
+
+3. Use the clone to understand the service (config files, flags,
+   entrypoints). When diagnosing a regression, diff the config surface
+   between the last recorded commit and HEAD:
+
+   ```bash
+   git -C /tmp/opencode/upstreams/<stack>-<project> diff <last-recorded-commit>..HEAD
+   ```
+
+4. After the session: append the new row to `UPSTREAM.md`, THEN delete the
+   clone. Both ends are mandatory:
+
+   ```bash
+   rm -rf /tmp/opencode/upstreams/<stack>-<project>
+   ```
+
+- Clones are temporary working material — NEVER commit them into the stack
+  or collection repos.
+- Clone fails (network, repo moved): report it and stop the provenance
+  step — do not silently skip recording.
