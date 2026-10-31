@@ -10,20 +10,15 @@ agent-browser skills get core
 
 ## 0. Prerequisites
 
-- [ ] step-ca root CA trusted by the BROWSER host, not just containers:
-  - System trust: run the manager companion's installer
-    (`stacks/devops/ssl-automation/step-ca-manager/modules/step-ca-companion/scripts/install-host-trust.sh`)
-    or manually — extract `/home/step/certs/root_ca.crt` from the step-ca
-    container into `/etc/ca-certificates/trust-source/anchors/`, then
-    `trust extract-compat` (Arch).
-  - Chromium NSS db (the installer does NOT cover this):
-
-    ```bash
-    certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "step-ca root" -i root_ca.crt
-    ```
-
-- [ ] Cert errors in the browser at this point are a CA-trust problem, NOT an
-      app bug. Fix trust first — before touching any stack config.
+- [ ] step-ca root CA is already trusted at the HOST level (the manager
+      companion's `install-host-trust.sh` has been run). Assume browser TLS is
+      clean — do not re-install trust.
+- [ ] If a cert error still appears in the browser, it is a CA-trust problem,
+      NOT an app bug: fix host trust first (extract `/home/step/certs/root_ca.crt`
+      from the step-ca container into `/etc/ca-certificates/trust-source/anchors/`,
+      then `trust extract-compat`; for Chromium add it to the NSS db:
+      `certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n "step-ca root" -i root_ca.crt`)
+      — before touching any stack config.
 - [ ] Test user exists in kanidm, member of the group the OIDC client
       requires; credentials stored in the agent-browser session/auth vault.
 - [ ] agent-browser session open; screenshots saved as run artifacts.
