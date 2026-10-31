@@ -69,3 +69,17 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
   канонический абсолютный путь); правило продублировано в AGENTS.md и
   stack-conventions
 - fix: —
+
+## P-004: vendoring upstream source into stack repo (submodule proposal)
+- hits: 2 | status: fixed | first: 2026-10-31 | last: 2026-10-31
+- where: дизайн/план стеков без опубликованных Docker-образов (vibe-kanban и
+  предыдущая попытка)
+- symptom: агент предлагает втащить исходники upstream-приложения в репозиторий
+  deployment-конфигов как git-подмодуль (`modules/<app>`) или копию исходников;
+  пользователь отклонил дважды
+- workaround: исходники не вендорим никогда; tmp-клон из clone-in-tmp —
+  reference-only; сборка из исходников оформляется self-contained
+  `app/images/<image>/Dockerfile` (ARG GIT_REPO/GIT_TAG или релизный архив),
+  compose ссылается на готовый образ через `${IMAGE:-localhost/<image>:<tag>}`
+- fix: правило зафиксировано в stack-conventions §15, скилл `source-image`,
+  шаги в stack-init/stack-modernize, секция в AGENTS.md
