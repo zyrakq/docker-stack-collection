@@ -45,8 +45,12 @@ opportunistically.
 6. **Extensions**: add `oidc` where the app supports it (include in default
    build, keep a no-oidc variant) and `s3-storage` where applicable.
 7. **stackbuilder.toml**: convert to the new `[build.environments]` API.
-8. **Artifacts**: delete `.kilocode/`, `.clinerules/` everywhere in the
+8. **Source-built images**: if the app has no published Docker image,
+   convert any context-dependent builds to the `source-image` skill
+   pattern (`app/images/<image>/Dockerfile`, self-contained). NEVER vendor
+   upstream source into the stack repo — stack-conventions §15.
+9. **Artifacts**: delete `.kilocode/`, `.clinerules/` everywhere in the
    stack.
-9. **READMEs**: regenerate hub + component READMEs with the `readme-gen`
-   skill.
-10. **Verify** with the `stack-test` skill (step-ca variant first).
+10. **READMEs**: regenerate hub + component READMEs with the `readme-gen`
+    skill.
+11. **Verify** with the `stack-test` skill (step-ca variant first).

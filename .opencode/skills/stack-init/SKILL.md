@@ -51,6 +51,10 @@ Load the `stack-conventions` skill first — every step below depends on it.
      applicable (step-ca needs the certs volume + network fragment).
    - `app/components/extensions/{oidc,s3-storage,step-ca-trust}/` as
      applicable.
+   - **No published Docker image?** Build from source via the
+     `source-image` skill — `app/images/<image>/Dockerfile`, self-contained
+     (fetches the source itself). NEVER vendor upstream source into the
+     stack repo (no submodules, no source trees) — stack-conventions §15.
    - `app/stackbuilder.toml` — new `[build.environments]` API; use
      `env_file_patterns` to preserve app-native config files (numa idiom).
    - `app/README.md` — delegate to the `readme-gen` skill rules.

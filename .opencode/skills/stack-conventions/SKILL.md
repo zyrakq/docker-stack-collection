@@ -3,7 +3,8 @@ name: Stack Conventions
 description: >-
   Conventions for docker-stack-collection stacks: app/ layout, sb/stackbuilder
   builds, environments and extensions, no-bind-mount volume policy,
-  dockerfile_inline config patterns, OIDC/S3/step-ca integration rules,
+  dockerfile_inline config patterns, source-built images (app/images/),
+  OIDC/S3/step-ca integration rules,
   .env.example standards, and upstream provenance (UPSTREAM.md). Load before
   creating or modifying any stack.
 ---
@@ -238,3 +239,28 @@ stacks, one entry per problem with a `hits` counter and
 - Fixed → `status: fixed` + `fix:` description; entries are never deleted.
 - Never end a stack session with an unrecorded obstacle. Format and
   protocol are defined in the file's header.
+
+## 15. Source-built images (`app/images/`) — NO VENDORING
+
+When an app has no published Docker image and must be built from source:
+
+- **NEVER vendor upstream source into the stack repo.** No git submodule of
+  the upstream app, no copied source tree, no `modules/<upstream-app>`.
+  `modules/` is ONLY for the ssl-automation managers. The §13 clone-in-tmp
+  clone is REFERENCE-ONLY — it is never committed and never referenced by
+  the build.
+- The build lives in `app/images/<image>/Dockerfile` and must be **fully
+  self-contained**: the Dockerfile itself downloads release
+  binaries/archives or clones the upstream repo at a pinned tag/commit
+  (`ARG GIT_REPO` / `ARG GIT_TAG`, or a GitHub archive URL). It must build
+  with an empty build context — no local files required.
+- **Wiring:** `images/` is a sibling of `components/` and is NOT part of
+  the `sb` build. Build standalone:
+  `docker build -t localhost/<image>:<tag> images/<image>`. Compose
+  references the prebuilt image — `image: ${IMAGE:-localhost/<image>:<tag>}`
+  — never a `build:` section.
+- Exemplars: `open-coreui` `images/{frontend,backend,complex}` (sparse git
+  clone), the vibe-kanban `images/{git-clone,release-assets}` Dockerfiles
+  (older upstream layout — pattern reference only). `litellm-amd64` uses
+  `COPY . .` — context-dependent, NOT the canonical pattern.
+- Step-by-step procedure: the `source-image` skill.

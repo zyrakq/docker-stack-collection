@@ -28,3 +28,18 @@ Checklist per workflow step:
 - When a problem gets a real fix, set `status: fixed` and fill `fix:` —
   entries are never deleted.
 - Never leave an encountered obstacle unrecorded at the end of a session.
+
+## Source-built images — no vendoring (stack work)
+
+When a stack's app has no published Docker image and must be built from
+source, agents MUST follow the `source-image` skill and stack-conventions
+§15:
+
+- NEVER vendor upstream source into the stack repo — no git submodules of
+  the upstream app, no copied source trees. `modules/` is ONLY for the
+  ssl-automation managers. The clone-in-tmp clone is reference-only.
+- The build lives in `app/images/<image>/Dockerfile`, fully self-contained:
+  it downloads release binaries/archives or clones the upstream repo at a
+  pinned tag/commit itself; builds with an empty build context.
+- Compose references the prebuilt image via
+  `image: ${IMAGE:-localhost/<image>:<tag>}` — never a `build:` section.
