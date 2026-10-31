@@ -108,6 +108,15 @@ Three canonical patterns (verbatim snippets in `references/patterns.md`):
   default build; keep a no-oidc variant as proof of the tested pre-OIDC step.
 - Provider is kanidm. Issuer convention:
   `https://<kanidm-domain>/oauth2/openid/<client-name>`.
+- UI-only OIDC apps (gitea, zerobyte): the provider is configured in the
+  app's own web interface, NOT via env — env only enables OAuth2 support
+  (gitea `GITEA__oauth2__ENABLE`; zerobyte runbook
+  `stacks/devops/backup/zerobyte/app/oidc.md`). Account linking relies on
+  matching email (zerobyte: "Link matching emails to existing accounts: On").
+- Staged testing is MANDATORY for every stack: verify the base deployment in
+  the browser first (Stage A), then add/configure oidc and re-verify
+  (Stage B) — procedure in the `stack-test` skill
+  (`references/browser-e2e.md`).
 
 ## 8. S3 policy
 
