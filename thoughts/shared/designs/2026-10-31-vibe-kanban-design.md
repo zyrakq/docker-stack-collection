@@ -35,17 +35,25 @@ adapted to collection standards.
 Dockerize the **remote (Cloud) variant, core app only** (no relay), replacing
 upstream's Caddy reverse proxy with the collection's nginx-proxy integration.
 
-Upstream source is pinned as a git submodule `modules/vibe-kanban` at the stack
-root; the compose build context references it via
-`../../../modules/vibe-kanban` (resolves identically from
-`app/components/base/` and from generated `app/build/<env>/`).
+The remote-server image is **source-built** per stack-conventions §15 and the
+`source-image` skill: `app/images/vk-remote-server/Dockerfile`, fully
+self-contained — it fetches the upstream source itself (release tarball from
+`https://github.com/BloopAI/vibe-kanban/archive/refs/tags/v<VERSION>.tar.gz`
+or a shallow git clone at a pinned tag via `ARG GIT_REPO`/`GIT_TAG`; no
+published Docker image exists upstream). The Dockerfile builds with an empty
+build context — the stack repo never vendors upstream source (no submodule,
+no source tree). Built standalone (`docker build -t
+localhost/vk-remote-server:<tag> app/images/vk-remote-server`); compose
+references the prebuilt image via `image: ${IMAGE:-localhost/vk-remote-server:<tag>}`
+— no `build:` section.
 
 ## Architecture
 
 Services (from upstream `docker-compose.prod.yml`, Caddy removed):
 
-- `remote-server` — built from submodule context, dockerfile
-  `crates/remote/Dockerfile` (self-hosted build strips private billing dep).
+- `remote-server` — source-built image `localhost/vk-remote-server:<tag>`
+  (Dockerfile in `app/images/vk-remote-server/`, based on upstream
+  `crates/remote/Dockerfile`; self-hosted build strips private billing dep).
   Port 8081, healthcheck `wget /v1/health`, runs as appuser, static frontend
   embedded at `/srv/static`.
 - `remote-db` — `postgres:16-alpine`, `wal_level=logical`, `pg_isready`
@@ -67,14 +75,17 @@ Services (from upstream `docker-compose.prod.yml`, Caddy removed):
 - `app/stackbuilder.toml` — environments `forwarding`, `letsencrypt`,
   `step-ca`; `copy_additional_files = true`.
 - `app/.env.example` — standard key order: `COMPOSE_PROJECT_NAME`,
-  `PROJECT_NAME`, `LOG_MAX_SIZE/LOG_MAX_FILE/LOG_COMPRESS`, `VIRTUAL_PORT=8081`,
+  `PROJECT_NAME`, `IMAGE=localhost/vk-remote-server:<tag>`,
+  `LOG_MAX_SIZE/LOG_MAX_FILE/LOG_COMPRESS`, `VIRTUAL_PORT=8081`,
   `VIRTUAL_HOST`, `LETSENCRYPT_HOST`, `LETSENCRYPT_EMAIL`, secrets
   (`VIBEKANBAN_REMOTE_JWT_SECRET`, `DB_PASSWORD`, `ELECTRIC_ROLE_PASSWORD`),
   auth block (`GITHUB_OAUTH_CLIENT_ID/SECRET`, `GOOGLE_OAUTH_CLIENT_ID/SECRET`,
   `SELF_HOST_LOCAL_AUTH_EMAIL/PASSWORD`), optional `LOOPS_EMAIL_API_KEY` +
   template IDs, optional `AZURE_STORAGE_*` (attachments), `TZ=UTC`.
   Also build-arg passthrough `VITE_RELAY_API_BASE_URL` (default empty).
-- `modules/vibe-kanban` — git submodule → `https://github.com/BloopAI/vibe-kanban`.
+- `app/images/vk-remote-server/Dockerfile` — self-contained source build of
+  the remote variant (fetches BloopAI/vibe-kanban at a pinned tag itself;
+  empty build context; NOT part of the sb build; built standalone).
 - `modules/ssl-automation/{letsencrypt-manager,step-ca-manager}` — existing
   submodules relocated from legacy `src/ssl-automation/` (target format).
 - Stack root: `README.md` (hub style), `.gitignore`, `.gitmessage`,
