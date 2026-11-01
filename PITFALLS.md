@@ -48,7 +48,7 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - where: поиск/навигация по коду
 - cause: `stacks/` в .gitignore коллекции, каждый стек — отдельный git-репозиторий;
   glob/grep из корня коллекции ничего не видит внутри stacks/
-- fix: правило зафиксировано в stack-conventions §12 — всегда указывать
+- fix: правило зафиксировано в stack-conventions §16 — всегда указывать
   конкретный путь стека, например `stacks/devops/identity-management/kanidm/...`
 
 ## P-002: stackbuilder no cartesian environment matrix
@@ -81,7 +81,7 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
   reference-only; сборка из исходников оформляется self-contained
   `app/images/<image>/Dockerfile` (ARG GIT_REPO/GIT_TAG или релизный архив),
   compose ссылается на готовый образ через `${IMAGE:-localhost/<image>:<tag>}`
-- fix: правило зафиксировано в stack-conventions §15, скилл `source-image`,
+- fix: правило зафиксировано в stack-conventions §19, скилл `source-image`,
   шаги в stack-init/stack-modernize, секция в AGENTS.md
 
 ## P-005: stackbuilder source does not compile (missing import)
@@ -113,3 +113,30 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
   commit (ARG GIT_COMMIT=7c380708...) вместо релизного tarball; UPSTREAM.md
   и так записывает коммит, а не тег
 - fix: —
+
+## P-008: mass convention violations on stack creation (naming/env/db/staged)
+- hits: 1 | status: fixed | first: 2026-11-01 | last: 2026-11-01
+- where: создание стеков / правила коллекции (vibe-kanban)
+- symptom: при создании vibe-kanban нарушены 8 классов правил разом:
+  объявлен ни разу не используемый `PROJECT_NAME`; postgres как обычный
+  сервис в base-compose (без extensions/, без pgrust-альтернативы, версия
+  `postgres:16-alpine` скопирована из upstream, узкий маунт
+  `/var/lib/postgresql/data`); имена сервисов не совпадают с
+  container_name и не несут префикса проекта (`remote-server`,
+  `vk-remote-server`, `electric`); захардкоженные env-литералы в compose
+  (`RUST_LOG`, `SERVER_LISTEN_ADDR`, `ELECTRIC_URL`, `POSTGRES_DB/USER`);
+  мёртвые переменные в `.env.example`; всё навернуто сразу без
+  тест-гейтов (19 коммитов, ни одного тестового); `SERVER_PUBLIC_BASE_URL`
+  объявлен в base и переопределён с другими дефолтами в letsencrypt/
+  step-ca оверлеях; 24+ ссылок на пути `stacks/` в скиллах
+- cause: правила пользователя не были кодифицированы в stack-conventions
+  (DB-as-extension с pgrust, `${VAR:-}` везде, префиксные имена,
+  поэтапный протокол с гейтами, layering); два старых правила были прямо
+  вредны (старый §3 предпочитал `${PROJECT_NAME:-<svc>}`-нейминг, старый
+  §9 требовал ключ `PROJECT_NAME` в `.env.example`)
+- workaround: —
+- fix: stack-conventions переструктурирован в §1–§19 (naming, env wiring,
+  DB-as-extension, staged protocol, layering); iron rules добавлены в
+  AGENTS.md; скиллы self-contained (паттерны встроены, атрибуция только
+  по имени стека); поэтапный протокол с тест-гейтами вписан в
+  stack-init/stack-test
