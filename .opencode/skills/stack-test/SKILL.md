@@ -1,10 +1,11 @@
 ---
 name: Stack Test
 description: >-
-  Testing procedure for docker-stack-collection stacks: step-ca variant
-  first, never touching the live step-ca-manager setup; sb build checks,
-  compose config validation, health, cert-wait, OIDC and S3 verification.
-  Use after any stack change.
+  Testing procedure for docker-stack-collection stacks: staged browser E2E
+  gates (base+DB, then pgrust, then oidc, s3 last — one extension at a
+  time), step-ca variant first, never touching the live step-ca-manager
+  setup; sb build checks, compose config validation, health, cert-wait,
+  OIDC and S3 verification. Use after any stack change.
 ---
 
 # Stack Test
@@ -39,20 +40,28 @@ images:
 3. If a new container breaks with the old configs: diff the upstream repo
    between the last recorded commit and the new one to identify what
    changed in the configuration surface — `UPSTREAM.md` has both commits;
-   use the clone-in-tmp workflow in stack-conventions §13. Fix the configs
+   use the clone-in-tmp workflow in stack-conventions §17. Fix the configs
    per collection rules, re-verify, then append a new provenance row to
    `UPSTREAM.md` (append-only — never rewrite existing rows).
 
 ## Staged browser E2E
 
-Verification is a staged pipeline; the browser is the gate between stages:
+Verification is a staged pipeline; the browser is the gate between stages
+(stack-conventions §9):
 
-- **Stage A — base deployment (no oidc):** after health checks pass, drive
-  `https://<VIRTUAL_HOST>` with agent-browser. MUST pass before any
-  extension work.
+- **Stage A — base deployment (+ DB, no oidc):** base + the `postgresql`
+  database extension when the app needs postgres; NO oidc, NO s3. After
+  health checks pass, drive `https://<VIRTUAL_HOST>` with agent-browser.
+  MUST pass before any further extension work.
+- **Stage A2 — DB alternative (pgrust):** rebuild with the `pgrust` combo,
+  same browser gate. Clean pass → `pgrust` becomes the default combo
+  (stack-conventions §9). Failure → keep `postgresql` default and record
+  why in the component README.
 - **Stage B — oidc enabled:** env-based (rebuild with the `oidc`
   extension) or UI-based (provider configured in the app's own web UI —
   gitea, zerobyte), then re-verify in the browser.
+- **S3 round-trip — always last:** only when the `s3-storage` extension is
+  present, after Stage B.
 
 Before ANY browser step: load the `agent-browser` skill, then load its
 runtime content — never work from memory:
@@ -72,16 +81,21 @@ Follow `references/verification-procedure.md` in order. Summary:
 3. `docker compose config` — must validate.
 4. `docker compose up --build -d`.
 5. Health checks pass.
-6. **Stage A browser gate** (base deploy, no oidc): clean TLS, local login,
-   one core flow, screenshot artifact (`references/browser-e2e.md` §1).
-7. TLS-terminating services: cert-wait behavior verified (kanidm
+6. **Stage A browser gate** (base + DB via the postgresql extension, no
+   oidc): clean TLS, local login, one core flow, screenshot artifact
+   (`references/browser-e2e.md` §1).
+7. **Stage A2 browser gate** (DB alternative): rebuild with the `pgrust`
+   combo, run the same Stage A flow (`references/browser-e2e.md` §1); on
+   a clean pass promote `pgrust` to the default combo (stack-conventions
+   §9).
+8. TLS-terminating services: cert-wait behavior verified (kanidm
    delayed-start sleep entrypoint; coturn gosu poll loop).
-8. `STEP_CA_TRUST=true` installs the CA bundle into the container;
+9. `STEP_CA_TRUST=true` installs the CA bundle into the container;
    `STEP_CA_TRUST_RESTART=true` restarts it after install — trust is often
    not picked up on first boot, so always set BOTH.
-9. Apps needing explicit cert paths: set `REQUESTS_CA_BUNDLE` /
-   `SSL_CERT_FILE` (open-webui example).
-10. **Stage B** (oidc present): env-based rebuild or UI-based configuration,
+10. Apps needing explicit cert paths: set `REQUESTS_CA_BUNDLE` /
+    `SSL_CERT_FILE` (open-webui example).
+11. **Stage B** (oidc present): env-based rebuild or UI-based configuration,
     then browser login via kanidm + email-matching account linking
     (`references/browser-e2e.md` §2).
-11. S3 round-trip when the `s3-storage` extension is present.
+12. S3 round-trip when the `s3-storage` extension is present — always LAST.
