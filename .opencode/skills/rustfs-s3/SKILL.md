@@ -8,8 +8,7 @@ description: >-
 
 # RustFS S3
 
-Load the `stack-conventions` skill first. Reference stack:
-`stacks/devops/s3/storage/rustfs/`.
+Load the `stack-conventions` skill first.
 
 Full command cookbook: read `references/cookbook.md`.
 
