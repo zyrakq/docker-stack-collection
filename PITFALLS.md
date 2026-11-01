@@ -173,3 +173,40 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - workaround: —
 - fix: `skip_base_generation = true` в `[build]` stackbuilder.toml —
   дерево становится ровно `build/<env>/<combo>/` по списку combos
+
+## P-011: upstream migration hardcodes database name `remote`
+- hits: 1 | status: fixed | first: 2026-11-01 | last: 2026-11-01
+- where: vibe-kanban stack — remote-server Postgres migrations
+- symptom: приложение падает/не стартует, если БД названа иначе
+  (`POSTGRES_DB` != `remote`); миграция не может выдать `GRANT
+  CONNECT` несуществующей БД
+- cause: миграция `crates/remote/migrations/
+  20251127000000_electric_support.sql` жёстко выполняет
+  `GRANT CONNECT ON DATABASE remote TO electric_sync;` — имя БД
+  зашито в исходник (проверено на pinned commit `7c380708`),
+  конфигурируемой переменной нет; патчить апстрим запрещено
+- workaround: —
+- fix: держать `POSTGRES_DB=remote` в `.env.example`/overlay стека
+  (имя одобрено пользователем); зафиксировано коммитом
+  "Fix database name for remote server" в репозитории стека
+
+## P-012: automated-browser session loss in remote-web (agent-browser)
+- hits: 3 | status: open | first: 2026-11-01 | last: 2026-11-01
+- where: vibe-kanban remote-web SPA — browser E2E через agent-browser
+- symptom: в автоматизированном браузере SPA произвольно отбрасывает
+  сессию на страницу sign-in при hard-навигациях/перезагрузках
+  страницы; в обычном браузере (проверено пользователем) всё стабильно
+- cause: не баг стека. remote-web хранит JWT-пару в IndexedDB
+  (`rf-auth`, store `tokens`, ключи `access_token`/`refresh_token`;
+  `packages/remote-web/src/shared/lib/auth.ts`); access-token живёт
+  120 c, tokenManager автообновляет каждые ~80 c
+  (`POST /v1/tokens/refresh`); токены гидрируются из IndexedDB только
+  при загрузке документа, а при некоторых reload/сбоях refresh в
+  agent-browser сессия теряется
+- workaround: —
+- fix: E2E вести одним документом без лишних hard-навигаций; логин —
+  in-page `fetch POST /v1/auth/local/login` {email,password} → положить
+  оба токена в IndexedDB → reload → SPA гидратит сессию
+  (redirect `/account?next=%2F` → `/`); скриншот снимать сразу после
+  re-seed; событие `remote-auth-changed` состояние реактивно не
+  переключает

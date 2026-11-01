@@ -945,3 +945,51 @@ Run 2 (pending): image build, Stage A gate (base + postgresql, forwarding
 variant, browser E2E via bootstrap local auth), then Stage A2 (pgrust combo —
 clean pass makes pgrust the default), letsencrypt/step-ca browser gates need
 a real domain from the user.
+
+## Batch 6: Image build + Stage A (2026-11-01)
+
+### Completed
+
+- **Source-built image**: `app/images/remote-server/Dockerfile` builds
+  the remote server from upstream `buttermeat/vibe-kanban` at pinned
+  commit `7c380708` (cargo + pnpm, builder pattern, empty context).
+  Built via `sb build` → `localhost/vibe-kanban-remote-server:0.1.45`.
+- **DB-name fix** (stack repo commit "Fix database name for remote
+  server", 6 files): upstream migration
+  `crates/remote/migrations/20251127000000_electric_support.sql`
+  hardcodes `GRANT CONNECT ON DATABASE remote TO electric_sync;` —
+  not configurable at the pinned commit, so `POSTGRES_DB=remote` is
+  required. User approved keeping the upstream name `remote`.
+- **Stage A environment**: `app/build/forwarding/postgresql/` —
+  base + postgresql extension, forwarding variant. Bootstrap order
+  db → app (runs migrations, creates `electric_sync` role) → electric.
+- **Gates**:
+  - Containers: all 3 healthy (`vibe-kanban` on 0.0.0.0:8081,
+    `vibe-kanban-db`, `vibe-kanban-electric`); migrations clean.
+  - DB: `electric_sync` role + `electric_publication_default`
+    publication exist in DB `remote` — PASS.
+  - Electric: publication covers workspaces / notifications /
+    projects; electric logs healthy (periodic notices, no errors) —
+    PASS.
+  - Browser E2E: login (local auth via seeded tokens) + core flow
+    (project "E2E Check" created via Create Project dialog, URL
+    `/projects/649778e3-…`, listed in org "test") + screenshot —
+    PASS.
+- **Catalog**: `stacks.csv` row flipped `incomplete` → `unverified`.
+- **Pitfalls recorded**: P-011 (hardcoded DB name), P-012
+  (remote-web auth/session behavior in automated browsers).
+- **Cleanup**: upstream clone `/tmp/opencode/upstreams/vibe-kanban`
+  removed. Runtime `.env` kept; containers left RUNNING
+  (user reviews UI at http://localhost:8081).
+
+### E2E notes (for future runs)
+
+- remote-web stores the JWT pair in IndexedDB (`rf-auth`, store
+  `tokens`); access TTL 120s with auto-refresh every ~80s.
+- Automated-browser flow that works: in-page fetch
+  `POST /v1/auth/local/login` → seed IndexedDB → reload → SPA
+  hydrates tokens. Full-page navigations without seeded tokens lose
+  the session (agent-browser quirk; real browsers are fine — user
+  confirmed).
+- Do the whole flow in one document (no extra hard navigations),
+  screenshot promptly after re-seed.
