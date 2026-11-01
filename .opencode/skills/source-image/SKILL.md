@@ -12,13 +12,13 @@ description: >-
 
 # Source Image
 
-Load the `stack-conventions` skill first — §15 defines the hard rules this
+Load the `stack-conventions` skill first — §19 defines the hard rules this
 skill implements.
 
 ## Iron rules
 
 1. **No vendoring.** The stack repo never contains upstream source — no
-   submodule, no copied tree. The clone-in-tmp clone (§13) is
+   submodule, no copied tree. The clone-in-tmp clone (§17) is
    reference-only.
 2. **Self-contained Dockerfile.** `app/images/<image>/Dockerfile` must
    build from an empty build context: it fetches the source itself
@@ -59,8 +59,8 @@ skill implements.
 5. **Wire into compose:** in `components/base/docker-compose.yml` set
    `image: ${IMAGE:-localhost/<image>:<tag>}` on the service. Add
    `IMAGE=localhost/<image>:<tag>` to `.env.example` in the standard key
-   order (§9). Never add a `build:` section.
-6. **Record provenance:** append the UPSTREAM.md row (§13) — upstream
+   order (§6). Never add a `build:` section.
+6. **Record provenance:** append the UPSTREAM.md row (§17) — upstream
    commit the image is built from (the pinned tag/commit) in the commit
    column, `localhost/<image>:<tag>` in the image column, note
    `source-built via app/images/<image>`.
@@ -68,11 +68,5 @@ skill implements.
 
 ## Exemplars
 
-- `stacks/self-hosting/ai-services/chats/open-coreui/src/open-coreui/images/{frontend,backend,complex}/Dockerfile`
-  — sparse git clone pattern.
-- `stacks/self-hosting/ai-services/automation/vibe-kanban/src/vibe-kanban/images/{git-clone,release-assets}/Dockerfile`
-  — release-tarball and git-clone patterns (older upstream layout;
-  pattern reference only).
-- `stacks/self-hosting/ai-services/model-serving/litellm/app/images/litellm-amd64-conf/Dockerfile`
-  — conf-layer image idiom. NOTE: `litellm-amd64` itself uses `COPY . .`
-  and is NOT the canonical self-contained pattern.
+Canonical skeletons (release-tarball, pinned git-clone, conf-layer) are
+embedded in `references/dockerfiles.md` — imitate those, not live stacks.
