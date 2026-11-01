@@ -45,3 +45,36 @@ Reasons behind each convention in `SKILL.md`. When an assumption breaks
 14. **Skills + `STASKBUILDER.md` as single source of truth.** When reality
     drifts from a skill, both are updated together so the next session never
     re-derives conventions.
+
+15. **Naming `<stack>-<role>`.** A DB of this class is assumed to be
+    per-project with its own container name — user: «для таких решений
+    как бд обычно предполагается, что она под каждый проект своя и со
+    своим именем контейнера». Generic names (`app`, `db`, `server`)
+    collide across stacks, break external references, and hide the stack
+    identity in `docker ps`.
+16. **Env overridability (`${VAR:-}` everywhere).** Compose files are
+    generated/managed artifacts; `.env` is the user surface. A value the
+    user cannot override from `.env` without editing compose is a defect.
+17. **No dead vars in `.env.example`.** A declared-but-unreferenced var
+    (the `PROJECT_NAME` failure) misleads every reader and agent into
+    using it. `.env.example` documents exactly what compose consumes.
+18. **Postgres as the `database/{postgresql,pgrust}` extension pair.** An
+    alternative implementation exists (pgrust) → the DB is swappable per
+    project → it is an extension, not base infrastructure. A plain base
+    service hard-couples the stack to one engine.
+19. **`postgres:alpine` (latest), not the upstream-pinned version.**
+    Upstream project instructions pin conservative versions; the latest
+    postgres fits almost every app. `/var/lib/postgresql` (wide mount) is
+    the current image layout; `/var/lib/postgresql/data` is legacy.
+20. **Staged protocol (base first, test gates).** Extensions compound the
+    failure surface; the base must be proven working before each
+    extension is added, or a failure cannot be attributed. One extension
+    at a time, each followed by its test.
+21. **Environment layering (base is environment-agnostic).** A var whose
+    correct value depends on the deployment environment (public URLs, TLS
+    defaults) has no single right default — declaring it in base
+    guarantees a wrong default somewhere. Each overlay owns its default.
+22. **Self-contained skills (no `stacks/` path pointers).** Stacks are
+    independent repos that move and change; skills that point into them
+    rot silently. Patterns are embedded verbatim; attribution is by stack
+    name only.
