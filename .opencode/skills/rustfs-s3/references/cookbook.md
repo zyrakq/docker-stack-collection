@@ -47,11 +47,10 @@ Minimal read-write bucket policy JSON:
 ## Wiring an app (s3-storage extension)
 
 1. Create the bucket + a dedicated user/policy (least privilege).
-2. Copy the extension fragment shape from an exemplar:
-   - gitea: `stacks/devops/version-control/gitea/app/components/extensions/s3-storage/`
-     (`GITEA__storage__MINIO_ENDPOINT`, `..._ACCESS_KEY_ID`, `..._BUCKET`, ...)
-   - linkwarden: `stacks/self-hosting/media-streaming/bookmarks/linkwarden/src/linkwarden/components/extensions/s3-storage/`
-     (`SPACES_*` vars)
+2. Copy the extension fragment shape from the embedded s3-storage
+   fragments in the `stack-conventions` skill
+   (`references/patterns.md` §8) — env-only fragments
+   (`GITEA__storage__*` or `SPACES_*` var shapes).
 3. Fill the app's `.env` with endpoint, key id, secret, bucket.
 4. Verify with a round-trip per the `stack-test` skill (put/get/delete).
 
