@@ -157,3 +157,19 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
   инспекция) и запрет sudo/swap/losetup/mknod/пакетных менеджеров/sysctl/
   systemd/дисков; при нехватке ресурсов — стоп и репорт пользователю,
   хост не трогать
+
+## P-010: sb auto-generates a no-extension base variant per environment
+- hits: 1 | status: fixed | first: 2026-11-01 | last: 2026-11-01
+- where: stackbuilder (`sb build`) — per-env combos
+- symptom: при `combos = [...]` на окружение sb генерирует не только
+  `build/<env>/<combo>/`, но и дополнительный вариант
+  `build/<env>/base/` (base+env без расширений) — «Generated 9 build
+  combinations» вместо ожидаемых 6; для стека, где БД обязательна
+  (app требует Postgres), этот вариант нерабочий и является footgun'ом
+- cause: sb всегда добавляет plain-вариант окружения без расширений,
+  если не установлен `skip_base_generation = true` (у linkwarden это
+  незаметно, потому что их комбо само называется `base` и пишет в тот
+  же каталог)
+- workaround: —
+- fix: `skip_base_generation = true` в `[build]` stackbuilder.toml —
+  дерево становится ровно `build/<env>/<combo>/` по списку combos

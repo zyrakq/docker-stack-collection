@@ -71,7 +71,7 @@ stacks/network-privacy/vpn/wireproxy-awg;https://github.com/zyrakq/wireproxy-awg
 stacks/network-privacy/vpn/wstunnel;https://github.com/zyrakq/wstunnel-stack.git;incomplete
 stacks/self-hosting/ai-services/automation/flowise;https://github.com/zyrakq/flowise-stack.git;incomplete
 stacks/self-hosting/ai-services/automation/n8n;https://github.com/zyrakq/n8n-stack.git;unverified
-stacks/self-hosting/ai-services/automation/vibe-kanban;https://github.com/zyrakq/vibe-kanban-stack.git;unverified
+stacks/self-hosting/ai-services/automation/vibe-kanban;https://github.com/zyrakq/vibe-kanban-stack.git;incomplete
 stacks/self-hosting/ai-services/automation/windmill;https://github.com/zyrakq/windmill-stack.git;incomplete
 stacks/self-hosting/ai-services/chats/bionic-gpt;https://github.com/zyrakq/bionic-gpt-stack.git;incomplete
 stacks/self-hosting/ai-services/chats/libre-webui;https://github.com/zyrakq/libre-webui-stack.git;unverified

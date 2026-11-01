@@ -911,3 +911,37 @@ rm -rf /tmp/opencode/upstreams/vibe-kanban
 - Generic OIDC / kanidm `oidc` extension — upstream has no generic OIDC.
 - `azurite` attachments dev-profile from upstream's dev compose — production
   stacks use real `AZURE_STORAGE_*` only.
+
+---
+
+## Batch 5: Conformance rework (2026-11-01)
+
+Run 1 of 2 (file rework + `sb build` + `docker compose config` validation —
+no image build, no compose up, no browser testing):
+
+- Task A: `git mv app/images/vk-remote-server app/images/vibe-kanban-remote-server`;
+  Dockerfile header §15 → §19, build command updated (commit 14252d3).
+- Task B: base compose rewritten to `vibe-kanban-app` + `vibe-kanban-electric`
+  only — no db service, no ports, no `SERVER_PUBLIC_BASE_URL`; all env
+  `${VAR:-}`/`${VAR:?}` wired (commit 14252d3).
+- Task C: `components/extensions/database/{postgresql,pgrust}/` pair created
+  (patch + `docker-compose.db.yml` + `.env.example` each; `wal_level=logical`
+  in both; `POSTGRES_INITDB_ARGS` hardcoded) (commit c619b04).
+- Task D: env overlays renamed to `vibe-kanban-app`; forwarding owns
+  `SERVER_PUBLIC_BASE_URL` + `VIBEKANBAN_PORT`; per-env `.env.example`
+  fragments created (commit b6f21ba).
+- Task E/F: base `.env.example` reduced to referenced vars; stackbuilder.toml
+  rewritten with the combos idiom (commit 3452ff2).
+- Task G: `sb build` → `build/<env>/{postgresql,pgrust}/` (6 variants);
+  `skip_base_generation = true` added after sb auto-generated a broken
+  no-extension `base` variant (P-010); rust merger deep-merges `depends_on` —
+  electric depends on BOTH app and db, no fallback needed; all 6 variants
+  pass `docker compose config` (commit 05c7004).
+- Task H: hub + component READMEs regenerated (commit 7868310).
+- Task I: UPSTREAM.md row appended (commit 3260a37); `stacks.csv` status set
+  back to `incomplete` (Stage A not yet passed).
+
+Run 2 (pending): image build, Stage A gate (base + postgresql, forwarding
+variant, browser E2E via bootstrap local auth), then Stage A2 (pgrust combo —
+clean pass makes pgrust the default), letsencrypt/step-ca browser gates need
+a real domain from the user.
