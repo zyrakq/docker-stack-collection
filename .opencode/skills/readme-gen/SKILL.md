@@ -11,13 +11,12 @@ description: >-
 Load the `stack-conventions` skill first. Full templates with placeholders:
 read `references/templates.md`.
 
-## Canonical exemplars
+## Canonical templates
 
-- Component README (canonical): `stacks/devops/identity-management/keycloak/src/keycloak/README.md`
-- Hub README (canonical): `stacks/devops/identity-management/kanidm/README.md`
-  (also `stacks/devops/identity-management/keycloak/README.md`)
-- Module READMEs (`modules/ssl-automation/{letsencrypt-manager,step-ca-manager}/README.md`)
-  are REUSED verbatim — never rewrite them.
+`references/templates.md` (fully embedded) is the canon for both styles —
+component and hub README. Module READMEs
+(`modules/ssl-automation/{letsencrypt-manager,step-ca-manager}/README.md`)
+are REUSED verbatim — never rewrite them.
 
 ## Rules
 
