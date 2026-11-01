@@ -1,11 +1,12 @@
 # Stack Conventions — Pattern Library
 
-Verbatim snippets. Source paths are exact — re-read them when in doubt
-(`stacks/` is gitignored; target the specific path).
+Verbatim snippets, embedded in full — this library is self-contained
+(stacks move and change; skills never point into them by path).
+`Source:` lines are attribution by stack name only.
 
 ## 1. Config-into-image (zot)
 
-Source: `stacks/development-tools/registries/container-registries/zot/app/components/base/docker-compose.yml`
+Source: zot stack (embedded verbatim)
 
 ```yaml
 services:
@@ -21,7 +22,7 @@ services:
 
 ## 2. cert-wait + gosu (coturn)
 
-Source: `stacks/network-privacy/turn/coturn/app/components/environments/step-ca/docker-compose.yml`
+Source: coturn stack (embedded verbatim)
 
 ```yaml
 services:
@@ -73,7 +74,7 @@ volumes:
 
 ## 3. delayed-start sleep entrypoint (kanidm)
 
-Source: `stacks/devops/identity-management/kanidm/app/components/base/docker-compose.yml`
+Source: kanidm stack (embedded verbatim)
 
 ```yaml
 services:
@@ -106,7 +107,7 @@ services:
 
 ## 4. vhost.d tuning via configs.content (zot)
 
-Source: `stacks/development-tools/registries/container-registries/zot/app/components/environments/step-ca/docker-compose.yml`
+Source: zot stack (embedded verbatim)
 
 ```yaml
 services:
@@ -141,7 +142,7 @@ networks:
 
 ## 5. Multi-port vhosts — VIRTUAL_HOST_MULTIPORTS (rustfs)
 
-Source: `stacks/devops/s3/storage/rustfs/app/components/environments/step-ca/docker-compose.yml`
+Source: rustfs stack (embedded verbatim)
 
 ```yaml
 services:
@@ -183,7 +184,7 @@ networks:
 
 ## 6. oidc extension fragment (vaultwarden)
 
-Source: `stacks/devops/secret-control/vaultwarden/src/vaultwarden/components/extensions/oidc/docker-compose.yml`
+Source: vaultwarden stack (embedded verbatim)
 
 ```yaml
 services:
@@ -207,7 +208,7 @@ services:
       # SSO_MASTER_PASSWORD_POLICY: ${SSO_MASTER_PASSWORD_POLICY}
 ```
 
-Source: `stacks/devops/secret-control/vaultwarden/src/vaultwarden/components/extensions/oidc/.env.example`
+Source: vaultwarden stack (embedded verbatim)
 
 ```env
 # OIDC
@@ -241,7 +242,7 @@ LOG_LEVEL=info
 
 ## 7. step-ca-trust extension fragment (vaultwarden)
 
-Source: `stacks/devops/secret-control/vaultwarden/src/vaultwarden/components/extensions/step-ca-trust/docker-compose.yml`
+Source: vaultwarden stack (embedded verbatim)
 
 ```yaml
 services:
@@ -251,7 +252,7 @@ services:
       STEP_CA_TRUST_RESTART: ${STEP_CA_TRUST_RESTART:-true}
 ```
 
-Source: `stacks/devops/secret-control/vaultwarden/src/vaultwarden/components/extensions/step-ca-trust/.env.example`
+Source: vaultwarden stack (embedded verbatim)
 
 ```env
 #Step CA Trust
@@ -261,7 +262,7 @@ STEP_CA_TRUST_RESTART=true
 
 ## 8. s3-storage extension fragment (gitea)
 
-Source: `stacks/devops/version-control/gitea/app/components/extensions/s3-storage/docker-compose.yml`
+Source: gitea stack (embedded verbatim)
 
 ```yaml
 services:
@@ -281,7 +282,7 @@ services:
       GITEA__storage__MINIO_BUCKET_LOOKUP_TYPE: ${GITEA__storage__MINIO_BUCKET_LOOKUP_TYPE:-auto}
 ```
 
-Source: `stacks/devops/version-control/gitea/app/components/extensions/s3-storage/.env.example`
+Source: gitea stack (embedded verbatim)
 
 ```env
 # S3 Storage
@@ -299,7 +300,7 @@ GITEA__storage__SERVE_DIRECT=true
 GITEA__storage__MINIO_BUCKET_LOOKUP_TYPE=auto
 ```
 
-Second exemplar (SPACES_* vars) — Source: `stacks/self-hosting/media-streaming/bookmarks/linkwarden/src/linkwarden/components/extensions/s3-storage/docker-compose.yml`
+Second exemplar (SPACES_* vars) — Source: linkwarden stack (embedded verbatim)
 
 ```yaml
 services:
@@ -313,7 +314,7 @@ services:
       SPACES_FORCE_PATH_STYLE: ${SPACES_FORCE_PATH_STYLE:-true}
 ```
 
-Source: `stacks/self-hosting/media-streaming/bookmarks/linkwarden/src/linkwarden/components/extensions/s3-storage/.env.example`
+Source: linkwarden stack (embedded verbatim)
 
 ```env
 # S3 Storage
@@ -327,7 +328,7 @@ SPACES_FORCE_PATH_STYLE=true
 
 ## 9. env_file_patterns + new environments API (numa)
 
-Source: `stacks/network-privacy/dns/numa/app/client/stackbuilder.toml`
+Source: numa stack (embedded verbatim)
 
 ```toml
 [paths]
@@ -361,7 +362,7 @@ combos = []
 
 ## 10. Named volumes + logging anchors (rustfs base)
 
-Source: `stacks/devops/s3/storage/rustfs/app/components/base/docker-compose.yml`
+Source: rustfs stack (embedded verbatim)
 
 ```yaml
 x-logging: &default-logging
@@ -410,3 +411,143 @@ volumes:
   rustfs-logs:
     name: rustfs-logs
 ```
+
+## 11. Database extension pair (postgresql + pgrust)
+
+Source: convention canon (§8); genericized — no stack path
+
+`components/extensions/database/postgresql/` — three files. The `pgrust/`
+sibling directory is identical except the image default.
+
+`docker-compose.yml` (patches the app service only):
+
+```yaml
+services:
+  <stack>-app:
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@<stack>-db:5432/${POSTGRES_DB}}
+    depends_on:
+      <stack>-db:
+        condition: service_healthy
+```
+
+`docker-compose.db.yml` (the DB service):
+
+```yaml
+services:
+  <stack>-db:
+    image: ${DB_IMAGE:-postgres:alpine}
+    container_name: <stack>-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-<stack>}
+      POSTGRES_USER: ${POSTGRES_USER:-<stack>}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      POSTGRES_INITDB_ARGS: --encoding=UTF8 --lc-ctype=C --lc-collate=C
+      TZ: ${TZ:-UTC}
+    volumes:
+      - <stack>-db:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "/bin/sh", "-c", "exec pg_isready -h 127.0.0.1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  <stack>-db:
+    name: <stack>-db
+```
+
+`.env.example`:
+
+```env
+# Database (postgresql variant)
+COMPOSE_EXTENDS=:docker-compose.db.yml
+COMPOSE_FILE=docker-compose.yml${COMPOSE_EXTENDS:-}
+POSTGRES_DB=<stack>
+POSTGRES_USER=<stack>
+POSTGRES_PASSWORD=
+```
+
+Notes:
+
+- pgrust variant: identical service/env/mounts/healthcheck; only `image:`
+  differs — `${DB_IMAGE:-malisper/pgrust:v0.2}`.
+- Mount the named volume at `/var/lib/postgresql` (NOT the legacy narrow
+  `/var/lib/postgresql/data`).
+- The leading colon in `COMPOSE_EXTENDS=:docker-compose.db.yml` lets
+  multiple extensions chain correctly.
+- DB choice is a named combo in `stackbuilder.toml` (`postgresql` /
+  `pgrust`); pgrust becomes the default combo when it passes the Stage A2
+  gate (§9).
+
+## 12. Env wiring — before/after
+
+Source: convention canon (§5); vibe-kanban violations as the "before"
+
+BEFORE (defect — hardcoded literals, not overridable):
+
+```yaml
+services:
+  <stack>-app:
+    environment:
+      RUST_LOG: info
+      SERVER_LISTEN_ADDR: 0.0.0.0:8080
+```
+
+AFTER (every value overridable from `.env`):
+
+```yaml
+services:
+  <stack>-app:
+    environment:
+      RUST_LOG: ${RUST_LOG:-info}
+      SERVER_LISTEN_ADDR: ${SERVER_LISTEN_ADDR:-0.0.0.0:8080}
+```
+
+plus the matching entries in the owning component's `.env.example`:
+
+```env
+RUST_LOG=info
+SERVER_LISTEN_ADDR=0.0.0.0:8080
+```
+
+Required values use `${VAR:?required}` instead of a default. A var that
+appears in `.env.example` but is referenced by no compose file is a dead
+var — remove it (§6).
+
+## 13. Environment layering — public base URL
+
+Source: convention canon (§7); SERVER_PUBLIC_BASE_URL violation as the
+"before"
+
+BEFORE (defect — env-dependent var declared in base AND re-declared with
+different defaults in overlays):
+
+```yaml
+# components/base/docker-compose.yml
+environment:
+  <APP>_PUBLIC_BASE_URL: ${<APP>_PUBLIC_BASE_URL:-http://localhost:8080}
+# components/environments/{letsencrypt,step-ca}/docker-compose.yml
+environment:
+  <APP>_PUBLIC_BASE_URL: ${<APP>_PUBLIC_BASE_URL:-https://${VIRTUAL_HOST}}
+```
+
+AFTER (base declares nothing; each overlay owns its default):
+
+```yaml
+# components/base/docker-compose.yml — NOTHING (base is environment-agnostic)
+# components/environments/forwarding/docker-compose.yml
+environment:
+  <APP>_PUBLIC_BASE_URL: ${<APP>_PUBLIC_BASE_URL:-http://localhost:<port>}
+# components/environments/letsencrypt/docker-compose.yml
+environment:
+  <APP>_PUBLIC_BASE_URL: ${<APP>_PUBLIC_BASE_URL:-https://${VIRTUAL_HOST}}
+# components/environments/step-ca/docker-compose.yml
+environment:
+  <APP>_PUBLIC_BASE_URL: ${<APP>_PUBLIC_BASE_URL:-https://${VIRTUAL_HOST}}
+```
+
+The var never appears in base `.env.example`; each overlay documents its
+default in the component README env table (sb merges no env files for
+environments today).
