@@ -29,11 +29,36 @@ Checklist per workflow step:
   entries are never deleted.
 - Never leave an encountered obstacle unrecorded at the end of a session.
 
+## Stack work — iron rules (load stack-conventions first)
+
+Any work on a stack (create, modify, extend, modernize) MUST load the
+`stack-conventions` skill BEFORE acting. Non-negotiable rules from it:
+
+- Naming: services and containers are `<stack>-<role>` (e.g. `<stack>-db`,
+  `<stack>-app`); `container_name` equals the service name; networks
+  `<stack>-network`, volumes `<stack>-<purpose>`. No generic names, no
+  unused `PROJECT_NAME`-style vars.
+- Env: every compose env value is overridable (`${VAR:-default}` /
+  `${VAR:?}`) — never hardcoded. `.env.example` holds only vars the
+  compose files actually reference; optional vars live in extension
+  fragments only.
+- Layering: environment-dependent vars (public URLs, TLS-derived
+  defaults) are declared only in environment overlays, never in base.
+- Postgres: always the `database/{postgresql,pgrust}` extension pair —
+  never a base-compose service; `postgres:alpine` (latest, not the
+  upstream-pinned version); volume mounted at `/var/lib/postgresql`.
+- Staged protocol: base implementation first → test gate → extensions
+  one at a time (pgrust after base passes — becomes default if clean;
+  oidc/s3 only after base passes; s3fs-fuse never on DB volumes). Never
+  wire s3/oidc before the base is implemented and tested.
+- Skills and agent definitions are self-contained: no path references
+  into `stacks/` — patterns are embedded; stacks move and change.
+
 ## Source-built images — no vendoring (stack work)
 
 When a stack's app has no published Docker image and must be built from
 source, agents MUST follow the `source-image` skill and stack-conventions
-§15:
+§19:
 
 - NEVER vendor upstream source into the stack repo — no git submodules of
   the upstream app, no copied source trees. `modules/` is ONLY for the
