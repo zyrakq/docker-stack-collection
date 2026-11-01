@@ -23,10 +23,11 @@ agent-browser skills get core
       requires; credentials stored in the agent-browser session/auth vault.
 - [ ] agent-browser session open; screenshots saved as run artifacts.
 
-## 1. Stage A — base deployment (no oidc)
+## 1. Stage A — base deployment (+ DB, no oidc)
 
-Run BEFORE adding the `oidc` extension. Gate: Stage A must pass or Stage B
-is meaningless.
+Run BEFORE adding the `oidc` extension. When the app needs postgres, this
+variant is base + the `postgresql` database extension. Gate: Stage A must
+pass or Stage B is meaningless.
 
 - [ ] Deploy the no-oidc variant (verification-procedure.md §1–4).
 - [ ] Open `https://<VIRTUAL_HOST>` with agent-browser: page loads, TLS
@@ -34,6 +35,19 @@ is meaningless.
 - [ ] Local login works (the app's own admin/local account).
 - [ ] Exercise ONE core app flow (create/edit/delete something small).
 - [ ] Screenshot the working app state → run artifact.
+
+### Stage A2 — DB alternative (pgrust)
+
+Run AFTER Stage A passes and BEFORE oidc — the same browser gate on the
+alternative DB engine:
+
+- [ ] Rebuild with the `pgrust` combo and redeploy
+      (verification-procedure.md §1–4).
+- [ ] Same Stage A flow: page loads, TLS clean, local login, one core
+      flow, screenshot artifact.
+- [ ] Clean pass → `pgrust` becomes the default combo (stack-conventions
+      §9). Failure → keep `postgresql` as the default combo and record
+      why in the component README.
 
 ## 2. Stage B — oidc enabled
 
@@ -52,7 +66,7 @@ is meaningless.
 Configure the provider in the app UI FIRST, save, then run the same browser
 login check as 2a, plus the email-linking assertion.
 
-**gitea** (source: `stacks/devops/version-control/gitea/app/README.md`):
+**gitea**:
 
 - [ ] Site Administration → Authentication Sources → Add new **OAuth2**
       source.
@@ -67,8 +81,7 @@ login check as 2a, plus the email-linking assertion.
       discovery/save fails.
 - [ ] Save, then sign in via the new source on the login page.
 
-**zerobyte** (source: `stacks/devops/backup/zerobyte/app/oidc.md` — follow it
-verbatim):
+**zerobyte** (follow the steps verbatim):
 
 - [ ] Provider ID: `kanidm`.
 - [ ] Issuer URL: `https://<kanidm-domain>/oauth2/openid/zerobyte`.
