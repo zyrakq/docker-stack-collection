@@ -48,9 +48,10 @@ Dockerize the **remote (Cloud) variant, core app only** (no relay), replacing
 upstream's Caddy reverse proxy with the collection's nginx-proxy integration.
 Conformant shape:
 
-- **Naming (§3):** services `vibe-kanban-app`, `vibe-kanban-db`,
-  `vibe-kanban-electric` (`container_name` = service name); network
-  `vibe-kanban-network`; volumes `vibe-kanban-db`, `vibe-kanban-electric`.
+- **Naming (§3):** services `vibe-kanban`, `vibe-kanban-db`,
+  `vibe-kanban-electric` (`container_name` = service name; the app service
+  carries the stack name — 2026-11-01 user correction, was `vibe-kanban-app`);
+  network `vibe-kanban-network`; volumes `vibe-kanban-db`, `vibe-kanban-electric`.
 - **Postgres is NEVER a base-compose service (§8):** it lives in the
   `components/extensions/database/{postgresql,pgrust}` extension pair
   (dual-file idiom, patterns.md §11) — `postgres:alpine` default,
@@ -72,7 +73,7 @@ Conformant shape:
 
 Services (from upstream `docker-compose.prod.yml`, Caddy removed):
 
-- `vibe-kanban-app` — source-built image `localhost/vibe-kanban-remote-server:0.1.45`
+- `vibe-kanban` — source-built image `localhost/vibe-kanban-remote-server:0.1.45`
   (based on upstream `crates/remote/Dockerfile`; self-hosted build strips the
   private billing dep). Port 8081, healthcheck `wget /v1/health`, runs as
   appuser, static frontend embedded at `/srv/static`. `SERVER_DATABASE_URL` is
@@ -82,7 +83,7 @@ Services (from upstream `docker-compose.prod.yml`, Caddy removed):
   `POSTGRES_INITDB_ARGS`, `pg_isready` healthcheck, volume
   `vibe-kanban-db:/var/lib/postgresql`.
 - `vibe-kanban-electric` — `${ELECTRIC_IMAGE:-electricsql/electric:1.4.13}`,
-  Postgres→client sync layer; depends on `vibe-kanban-app` healthy (the server
+  Postgres→client sync layer; depends on `vibe-kanban` healthy (the server
   creates the `electric_sync` role on first startup) and on `vibe-kanban-db`
   healthy (the db dependency is added by the database extension patch, since
   base must not reference the db service).
@@ -92,11 +93,11 @@ Bootstrap order: db healthy → app healthy (migrations + `electric_sync` role)
 
 ## Components
 
-- `app/components/base/docker-compose.yml` — `vibe-kanban-app` +
+- `app/components/base/docker-compose.yml` — `vibe-kanban` +
   `vibe-kanban-electric` only. Every env value is `${VAR:-}` or `${VAR:?}`
   (§5). `SERVER_PUBLIC_BASE_URL` is NOT declared in base (§7 layering).
 - `app/components/extensions/database/{postgresql,pgrust}/` — dual-file idiom:
-  - `docker-compose.yml` — patches `vibe-kanban-app`
+  - `docker-compose.yml` — patches `vibe-kanban`
     (`SERVER_DATABASE_URL: postgres://${POSTGRES_USER:-…}:${POSTGRES_PASSWORD:?…}@vibe-kanban-db:5432/${POSTGRES_DB:-…}`
     + `depends_on: vibe-kanban-db: service_healthy`) and `vibe-kanban-electric`
     (`depends_on: vibe-kanban-db: service_healthy`);
@@ -105,7 +106,7 @@ Bootstrap order: db healthy → app healthy (migrations + `electric_sync` role)
     `COMPOSE_EXTENDS=:docker-compose.db.yml`,
     `COMPOSE_FILE=docker-compose.yml${COMPOSE_EXTENDS:-}`.
 - `app/components/environments/{forwarding,letsencrypt,step-ca}/` — compose
-  fragments (patching `vibe-kanban-app`) **plus** `.env.example` fragments
+  fragments (patching `vibe-kanban`) **plus** `.env.example` fragments
   (n8n/linkwarden idiom; sb concatenates them into the built `.env.example`).
   forwarding owns `SERVER_PUBLIC_BASE_URL:-http://localhost:8081` and publishes
   8081; letsencrypt/step-ca own the `https://${VIRTUAL_HOST}` default and the
@@ -120,10 +121,19 @@ Bootstrap order: db healthy → app healthy (migrations + `electric_sync` role)
 - `app/components/base/.env.example` — `COMPOSE_PROJECT_NAME`,
   `IMAGE=localhost/vibe-kanban-remote-server:0.1.45`, `LOG_*`, `RUST_LOG`,
   `SERVER_LISTEN_ADDR`, `ELECTRIC_URL`, secrets
-  (`VIBEKANBAN_REMOTE_JWT_SECRET`, `ELECTRIC_ROLE_PASSWORD`), auth block
-  (`GITHUB_OAUTH_*`, `GOOGLE_OAUTH_*`, `SELF_HOST_LOCAL_AUTH_*`), `TZ`.
-  Optional `LOOPS_*`/`AZURE_STORAGE_*` stay wired in compose with empty
-  defaults but are NOT listed (§6 — documented in the README only).
+  (`VIBEKANBAN_REMOTE_JWT_SECRET`, `ELECTRIC_ROLE_PASSWORD`), local auth
+  (`SELF_HOST_LOCAL_AUTH_EMAIL`/`PASSWORD` — required `:?` vars), `TZ`.
+  **2026-11-01 user correction (ground-truthed against upstream
+  `crates/remote/src/config.rs`):** the server requires ≥1 auth provider
+  (`ConfigError::NoOAuthProviders` otherwise) and genuinely reads
+  `SELF_HOST_LOCAL_AUTH_*` at runtime — env vars ARE the local-auth bootstrap
+  (no CLI, no first-run page; login page → `POST /v1/auth/local/login`), so
+  they stay as required base vars. `GITHUB_OAUTH_*`/`GOOGLE_OAUTH_*` (optional
+  providers), `LOOPS_*` (no-op mailer when unset), `AZURE_STORAGE_*`
+  (disabled when account name unset) are genuinely read but optional
+  third-party integrations → stripped from compose env entirely, README-only
+  documentation in app/README.md "Optional integrations" (user adds the env
+  entries themselves; no extension exists for them).
   `VITE_RELAY_API_BASE_URL` is a build-arg passthrough, referenced by no
   compose file → dead var, removed (documented in the README).
 - `app/images/vibe-kanban-remote-server/Dockerfile` — self-contained source
@@ -138,7 +148,7 @@ Bootstrap order: db healthy → app healthy (migrations + `electric_sync` role)
 
 ## Data Flow
 
-Browser → nginx-proxy (step-ca/letsencrypt stack) → `vibe-kanban-app:8081` →
+Browser → nginx-proxy (step-ca/letsencrypt stack) → `vibe-kanban:8081` →
 `vibe-kanban-db`. ElectricSQL syncs Postgres tables to the browser client
 through endpoints proxied by the app. Bootstrap order: db healthy → app
 healthy (migrations + `electric_sync` role) → electric starts.
