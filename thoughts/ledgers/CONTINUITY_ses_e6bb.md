@@ -1,69 +1,69 @@
 ---
 session: ses_e6bb
-updated: 2026-11-01T22:01:03.344Z
+updated: 2026-11-01T22:48:03.652Z
 ---
 
 ## Objective
-- Prepare stack `stacks/self-hosting/ai-services/automation/vibe-kanban` (BloopAI/vibe-kanban remote/cloud variant, source-built image) for deployment per collection conventions.
-- After the conventions overhaul (P-008) and the host-safety incident (P-009), audit everything previously produced and fix all non-compliance ("Ознакомься с изменениями и поправь все что ты сделал").
+- Finish vibe-kanban stack Stage A validation: browser E2E gate on `http://localhost:8081` (local login + one core flow + screenshot), then flip stacks.csv, update plan/ledger/PITFALLS, cleanup, and deliver final terse Russian report. Leave containers RUNNING at the end so the user can view the interface.
 
 ## Requirements
-- User angrily insists: use SUBAGENTS for research/study, not direct tool reads in main context ("ты сука забыл о возможности использовать субагентов для изучения?").
-- Host safety (P-009/AGENTS.md iron rules): no sudo/swap/loop devices/package managers/system config; if image build fails on memory/disk pressure → report numbers, suggest options, STOP.
-- Comply with stack-conventions §1–§19: `<stack>-<role>` naming, `${VAR:-}`/`${VAR:?}` everywhere, `.env.example` hygiene (zero dead vars; optional/feature vars not in base), env layering (public URLs only in overlays), postgres ONLY via `database/{postgresql,pgrust}` extension pair (postgres:alpine, `/var/lib/postgresql`, dual-file idiom), staged protocol (base+DB → gate → pgrust), source-built images §19 (no vendoring, `app/images/<image>/Dockerfile` self-contained, `${IMAGE:-...}` never `build:`).
-- No oidc extension (no generic OIDC upstream); no s3-storage (Azure-only attachments); no relay/tunnel.
-- Artifacts under `thoughts/shared/` must be committed immediately; UPSTREAM.md append-only; PITFALLS.md protocol for obstacles; tmp clone removed at session end.
+- Reply in Russian, terse, no preamble/post-action summaries.
+- NO comments in configs the user reads (compose yml + .env.example); explanations in READMEs only.
+- Required env vars use bare `${VAR:?}`; no unused env vars in base compose; optional integrations (OAuth/LOOPS/AZURE) README-only; app service named `vibe-kanban`; no oidc/s3-storage extensions.
+- Never touch live step-ca-manager; test secrets random, never committed.
+- Keep containers running AND keep runtime `.env` at the end — NO `docker compose down -v`.
+- agent-browser CLI unavailable (no npm/npx) → use in-app browser via Code Mode `tools.browser.*` (skill `browser` loaded).
+- AGENTS.md updated: directories containing only directories need empty `.gitkeep` committed (respect .gitignore).
 
 ## Decisions
-- Services: `vibe-kanban-app`, `vibe-kanban-db`, `vibe-kanban-electric`; network `vibe-kanban-network`; volumes `vibe-kanban-db`, `vibe-kanban-electric`; image renamed to `localhost/vibe-kanban-remote-server:0.1.45` (new UPSTREAM.md row, append-only).
-- Postgres moves to `components/extensions/database/{postgresql,pgrust}` pair (linkwarden/n8n idiom); `command: postgres -c wal_level=logical` in both variants (Electric requirement); pgrust may fail Stage A2 → postgresql stays default, README records why.
-- Electric stays in base (app-specific sync infra); its db `depends_on` lives in the db extension patch (base must not reference the db service); its `DATABASE_URL` uses `${POSTGRES_DB:-vibe-kanban}`.
-- stackbuilder.toml: linkwarden idiom — `extensions_dirs = ["extensions/database"]`, `extensions = ["postgresql","pgrust"]`, combos `postgresql`/`pgrust`, per-env `extensions = []` + `combos = ["postgresql","pgrust"]`; `yaml_merger = "rust"`; expect `build/<env>/{postgresql,pgrust}/`.
-- Environments get `.env.example` fragments (sb concatenates base+env+ext into built `.env.example` — n8n/linkwarden idiom); `SERVER_PUBLIC_BASE_URL` only in overlays (forwarding: http://localhost:8081; letsencrypt/step-ca: `https://${VIRTUAL_HOST}`); VIRTUAL_*/LETSENCRYPT_* only in env fragments.
-- Base `.env.example`: COMPOSE_PROJECT_NAME, IMAGE, LOG_*, RUST_LOG, SERVER_LISTEN_ADDR, ELECTRIC_URL, VIBEKANBAN_REMOTE_JWT_SECRET, ELECTRIC_ROLE_PASSWORD, auth block, TZ. Removed: PROJECT_NAME (dead), VIRTUAL_*/LETSENCRYPT_* (→env fragments), SERVER_PUBLIC_BASE_URL (→overlays), DB_PASSWORD (→POSTGRES_PASSWORD in db ext), LOOPS_*/AZURE_* (optional, README-only), VITE_RELAY_API_BASE_URL (dead build-arg, README-only).
-- `DB_PASSWORD` → `POSTGRES_PASSWORD` rename; db defaults `vibe-kanban`/`vibe-kanban`.
-- stacks.csv set back to `incomplete` until Stage A passes (executor had prematurely set `unverified` without tests).
-- Design doc rewritten in place as conformant target; plan gets appended "Batch 5 — conformance rework" section (history not rewritten).
+- DB name `POSTGRES_DB=remote` stays: upstream migration `crates/remote/migrations/20251127000000_electric_support.sql` hardcodes `GRANT CONNECT ON DATABASE remote TO electric_sync;` (verified at pinned commit `7c380708`); DB name not configurable; patching upstream source forbidden.
+- DB-name fix committed to stack repo (commit "Fix database name for remote server", 6 files); README clean.
+- git-commit skill conventions: header ≤50 chars verb-first, what-block past tense, why-block present tense, heredoc commit.
 
 ## Work State
 ### Completed
-- Read/loaded: full new stack-conventions §1–§19, patterns.md (§11 db pair, §12 env wiring, §13 layering), STASKBUILDER.md, stack-test SKILL.md, PITFALLS.md P-001..P-009.
-- source-image SKILL.md already §19/§17-compliant (fixed by later sessions); `references/dockerfiles.md` exists.
-- Explored via subagent (ses_e66e18a4fffec4WLFsmb4Ads1x): n8n env `.env.example` fragments exist; linkwarden stackbuilder.toml/combos/build tree (combo dirs contain merged docker-compose.yml + copied docker-compose.db.yml + concatenated .env.example); vibe-kanban READMEs, design doc, plan outline; untracked `thoughts/ledgers/CONTINUITY_{ses_e670,ses_e6bb}.md`.
-- Verified: stack Dockerfile already P-007-compliant (clones pinned commit 7c380708, no ssh mount) but header refs §15 and old image name; NO image exists yet (docker images empty); stacks.csv row currently `unverified`.
-- Design doc rewritten to conformant shape: `thoughts/shared/designs/2026-10-31-vibe-kanban-design.md` (written, NOT yet committed).
+- Fresh stack restart done: all 3 containers healthy (`vibe-kanban` on 0.0.0.0:8081, `vibe-kanban-db` 5432/tcp internal, `vibe-kanban-electric` internal). Migrations clean, `curl localhost:8081/` → 200.
+- DB gate PASSED: role `electric_sync` + publication `electric_publication_default` exist in DB `remote`.
+- Electric gate PASSED: "Starting shape replication pipeline", periodic "Verified publication electric_publication_default to include [] tables with REPLICA IDENTITY FULL" (empty list expected pre-registration; early `ssl not available` errors were transient startup retries).
+- Browser opened `http://localhost:8081` via `tools.browser.tabs.open` (tabID `tab_b1781d4c-0b58-479e-8d72-fb7c315a1c24`), page loads, zero console errors.
+- Login flow works via JS (a11y snapshot is broken/empty for this SPA — must drive via `tools.browser.evaluate` JS): POST `/v1/auth/local/login` → 200, `/v1/identity` → 200; Projects dashboard renders ("d5562dd2-b708-47ea-9d96-959b7e796227's Org", "Initial Project", "Create Project"); Electric shape endpoints live (`/v1/shape/user/workspaces?...live=true`).
+- Create Project dialog opens (button textContent === 'Create Project'); dialog shows "Project name" field, Cancel/Create Project buttons.
 
 ### Active
-- Committing the design doc, then spawning executor subagent with the full rework spec (tasks A–M below).
+- **Debug session bounce bug**: full-page navigations after login redirect back to `/account?next=%2F`; SPA-internal fetches work (cookie present) but hard navigations lose auth. Reproduced 3×: after login → `/` → bounce; direct `navigate` to `/` → bounce; Create Project click (@35 dialog open) → @37 back at sign-in. One stretch of ~40s stable at `/` (8 polls, no bounce) — bounce tied to navigations, not idle time.
+- Was capturing Set-Cookie of POST `/v1/auth/local/login` (request id `b98974ef-...:17`) but `network.get` failed: "Request ID is no longer retained in this tab" (page navigated before inspection).
 
 ### Blocked
-- Image build (Task J) and Stage A (Task K) pending conformance rework; build may hit memory pressure → must stop and report, never touch host.
+- letsencrypt/step-ca browser gates need a real domain from user (deferred; Stage A target is forwarding/postgresql only — pgrust may fail logical replication so postgresql stays default combo).
 
 ## Next Move
-1. Commit the design doc in the collection repo (`rtk git add thoughts/shared/designs/2026-10-31-vibe-kanban-design.md && git commit`).
-2. Spawn executor subagent with the full spec: (A) `git mv app/images/vk-remote-server → app/images/vibe-kanban-remote-server`, fix Dockerfile header §15→§19 + build cmd; (B) rewrite base compose (2 services, all envs wired, no db, no SERVER_PUBLIC_BASE_URL); (C) create `app/components/extensions/database/{postgresql,pgrust}/` with docker-compose.yml (patches app: SERVER_DATABASE_URL `postgres://${POSTGRES_USER:-vibe-kanban}:${POSTGRES_PASSWORD:?}@vibe-kanban-db:5432/${POSTGRES_DB:-vibe-kanban}` + db depends_on; patches electric: db depends_on), docker-compose.db.yml (vibe-kanban-db, `${DB_IMAGE:-postgres:alpine}` / pgrust `malisper/pgrust:v0.2`, wal_level=logical command, POSTGRES_INITDB_ARGS hardcoded per canon, volume `/var/lib/postgresql`, pg_isready -h 127.0.0.1, logging anchor, vibe-kanban-network), .env.example (POSTGRES_*, `COMPOSE_EXTENDS=:docker-compose.db.yml`, `COMPOSE_FILE=docker-compose.yml${COMPOSE_EXTENDS:-}`); (D) environments: service refs → vibe-kanban-app, forwarding gains SERVER_PUBLIC_BASE_URL env + fragment; env fragments (VIRTUAL_PORT=8081, VIRTUAL_HOST, LETSENCRYPT_HOST/EMAIL); (E) rewrite base .env.example per Decisions; (F) rewrite stackbuilder.toml (linkwarden idiom); (G) `cd app && sb build`, verify 6 combo variants + `docker compose config` with required vars on CLI (VIBEKANBAN_REMOTE_JWT_SECRET/ELECTRIC_ROLE_PASSWORD/POSTGRES_PASSWORD=test), watch depends_on merge behavior (electric must depend on BOTH app and db — if rust merger replaces maps, move electric's full depends_on into ext patch), record sb obstacles in PITFALLS.md, commit regenerated build/; (H) regenerate app+hub READMEs (readme-gen rules); (I) append UPSTREAM.md row (2026-11-01, commit 7c380708, localhost/vibe-kanban-remote-server:0.1.45, conformance rework note); set stacks.csv → incomplete; (J) build image (host-safe, report+stop on resource pressure); (K) Stage A per stack-test on build/forwarding/postgresql (letsencrypt/step-ca need user domain); on full pass → stacks.csv unverified; (L) append "## Batch 5: Conformance rework (2026-11-01)" to plan, commit; commit thoughts/ledgers/; (M) `rm -rf /tmp/opencode/upstreams/vibe-kanban`.
-3. Report executor results per task.
+1. Diagnose bounce: navigate to `/account`, login, IMMEDIATELY `network.list` + `network.get` the login POST to read Set-Cookie attributes (hypotheses: `Secure` over http, SameSite/Domain/Max-Age issue). Also check what a fresh document's first `/v1/identity` returns (server logs show no 4xx/auth errors, only INFO spans `identity.get_identity`, `projects.list_projects`).
+2. Once session stable: complete E2E — create project "E2E Check" (dialog input appears only on dialog page; at @36 `document.querySelectorAll('input')` returned none because page had bounced), verify listed, edit/delete if available, screenshot (focus tab first via `tools.browser.tabs.focus`) → copy server-local path to `/tmp/opencode/vibe-kanban-e2e.png`.
+3. On pass: flip `stacks.csv` line 74 `incomplete`→`unverified`.
+4. Append `## Batch 6: Image build + Stage A (2026-11-01)` to `thoughts/shared/plans/2026-10-31-vibe-kanban.md` (incl. DB-name fix + user's remote-name approval).
+5. Append PITFALLS entries: (a) upstream migration hardcodes DB name `remote` → `POSTGRES_DB=remote` required; (b) electric transient `ssl not available` startup retries non-fatal; respect P-004..P-010 numbering.
+6. Cleanup: `rm -rf /tmp/opencode/upstreams/vibe-kanban`. Do NOT delete runtime `.env`, do NOT stop containers.
+7. Update + commit ledger `thoughts/ledgers/CONTINUITY_ses_e66c.md`; commit plan/PITFALLS/stacks.csv changes immediately.
+8. Final terse Russian report: image `localhost/vibe-kanban-remote-server:0.1.45`, ground-truth env vars, Stage A verdict per check, stacks.csv change, commit hashes, PITFALLS entries, stack left running at localhost:8081 for user.
 
 ## Relevant Files
-- `thoughts/shared/designs/2026-10-31-vibe-kanban-design.md`: rewritten conformant design — the spec source (uncommitted)
-- `thoughts/shared/plans/2026-10-31-vibe-kanban.md`: plan to append Batch 5 (section headers at known line numbers)
-- `stacks/self-hosting/ai-services/automation/vibe-kanban/app/components/base/docker-compose.yml`: non-conformant (3 services, vk- naming, hardcoded envs)
-- `stacks/self-hosting/ai-services/automation/vibe-kanban/app/components/base/.env.example`: non-conformant (dead vars)
-- `stacks/self-hosting/ai-services/automation/vibe-kanban/app/stackbuilder.toml`: needs db extension/combos rewiring
-- `stacks/self-hosting/ai-services/automation/vibe-kanban/app/images/vk-remote-server/Dockerfile`: P-007-compliant build; rename + §19 comment fix
-- `stacks/self-hosting/ai-services/automation/vibe-kanban/app/components/environments/{forwarding,letsencrypt,step-ca}/docker-compose.yml`: service rename + layering fixes
-- `stacks/self-hosting/ai-services/automation/vibe-kanban/UPSTREAM.md`: append-only row for rework
-- `stacks/self-hosting/ai-services/automation/vibe-kanban/{app/README.md,README.md}`: regenerate
-- `stacks/self-hosting/ai-services/automation/n8n/app/components/extensions/database/`: db-pair exemplar (n8n env .env.example fragments idiom)
-- `stacks/self-hosting/media-streaming/bookmarks/linkwarden/src/linkwarden/stackbuilder.toml`: combos/build idiom exemplar
-- `.opencode/skills/stack-conventions/SKILL.md` + `references/patterns.md`: authoritative §1–§19 + verbatim fragments
-- `stacks.csv`: vibe-kanban row → incomplete
-- `PITFALLS.md`: P-004..P-009 ledger protocol
+- `stacks/self-hosting/ai-services/automation/vibe-kanban/app/build/forwarding/postgresql/`: Stage A working dir; `.env` has creds (KEEP, gitignored).
+- `stacks.csv`: line 74 flip target.
+- `thoughts/shared/plans/2026-10-31-vibe-kanban.md`: Batch 6 append target.
+- `thoughts/ledgers/CONTINUITY_ses_e66c.md`: session ledger to update+commit.
+- `PITFALLS.md`: append new entries.
+- `/tmp/opencode/upstreams/vibe-kanban`: upstream clone at `7c380708` (migration evidence); delete in cleanup.
+- `.opencode/skills/stack-test/references/{verification-procedure,browser-e2e}.md`: Stage A gate procedure (Stage A checklist lines 26–50; Stage A2 pgrust lines 39–48).
+- `/tmp/opencode/vibe-kanban-build.log`: image build log for final report stats.
+- `.opencode/skills/browser/SKILL.md` (in-app browser): current E2E driver — `tools.browser.*` via execute Code Mode.
 
 ## Important Context
-- Electric upstream env keys stay as-is; wire overrides with same-name vars (`${PG_PROXY_PORT:-65432}`, `${LOGICAL_PUBLISHER_HOST:-vibe-kanban-electric}`, `${AUTH_MODE:-insecure}`, `${ELECTRIC_FEATURE_FLAGS:-allow_subqueries,tagged_subqueries}`); electric image `${ELECTRIC_IMAGE:-electricsql/electric:1.4.13}`; electric DATABASE_URL user is `electric_sync` with ELECTRIC_ROLE_PASSWORD (role created by app on first boot).
-- sb facts: combo dirs render as `build/<env>/<combo>/` containing merged docker-compose.yml + copied `docker-compose.db.yml` (copy_additional_files) + concatenated .env.example; env dirs DO have `.env.example` fragments; n8n has skip_base_generation=true and NO combo dirs rendered (possibly stale build or skip flag suppresses combos — verify empirically); linkwarden (no skip flag, extensions=[]+combos) renders combo dirs — follow linkwarden.
-- Build dirs are committed in stack repos; `docker compose --env-file .env.example config` needs required `:?` vars supplied via shell env.
-- Stack repo: clean, master ahead 12. Collection repo: ahead 1, untracked `thoughts/ledgers/CONTINUITY_ses_e670.md` + `CONTINUITY_ses_e6bb.md`.
-- Upstream build: tag v0.1.45-20260919085201 does NOT compile (TS2339) — pinned commit 7c3807084daad0d9d315064f60fa869de254f027 required (P-007); self-hosted build strips billing crate (sed in Dockerfile), no ssh mount.
-- 2026-11-01 incident (P-009): agent ran sudo losetup/mkswap/swapon during image build — absolute ban; never repeat; report resource pressure instead.
+- Test creds (runtime `.env`): `SELF_HOST_LOCAL_AUTH_EMAIL=admin@example.com`, `SELF_HOST_LOCAL_AUTH_PASSWORD=ez1Bh4N5JpsvInwGckFo4YKKlYEk8m4O`.
+- Browser automation pattern (works): a11y snapshot broken → drive via `tools.browser.evaluate` with React native-setter fill (`Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set`) + `dispatchEvent(new Event('input',{bubbles:true}))`; click buttons via JS by textContent match. Input ids `#self-host-email`, `#self-host-password`; button text "Sign in with email".
+- `evaluate` needs `script:` key (not `expression`); `network.get` signature `{ tabID, id, includeBody: true }` (NOT `requestID`); network request IDs expire on navigation — inspect immediately.
+- rtk grep does NOT support `-g`; use plain `grep --include=`. Use `grep '^vibe-kanban'` for `docker ps --format` (line ends with Ports column).
+- Electric env: `PG_PROXY_PORT=65432`, `LOGICAL_PUBLISHER_HOST=vibe-kanban-electric`, `AUTH_MODE=insecure`, `ELECTRIC_FEATURE_FLAGS=allow_subqueries,tagged_subqueries`, `ELECTRIC_IMAGE=electricsql/electric:1.4.13`.
+- Ground truth env (server): VIBEKANBAN_REMOTE_JWT_SECRET, SELF_HOST_LOCAL_AUTH_EMAIL/PASSWORD, SERVER_DATABASE_URL/DATABASE_URL, SERVER_LISTEN_ADDR, SERVER_PUBLIC_BASE_URL, ELECTRIC_URL, ELECTRIC_ROLE_PASSWORD, RUST_LOG + optional GITHUB_OAUTH_*/GOOGLE_OAUTH_*/LOOPS_*/AZURE_STORAGE_*/DIGEST_*/GITHUB_APP_*/R2_*/REVIEW_*/OTEL_*/APPLICATIONINSIGHTS_*.
+- Bootstrap order: db healthy → app healthy (migrations + creates electric_sync role) → electric.
+- Stack repo HEAD = DB-name-fix commit, ahead ~22 of origin; collection HEAD `04ddd2f` + pending commits.
+- Run 2 session `ses_e66cfbbd4ffe7LI4LSNfIIZ4EF` is dead (credit-limit error) — no race risk; never commit stack repo while a subagent is mid-edit.
