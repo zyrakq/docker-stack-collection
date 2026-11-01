@@ -46,6 +46,23 @@ Checklist per workflow step:
 - execution results → already committed by the executor; verify with
   `git status` and commit anything left untracked
 
+## File-less directories need a .gitkeep
+
+Git does not track empty directories, and IDEs hide or collapse a folder
+whose only content is another folder — intermediate directories disappear
+from the project tree. Rule:
+
+- Whenever a directory contains only other directories (or nothing at
+  all), put an empty `.gitkeep` file in it and commit it.
+- Apply this everywhere you create or restructure directories — in this
+  repo and in stack repos. If you add `a/b/c.txt` and `a` would contain
+  nothing but `b`, also create `a/.gitkeep`.
+- `.gitkeep` is a pure placeholder: empty file, never referenced by
+  configs, scripts, or tooling.
+- Respect `.gitignore` as everywhere else: if the directory's contents
+  are ignored (e.g. cloned stack repos under `stacks/`), do not force-add
+  anything.
+
 ## Pitfalls ledger (PITFALLS.md)
 
 `PITFALLS.md` at this repo root is the shared log of recurring obstacles
