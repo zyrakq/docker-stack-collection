@@ -9,8 +9,7 @@ description: >-
 
 # Kanidm OIDC
 
-Load the `stack-conventions` skill first. Reference stack:
-`stacks/devops/identity-management/kanidm/`.
+Load the `stack-conventions` skill first.
 
 Full command cookbook: read `references/cli-cookbook.md`.
 
@@ -29,7 +28,7 @@ Full command cookbook: read `references/cli-cookbook.md`.
   (e.g. vaultwarden: `https://<app-domain>/identity/connect/oidc-signin`).
 - The kanidm container is `kanidmd`; admin password recovery uses
   `docker exec -it kanidmd kanidmd recover-account <admin|idm_admin>`
-  (documented in the kanidm app README).
+  (procedure in `references/cli-cookbook.md`).
 
 ## Guardrails
 
