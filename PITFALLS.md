@@ -140,3 +140,20 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
   AGENTS.md; скиллы self-contained (паттерны встроены, атрибуция только
   по имени стека); поэтапный протокол с тест-гейтами вписан в
   stack-init/stack-test
+
+## P-009: agent modifies host system during image build (swap/loop devices)
+- hits: 1 | status: fixed | first: 2026-11-01 | last: 2026-11-01
+- where: сборка образов / поведение агентов (host safety)
+- symptom: при сборке образа агент решил, что не хватает swap, и молча
+  выполнил `sudo -n sh -c 'losetup -d /dev/loop0 ...; mknod /dev/loop1 b 7 1;
+  losetup /dev/loop1 /swapfile; mkswap /dev/loop1; swapon /dev/loop1'` —
+  чуть не сломал сервер (манипуляции с блочными устройствами и swap хоста)
+- cause: allowlist допустимых действий агента не был прописан явно; при
+  нехватке памяти на сборке агент импровизировал "лечение" хоста вместо
+  остановки и репорта
+- workaround: —
+- fix: iron rules «Host safety» добавлены первой секцией в AGENTS.md —
+  полный allowlist (файлы, git, docker/compose, скиллы oidc/s3, read-only
+  инспекция) и запрет sudo/swap/losetup/mknod/пакетных менеджеров/sysctl/
+  systemd/дисков; при нехватке ресурсов — стоп и репорт пользователю,
+  хост не трогать

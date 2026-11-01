@@ -1,5 +1,36 @@
 # Project Rules
 
+## Host safety — iron rules (NEVER touch the host system)
+
+Agents in this repo are guests on the user's machine. The host is NOT ours
+to reconfigure. The complete allowlist of host-level actions:
+
+- edit/create files inside this repo (scratch work in `/tmp/opencode`)
+- git operations (clone into /tmp, add, commit, push, pull)
+- read-only inspection: logs, `free -h`, `df -h`, `docker ps/logs/stats`
+- `docker` / `docker compose` commands as permitted by stack-conventions
+- commands from the `kanidm-oidc` and `rustfs-s3` skills
+
+Everything else on the host is FORBIDDEN, no exceptions, no improvisation:
+
+- `sudo` / `doas` / `su` in ANY form (including `sudo -n sh -c '...'`)
+- swap and block devices: `mkswap`, `swapon`, `swapoff`, `losetup`, `mknod`,
+  `/swapfile`, loop devices
+- host package managers: `pacman`, `apt`, `dnf`, `cargo install`, `pip install`
+- system config: `sysctl`, `modprobe`, `mount`/`umount`, writing to `/etc`,
+  `systemctl`, udev rules, kernel modules
+- disks and partitions: `fdisk`, `parted`, `mkfs`, `dd` to devices
+- killing or restarting system services/processes outside our docker scope
+
+If a build or test fails due to memory/disk/CPU pressure: do NOT "fix" the
+host. Report the failure to the user with observed numbers, suggest options
+(less build parallelism, smaller image, retry later), and STOP.
+
+Incident 2026-11-01: during an image build an agent ran
+`sudo -n sh -c 'losetup ...; mknod /dev/loop1 ...; mkswap ...; swapon ...'`
+to "add swap" and nearly broke the server. This section exists because of
+that. Never repeat anything like it.
+
 ## Artifacts must be committed immediately
 
 Every file created under `thoughts/shared/` (design docs in `designs/`,
