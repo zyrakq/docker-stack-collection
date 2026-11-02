@@ -34,12 +34,14 @@ that. Never repeat anything like it.
 ## Agents and skills — never redefine without explicit user confirmation
 
 Agents and skills are the user's tooling, NOT ours to change on our own
-initiative. Redefining, rewriting, restructuring, or deleting any of the
-following is FORBIDDEN without the user's explicit confirmation FIRST:
+initiative.
 
-- agent definitions: `~/.micode-v2/**` and any other agent config files
-- skills: `.opencode/skills/**` in this repo and any other skill files
-  (SKILL.md, references/, templates)
+- Agent definitions OUTSIDE this repo (e.g. under the home directory) are
+  never touched by agents working here — not modified, not rewritten, not
+  deleted. No confirmation makes this allowed; it is simply out of scope.
+- Redefining, rewriting, restructuring, or deleting project-level agents
+  and skills (`.opencode/skills/**`, any agent/skill config inside this
+  repo) is FORBIDDEN without the user's explicit confirmation FIRST.
 
 This applies even when a plan or design doc lists such edits as tasks: a
 documented task is NOT consent. Show the user exactly what will change and
