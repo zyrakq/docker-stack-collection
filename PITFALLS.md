@@ -212,7 +212,7 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
   переключает
 
 ## P-013: sb build deletes build/**/.gitkeep; old container/volume leftovers conflict
-- hits: 1 | status: open | first: 2026-11-02 | last: 2026-11-02
+- hits: 2 | status: open | first: 2026-11-02 | last: 2026-11-02
 - where: vibe-kanban app/remote after app/→app/remote/ move and service rename
 - symptom: `sb build` removes tracked `build/**/.gitkeep`; `compose up` fails
   on container_name conflict with old `vibe-kanban*` test containers; kept
@@ -225,3 +225,27 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - where: vibe-kanban app/relay/images/vibe-kanban-relay Dockerfile
 - symptom: `cargo build --locked` fails "cannot update the lock file ... because --locked was passed"; crates/relay-tunnel is in workspace `exclude` and its own Cargo.lock needs updating
 - fix: drop `--locked`; limit parallelism with CARGO_BUILD_JOBS=2
+
+## P-015: wildcard cert impossible via http-01 on step-ca
+- hits: 1 | status: fixed | first: 2026-11-02 | last: 2026-11-02
+- where: vibe-kanban relay, `LETSENCRYPT_HOST` containing `*.relay.<domain>`
+- symptom: companion logs `Cannot get domain token entry *.relay.<domain> for http-01`; no cert issued
+- fix: `LETSENCRYPT_HOST` = apex only; keep wildcard in `VIRTUAL_HOST` for routing; wildcard cert needs DNS-01
+
+## P-016: source Dockerfile missing patches/ before `pnpm install --frozen-lockfile`
+- hits: 1 | status: fixed | first: 2026-11-02 | last: 2026-11-02
+- where: vibe-kanban host image
+- symptom: `ENOENT ... /app/patches/@pierre__diffs@1.1.4.patch`
+- fix: `COPY --from=source /repo/patches/ patches/` before install
+
+## P-017: cross-group access to a DB published on 127.0.0.1 fails via host.docker.internal
+- hits: 1 | status: fixed | first: 2026-11-02 | last: 2026-11-02
+- where: vibe-kanban relay -> remote DB
+- symptom: relay cannot connect to the DB
+- fix: remote `DB_PUBLISH_ADDR=0.0.0.0` (test) — restrict by firewall in production
+
+## P-018: rustls-based app rejects step-ca certs (UnknownIssuer)
+- hits: 1 | status: fixed | first: 2026-11-02 | last: 2026-11-02
+- where: vibe-kanban host -> remote (`/api/auth/local/login` 502)
+- symptom: `failed to verify TLS certificate: UnknownIssuer`
+- fix: mount step-ca root_ca.crt, set `SSL_CERT_FILE`; file must be readable by uid 10001 (mode 644) or the app panics "No CA certificates were loaded"
