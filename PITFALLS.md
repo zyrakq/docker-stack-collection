@@ -210,3 +210,12 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
   (redirect `/account?next=%2F` → `/`); скриншот снимать сразу после
   re-seed; событие `remote-auth-changed` состояние реактивно не
   переключает
+
+## P-013: sb build deletes build/**/.gitkeep; old container/volume leftovers conflict
+- hits: 1 | status: open | first: 2026-11-02 | last: 2026-11-02
+- where: vibe-kanban app/remote after app/→app/remote/ move and service rename
+- symptom: `sb build` removes tracked `build/**/.gitkeep`; `compose up` fails
+  on container_name conflict with old `vibe-kanban*` test containers; kept
+  old volumes hold the old DB password
+- fix: restore .gitkeep via `git ls-files -d | xargs touch`; remove only our
+  old containers; reuse old secrets from the old build/.env
