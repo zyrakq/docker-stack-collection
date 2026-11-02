@@ -31,6 +31,22 @@ Incident 2026-11-01: during an image build an agent ran
 to "add swap" and nearly broke the server. This section exists because of
 that. Never repeat anything like it.
 
+## Agents and skills — never redefine without explicit user confirmation
+
+Agents and skills are the user's tooling, NOT ours to change on our own
+initiative. Redefining, rewriting, restructuring, or deleting any of the
+following is FORBIDDEN without the user's explicit confirmation FIRST:
+
+- agent definitions: `~/.micode-v2/**` and any other agent config files
+- skills: `.opencode/skills/**` in this repo and any other skill files
+  (SKILL.md, references/, templates)
+
+This applies even when a plan or design doc lists such edits as tasks: a
+documented task is NOT consent. Show the user exactly what will change and
+wait for his explicit approval before touching any of these files. Edits to
+stack repos and `thoughts/shared/` documents follow the normal workflow —
+this rule is about tooling definitions only.
+
 ## Artifacts must be committed immediately
 
 Every file created under `thoughts/shared/` (design docs in `designs/`,
