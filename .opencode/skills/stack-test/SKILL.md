@@ -2,10 +2,12 @@
 name: Stack Test
 description: >-
   Testing procedure for docker-stack-collection stacks: staged browser E2E
-  gates (base+DB, then pgrust, then oidc, s3 last — one extension at a
-  time), step-ca variant first, never touching the live step-ca-manager
-  setup; sb build checks, compose config validation, health, cert-wait,
-  OIDC and S3 verification. Use after any stack change.
+  gates (Stage A = product parts + database running the DEPLOYMENT.md
+  functional gate scenario, then the mandatory infra base stages pgrust,
+  oidc, s3 in order, then confirmed extensions one at a time), step-ca
+  variant first, never touching the live step-ca-manager setup; sb build
+  checks, compose config validation, health, cert-wait, OIDC and S3
+  verification. Use after any stack change.
 ---
 
 # Stack Test
@@ -47,12 +49,21 @@ images:
 ## Staged browser E2E
 
 Verification is a staged pipeline; the browser is the gate between stages
-(stack-conventions §9):
+(stack-conventions §9). Stage A executes the functional gate scenario
+from the stack's `DEPLOYMENT.md` (§20); a stack without DEPLOYMENT.md →
+run the `stack-analysis` skill gap mode first.
 
-- **Stage A — base deployment (+ DB, no oidc):** base + the `postgresql`
-  database extension when the app needs postgres; NO oidc, NO s3. After
-  health checks pass, drive `https://<VIRTUAL_HOST>` with agent-browser.
-  MUST pass before any further extension work.
+- **Stage A — functional base (product parts + DB, no oidc):** ALL
+  product parts from the stack's `DEPLOYMENT.md` (stack-conventions §20)
+  + the `postgresql` database stage (mandatory infra, ALWAYS attempted —
+  refusal recorded in DEPLOYMENT.md when blocked); NO oidc, NO s3, NO
+  product extensions. After health checks pass, drive
+  `https://<VIRTUAL_HOST>` with agent-browser and execute the
+  DEPLOYMENT.md **functional gate scenario** — the cross-part
+  end-to-end flow that proves the functional base, not just a
+  single-container core flow. MUST pass before any further stage work.
+  Model vs gate mismatch → update `DEPLOYMENT.md` (living doc, §20) and
+  re-run the stage.
 - **Stage A2 — DB alternative (pgrust):** rebuild with the `pgrust` combo,
   same browser gate. Clean pass → `pgrust` becomes the default combo
   (stack-conventions §9). Failure → keep `postgresql` default and record
@@ -81,8 +92,9 @@ Follow `references/verification-procedure.md` in order. Summary:
 3. `docker compose config` — must validate.
 4. `docker compose up --build -d`.
 5. Health checks pass.
-6. **Stage A browser gate** (base + DB via the postgresql extension, no
-   oidc): clean TLS, local login, one core flow, screenshot artifact
+6. **Stage A browser gate** (product parts + DB via the postgresql
+   stage, no oidc): clean TLS, local login, the DEPLOYMENT.md
+   functional gate scenario (cross-part E2E), screenshot artifact
    (`references/browser-e2e.md` §1).
 7. **Stage A2 browser gate** (DB alternative): rebuild with the `pgrust`
    combo, run the same Stage A flow (`references/browser-e2e.md` §1); on
