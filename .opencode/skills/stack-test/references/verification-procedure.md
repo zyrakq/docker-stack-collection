@@ -43,9 +43,10 @@ service name.
 
 Staged per `browser-e2e.md`. Stage A MUST pass before any extension work.
 
-- [ ] Stage A (base deploy, no oidc): browser smoke test via agent-browser —
-      clean TLS, local login, one core flow, screenshot artifact
-      (`browser-e2e.md` §1).
+- [ ] Stage A (functional base, no oidc): browser smoke test via
+      agent-browser — clean TLS, local login, the DEPLOYMENT.md functional
+      gate scenario (cross-part E2E, stack-conventions §20), screenshot
+      artifact (`browser-e2e.md` §1).
 - [ ] OIDC (when present), per its configuration mode (`browser-e2e.md` §2):
   - [ ] Env-based (`oidc` extension): rebuild, redeploy, browser login via
         the SSO button → kanidm → callback → session; email-matching
