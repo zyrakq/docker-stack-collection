@@ -93,6 +93,13 @@ docker compose up --build -d
 
 Access: `<url>` (for forwarding mode)
 
+## 🧩 Product Parts
+
+The product's functional base per [`DEPLOYMENT.md`](../DEPLOYMENT.md)
+(stack-conventions §20) — one compose service per part:
+
+- **<part>**: <1-2 sentence purpose — what breaks when it is absent>
+
 ## 📁 Project Structure
 
 - [`components/`](components/) — Source compose components
@@ -112,7 +119,9 @@ Access: `<url>` (for forwarding mode)
 
 ### Extensions
 
-- **<ext-name>**: <description>
+- **<ext-name>** (`<status>`): <description> — status per the extension
+  catalog in [`DEPLOYMENT.md`](../DEPLOYMENT.md) (stack-conventions §20):
+  `available` / `implemented` / `refused`
 
 ## 🔧 Environment Variables
 
@@ -179,3 +188,6 @@ Access: `<url>` (for forwarding mode)
   verbatim when linking modules — never paraphrase them.
 - Omit sections for features the stack does not have (e.g. no Extensions
   section when there are none) but keep the ORDER of remaining sections.
+- Keep the Product Parts section even for single-part products — one
+  bullet; it ties the README to the stack's DEPLOYMENT.md contract
+  (stack-conventions §20).
