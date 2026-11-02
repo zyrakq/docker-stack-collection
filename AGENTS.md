@@ -100,6 +100,16 @@ from the project tree. Rule:
 Any work on a stack (create, modify, extend, modernize) MUST load the
 `stack-conventions` skill BEFORE acting. Non-negotiable rules from it:
 
+- Deployment model: any new stack — and any change to a product's part
+  scope — begins with the `stack-analysis` skill; the committed
+  `DEPLOYMENT.md` (stack-conventions §20) is the contract for the
+  functional base (product parts + mandatory infra) and the extension
+  catalog. Mandatory infra (database, OIDC, S3 — or other
+  product-mandated infra) is ALWAYS attempted — refusal only with the
+  reason recorded; every other extension needs explicit user
+  confirmation before implementation. Missing functional-base parts are
+  completed BEFORE any extension work; stack-test Stage A (product
+  parts + database) runs the DEPLOYMENT.md functional gate scenario.
 - Naming: services and containers are `<stack>-<role>` (e.g. `<stack>-db`,
   `<stack>-app`); `container_name` equals the service name; networks
   `<stack>-network`, volumes `<stack>-<purpose>`. No generic names, no
