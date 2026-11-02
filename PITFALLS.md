@@ -219,3 +219,9 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
   old volumes hold the old DB password
 - fix: restore .gitkeep via `git ls-files -d | xargs touch`; remove only our
   old containers; reuse old secrets from the old build/.env
+
+## P-014: relay image build fails with `cargo build --locked` (relay-tunnel excluded from workspace)
+- hits: 1 | status: fixed | first: 2026-11-02 | last: 2026-11-02
+- where: vibe-kanban app/relay/images/vibe-kanban-relay Dockerfile
+- symptom: `cargo build --locked` fails "cannot update the lock file ... because --locked was passed"; crates/relay-tunnel is in workspace `exclude` and its own Cargo.lock needs updating
+- fix: drop `--locked`; limit parallelism with CARGO_BUILD_JOBS=2
