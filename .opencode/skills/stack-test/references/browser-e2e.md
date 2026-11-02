@@ -23,17 +23,24 @@ agent-browser skills get core
       requires; credentials stored in the agent-browser session/auth vault.
 - [ ] agent-browser session open; screenshots saved as run artifacts.
 
-## 1. Stage A — base deployment (+ DB, no oidc)
+## 1. Stage A — functional base (product parts + DB, no oidc)
 
-Run BEFORE adding the `oidc` extension. When the app needs postgres, this
-variant is base + the `postgresql` database extension. Gate: Stage A must
-pass or Stage B is meaningless.
+Run BEFORE adding the `oidc` stage. This variant is the functional base +
+the `postgresql` database stage (mandatory infra, ALWAYS attempted). The
+functional base = ALL product parts from the stack's `DEPLOYMENT.md`
+(stack-conventions §20); a stack without DEPLOYMENT.md → run the
+`stack-analysis` skill gap mode first. Gate: Stage A must pass or Stage B
+is meaningless.
 
 - [ ] Deploy the no-oidc variant (verification-procedure.md §1–4).
 - [ ] Open `https://<VIRTUAL_HOST>` with agent-browser: page loads, TLS
       clean (no cert warning).
 - [ ] Local login works (the app's own admin/local account).
-- [ ] Exercise ONE core app flow (create/edit/delete something small).
+- [ ] Execute the DEPLOYMENT.md **functional gate scenario** — the
+      cross-part end-to-end flow that proves the functional base
+      (stack-conventions §20), not just a single-container core flow.
+      Model vs gate mismatch → update DEPLOYMENT.md (living doc, §20) and
+      re-run the stage.
 - [ ] Screenshot the working app state → run artifact.
 
 ### Stage A2 — DB alternative (pgrust)
@@ -43,8 +50,8 @@ alternative DB engine:
 
 - [ ] Rebuild with the `pgrust` combo and redeploy
       (verification-procedure.md §1–4).
-- [ ] Same Stage A flow: page loads, TLS clean, local login, one core
-      flow, screenshot artifact.
+- [ ] Same Stage A flow: page loads, TLS clean, local login, the
+      DEPLOYMENT.md functional gate scenario, screenshot artifact.
 - [ ] Clean pass → `pgrust` becomes the default combo (stack-conventions
       §9). Failure → keep `postgresql` as the default combo and record
       why in the component README.
