@@ -5,7 +5,8 @@ description: >-
   volume naming, sb/stackbuilder builds, environments and layering,
   extensions (oidc, s3-storage, database postgresql+pgrust), env wiring
   (${VAR:-} everywhere), .env.example hygiene, no-bind-mount volume
-  policy, staged integration protocol with test gates, dockerfile_inline
+  policy, staged integration protocol with test gates, deployment model
+  and application parts (DEPLOYMENT.md), dockerfile_inline
   config patterns, source-built images (app/images/), OIDC/S3/step-ca
   integration rules, and upstream provenance (UPSTREAM.md). Load before
   creating or modifying any stack.
@@ -13,8 +14,9 @@ description: >-
 
 # Stack Conventions
 
-Reference skill for every stack in this collection. The `stack-init`,
-`stack-test`, `stack-modernize`, and `readme-gen` skills build on these rules.
+Reference skill for every stack in this collection. The `stack-analysis`,
+`stack-init`, `stack-test`, `stack-modernize`, and `readme-gen` skills
+build on these rules.
 
 - Why each decision was made: read `references/rationale.md`.
 - Verbatim embedded pattern snippets (genericized; attribution by stack
@@ -66,7 +68,7 @@ Inner structure of a project dir (e.g. `app/`):
 ## 3. Naming (services, containers, networks, volumes)
 
 - Service names carry the stack identity: `<stack>-<role>` (e.g.
-  `vibe-kanban-app`, `vibe-kanban-db`). NEVER generic, anonymous, or
+  `<stack>-app`, `<stack>-db`). NEVER generic, anonymous, or
   role-only names (`app`, `db`, `server`, `remote-db`, `electric`).
 - `container_name`, when present, MUST equal the service name — no
   mismatched pairs. Either omit it (the service name is then the container
@@ -362,7 +364,77 @@ When an app has no published Docker image and must be built from source:
   references the prebuilt image — `image: ${IMAGE:-localhost/<image>:<tag>}`
   — never a `build:` section.
 - Exemplars: `open-coreui` `images/{frontend,backend,complex}` (sparse git
-  clone), the vibe-kanban `images/{git-clone,release-assets}` Dockerfiles
-  (older upstream layout — pattern reference only). `litellm-amd64` uses
-  `COPY . .` — context-dependent, NOT the canonical pattern.
+  clone). `litellm-amd64` uses `COPY . .` — context-dependent, NOT the
+  canonical pattern.
 - Step-by-step procedure: the `source-image` skill.
+
+## 20. Deployment model and application parts (DEPLOYMENT.md)
+
+Every stack records WHAT the upstream product deploys as, in a per-stack
+`DEPLOYMENT.md` at the stack root (next to `UPSTREAM.md`). Produced by
+the `stack-analysis` skill; consumed by `stack-init` (Phase 0),
+`stack-test` (Stage A), `stack-modernize`, and `readme-gen`.
+
+Definitions:
+
+- **Part** — one deployable component of the upstream product (web app,
+  API server, worker, scheduler, ...). One part = exactly one compose
+  service, named `<stack>-<role>` (§3).
+- **Functional base** — the product parts required for the product's
+  core value END-TO-END PLUS the mandatory infra. Base ≠ one app
+  container: a product whose core value needs N cooperating parts has an
+  N-service base. Overreach guard: a single-part product stays
+  single-part — every part in the base must be exercised by the
+  functional gate scenario.
+- **Mandatory infra** — database (postgresql+pgrust, §8), OIDC (§10),
+  S3 (s3-storage, §11) — or other infra the product mandates — is
+  ALWAYS part of the functional base, never an optional extension.
+  Always attempted as base stages in the staged order: db first, s3
+  last, s3fs-fuse never on DB volumes (§9, §11).
+- **Functional gate scenario** — the cross-part end-to-end flow that
+  proves the functional base; defined in DEPLOYMENT.md, executed as the
+  Stage A browser gate (§9) by `stack-test`.
+- **Extension catalog** — everything not in the functional base:
+  upstream features that are not product parts, optional companion
+  parts, and non-mandated optional infra (e.g. an optional cache), each
+  with type, status, and dependencies.
+
+DEPLOYMENT.md content spec (all six sections required):
+
+1. `## Product parts` — every deployable part found upstream: name,
+   purpose, image source (published / source-built per §19).
+2. `## Interaction map` — who talks to whom; what breaks when a part is
+   absent.
+3. `## Functional base` — the base parts, each justified, PLUS the
+   mandatory infra; any mandatory item blocked by unresolvable problems
+   is recorded here as REFUSED with the reason — never silently
+   dropped, never silently shrunk.
+4. `## Base stage plan` — ordered implementation stages, each with its
+   gate; Stage A (product parts + database) executes the functional
+   gate scenario.
+5. `## Extension catalog` — table: extension | type (product/infra) |
+   status (`available` / `implemented` / `refused`) | dependencies.
+6. `## Open hypotheses` — uncertain classifications with confidence and
+   what the functional gate must observe to settle them.
+
+Rules:
+
+- DEPLOYMENT.md is a LIVING document: update and commit it whenever the
+  model changes (model-vs-gate mismatch, reclassification, extension
+  status change). Unlike `UPSTREAM.md` (§17) it is NOT append-only.
+- ONE mandatory user checkpoint: the extension menu from the catalog,
+  AFTER the base gates pass. Base scope itself needs NO user agreement
+  — the base is executed as analyzed. Base scope the analysis cannot
+  decide with confidence → 2–3 options with trade-offs to the user (an
+  exception path, not a standing gate) — never silently shrink, never
+  inflate.
+- Confirmation rule: catalog extensions are recorded as `available` and
+  NEVER implemented without the user's explicit confirmation; confirmed
+  ones go one at a time, each gated.
+- Mandatory-infra rule: database, S3, OIDC (or other product-mandated
+  infra) are always-attempted base stages; a mandatory item blocked by
+  unresolvable problems is REFUSED with the reason recorded in
+  DEPLOYMENT.md — never silently dropped, never silently skipped.
+- Remediation rule: an existing stack missing functional-base parts
+  (including mandatory infra) completes them BEFORE any extension work
+  (gap mode in the `stack-analysis` skill).
