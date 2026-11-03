@@ -251,7 +251,9 @@ Three canonical patterns (verbatim snippets in `references/patterns.md`):
    `ROCKET_TLS='{certs="/certs/${VIRTUAL_HOST}/fullchain.pem",key=...}'`.
    Cert path convention: `/certs/<VIRTUAL_HOST>/fullchain.pem` and `key.pem`.
 2. **`step-ca-trust` extension**: env patch setting `STEP_CA_TRUST` /
-   `STEP_CA_TRUST_RESTART` (vaultwarden exemplar).
+   `STEP_CA_TRUST_RESTART` (vaultwarden exemplar). MANDATORY (§20) for a
+   group that may run on another host and calls another group by public
+   https domain.
 
 ## 15. nginx-proxy vhost.d tuning
 
@@ -391,6 +393,15 @@ Definitions:
   ALWAYS part of the functional base, never an optional extension.
   Always attempted as base stages in the staged order: db first, s3
   last, s3fs-fuse never on DB volumes (§9, §11).
+- **Tier** — `core` = self-sufficient unit doing the main work (with its
+  primary UI); `ring-N` = only adds sharing, multi-tenancy, remote
+  access, sync or relay. Implementation goes core outward.
+- **Group** — a part plus its DB, cache, sidecars. A group is its own
+  component only if independently useful or deployable AND plausibly on
+  another host; simple components are never split out.
+- **Link** — inter-group call: protocol, direction, by public https
+  domain or not. Such a link from a possibly-remote group makes
+  `step-ca-trust` (§14) mandatory for the caller group.
 - **Functional gate scenario** — the cross-part end-to-end flow that
   proves the functional base; defined in DEPLOYMENT.md, executed as the
   Stage A browser gate (§9) by `stack-test`.
@@ -409,9 +420,11 @@ DEPLOYMENT.md content spec (all six sections required):
    mandatory infra; any mandatory item blocked by unresolvable problems
    is recorded here as REFUSED with the reason — never silently
    dropped, never silently shrunk.
-4. `## Base stage plan` — ordered implementation stages, each with its
-   gate; Stage A (product parts + database) executes the functional
-   gate scenario.
+4. `## Base stage plan` — stages core → outward, one gate per group;
+   Stage A (core group + its database) executes the standalone core
+   gate; outer groups follow with their `step-ca-trust`, then a
+   cross-group link gate over step-ca domains. Section 3 lists groups
+   with tiers; section 2 lists links.
 5. `## Extension catalog` — table: extension | type (product/infra) |
    status (`available` / `implemented` / `refused`) | dependencies.
 6. `## Open hypotheses` — uncertain classifications with confidence and

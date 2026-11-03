@@ -39,7 +39,9 @@ opportunistically.
    `stack-analysis` skill in gap mode against the upstream (clone per
    stack-conventions §17) BEFORE any format work: it inventories the
    product's deployable parts, diffs the model against the deployed
-   compose services, and writes `DEPLOYMENT.md` at the stack root (§20).
+   compose services, and writes `DEPLOYMENT.md` at the stack root (§20);
+    it also flags wrong tier order and cross-host https links lacking
+    `step-ca-trust`.
    Completing missing functional-base parts — product parts AND
    mandatory infra (database, oidc, s3 — or other product-mandated
    infra), each either completed or REFUSED with the reason recorded —

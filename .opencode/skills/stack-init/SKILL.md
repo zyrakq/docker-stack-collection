@@ -19,8 +19,10 @@ model and application parts).
 ## Workflow (phased; every stage gated by a test)
 
 Phase 0 produces the deployment model (DEPLOYMENT.md — committed, no
-approval gate). Phase 1 scaffolds the ENTIRE functional base: ALL
-product parts plus the mandatory database stage. Phases 2–4 complete
+approval gate). Phase 1 scaffolds the functional base group by group,
+core outward (§20): the core group plus its database first, gated
+standalone; each outer group (with its `step-ca-trust` where DEPLOYMENT.md
+lists an https-domain link) is then added and gated. Phases 2–4 complete
 the remaining mandatory infra stages (pgrust, oidc, s3). Phase 5
 presents the extension catalog — the ONE user checkpoint. Confirmed
 extensions are added ONE at a time after that, each followed by its
@@ -82,8 +84,10 @@ with the reason recorded in DEPLOYMENT.md, never silently skipped.
 ### Phase 1 — scaffold the functional base (ALL product parts + database)
 
 7. **Scaffold** exactly per `references/scaffold-checklist.md` — the
-   product parts only: EVERY part in the DEPLOYMENT.md
-   `## Functional base` section, one compose service per part:
+   product parts only, in DEPLOYMENT.md `## Base stage plan` order: core
+   group first (all its parts + DB); outer groups are added after the
+   core gate passes, each gated, `step-ca-trust` alongside its group.
+   One compose service per part:
    - Service per part named `<stack>-<role>` per §3 — base ≠ one app
      container (§20); a multi-part product gets a multi-service base.
    - Image per part: the published upstream image, or source-built via
@@ -116,9 +120,9 @@ with the reason recorded in DEPLOYMENT.md, never silently skipped.
    no remote yet.
 10. **Clean artifacts:** delete `.kilocode/`, `.clinerules/` if present.
 11. **Build & verify the base:** `cd app/ && sb build`, then follow the
-    `stack-test` skill through the Stage A gate — Stage A (product
-    parts + database) executes the DEPLOYMENT.md functional gate
-    scenario (cross-part E2E). Model vs gate mismatch → update
+    `stack-test` skill through the Stage A gate — Stage A (core group
+    + database) runs the standalone core gate; then each outer group's
+    gate and the cross-group link gate. Model vs gate mismatch → update
     DEPLOYMENT.md (living doc, §20) and re-run the stage.
 
 ### Phase 2 — pgrust stage (mandatory infra, always attempted)

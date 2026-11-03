@@ -57,7 +57,10 @@ run the `stack-analysis` skill gap mode first.
   product parts from the stack's `DEPLOYMENT.md` (stack-conventions §20)
   + the `postgresql` database stage (mandatory infra, ALWAYS attempted —
   refusal recorded in DEPLOYMENT.md when blocked); NO oidc, NO s3, NO
-  product extensions. After health checks pass, drive
+  product extensions. Tier order: Stage A is the CORE group standalone
+  (no outer rings); then one gate per outer group, then a cross-group
+  link gate — calls between groups by step-ca domain succeed with
+  `step-ca-trust` applied. After health checks pass, drive
   `https://<VIRTUAL_HOST>` with agent-browser and execute the
   DEPLOYMENT.md **functional gate scenario** — the cross-part
   end-to-end flow that proves the functional base, not just a

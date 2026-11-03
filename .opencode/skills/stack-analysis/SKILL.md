@@ -42,6 +42,17 @@ model this skill produces.
    model.
 6. **No vendoring.** The clone-in-tmp clone (§17) is reference-only and
    temporary — never committed, never referenced by any build.
+7. **Core first.** Every part gets a tier: `core` = a self-sufficient
+   unit doing the product's main work (with its primary UI, if any);
+   `ring-N` = only adds sharing, multi-tenancy, remote access, sync or
+   relay on top of an inner tier. The base stage plan runs core → outward,
+   one gate per group; the core gate runs standalone, without outer rings.
+8. **Cross-host trust.** Parts form groups (a part plus its DB, cache,
+   sidecars). A group is its own component only if independently useful
+   or deployable AND plausibly on another host. When such a group calls
+   another group by public https domain, record the link and make the
+   `step-ca-trust` extension (§14) MANDATORY for the caller group. Not for
+   intra-group links; never split simple components into separate groups.
 
 ## Workflow
 
@@ -61,7 +72,8 @@ model this skill produces.
    Dockerfiles, workspace/crate/package structure, CLI entrypoints,
    published ports, deployment docs, release artifacts.
 4. **Build the interaction map** — who talks to whom, and what breaks
-   when a part is absent.
+   when a part is absent. Assign tiers and groups (rules 7–8); list every
+   inter-group link: protocol, direction, by public https domain or not.
 5. **Classify every part/feature**: a product part required for the
    core value → functional base; mandatory infra (database §8, oidc
    §10, s3 §11 — or other product-mandated infra) → functional base,
@@ -70,8 +82,10 @@ model this skill produces.
    uncertain ones become hypotheses (iron rule 3).
 6. **Define the functional base** and the **functional gate scenario**
    (the cross-part E2E flow that proves it), then the **base stage
-   plan** — ordered stages, each with its own gate; Stage A (product
-   parts + database) executes the functional gate scenario.
+   plan** — ordered stages core → outward, one gate per group; Stage A
+   (core group + its database) executes the standalone core gate, later
+   stages add outer groups, their `step-ca-trust` and a cross-group link
+   gate over step-ca domains.
 7. **Assemble the extension catalog** — ONE catalog for everything
    outside the functional base, every entry recorded `available`, with
    type, status, dependencies. Ordering constraints preserved: db
@@ -94,7 +108,7 @@ model this skill produces.
    workflow above against the upstream.
 2. Diff model vs deployed: missing base parts (including mandatory
    infra), undocumented deployed services, extensions absent from the
-   catalog.
+   catalog, wrong tier order, cross-host links lacking `step-ca-trust`.
 3. Output a remediation plan — completing missing base parts takes
    PRIORITY over any extension work (§20 remediation rule). Extensions
    are offered from the catalog only after the base is complete and its
@@ -113,3 +127,9 @@ Validation cases to run mentally against any produced model:
   an optional catalog extension.
 - Anti-overreach: a simple single-part product must come out with a
   single-part base — the analysis must not inflate it.
+- Core-first: a local unit with its own UI plus an optional multi-user
+  server and relay → the local unit is core and first; server and relay
+  are outer rings, added after the core gate passes.
+- Cross-host trust: two groups that may live on different hosts and call
+  each other by https domain → `step-ca-trust` mandatory for the caller,
+  link gate over domains; a DB inside a group gets no such treatment.

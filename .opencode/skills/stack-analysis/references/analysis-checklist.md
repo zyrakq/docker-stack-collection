@@ -29,6 +29,10 @@ stack-conventions §20 (deployment model), §17 (clone-in-tmp).
 - [ ] For each part: what breaks when it is absent — which
       user-visible feature degrades or dies.
 - [ ] The data flow of the product's core value, end-to-end.
+- [ ] Tier per part (`core` / `ring-N`) and groups (part + its DB,
+      cache, sidecars). Split a group out only if independently useful
+      or deployable AND plausibly on another host.
+- [ ] Inter-group links: protocol, direction, by public https domain?
 
 ## 3. Classification (every part + notable feature)
 
@@ -49,9 +53,14 @@ stack-conventions §20 (deployment model), §17 (clone-in-tmp).
 - [ ] Functional gate scenario: a concrete cross-part E2E flow (user
       action → expected observable result), executable with
       agent-browser per the `stack-test` skill.
-- [ ] Base stage plan: ordered stages, each with its own gate; Stage A
-      (product parts + database) executes the functional gate
-      scenario.
+- [ ] Base stage plan: stages core → outward, one gate per group; Stage
+      A (core group + its database) runs the standalone core gate;
+      outer groups add `step-ca-trust` where a link goes by https
+      domain, then a cross-group link gate over step-ca domains.
+- [ ] Exemplar: local unit with UI + optional multi-user server + relay
+      → local unit core/Stage A; server, relay later rings.
+- [ ] Exemplar: two groups on possibly different hosts calling by https
+      domain → `step-ca-trust` for the caller; a DB in-group gets none.
 
 ## 5. Extension catalog
 
@@ -90,6 +99,11 @@ stack-conventions §20 (deployment model), §17 (clone-in-tmp).
 - [ ] Mandatory-infra check: database, S3, OIDC (or other
       product-mandated infra) are base stages — each staged or refused
       with a recorded reason — never optional catalog extensions.
+- [ ] Core-first check: no ring part precedes the core; core gate needs
+      no outer ring.
+- [ ] Link check: every https-domain link between possibly-remote
+      groups has `step-ca-trust` for the caller; no intra-group links
+      or simple components split out.
 - [ ] Clone deleted: `rm -rf /tmp/opencode/upstreams/<stack>-<project>`
       (unless running as stack-init Phase 0 — the clone lives on for
       scaffolding).
