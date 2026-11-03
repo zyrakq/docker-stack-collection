@@ -250,3 +250,9 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: `failed to verify TLS certificate: UnknownIssuer`
 - fix: mount step-ca root_ca.crt, set `SSL_CERT_FILE`; file must be readable by uid 10001 (mode 644) or the app panics "No CA certificates were loaded"
 - fix (final): vibe-kanban host `step-ca-trust` extension: root user entrypoint wrapper builds system bundle + step-ca root (chmod 644), sets SSL_CERT_FILE and HOME=/home/appuser (else PermissionDenied), drops to uid 10001 via setpriv; CA from external volume `step-ca-data` with `subpath: certs`
+
+## P-019: Stage D pairing E2E cannot run self-paired / headless
+- hits: 1 | status: open | first: 2026-11-03 | last: 2026-11-03
+- where: vibe-kanban Stage D gate
+- symptom: `client/pair` lives on the host server, release build forbids pairing to itself; in-app browser disconnected, no agent-browser CLI
+- fix: needs second host machine + attached desktop browser + remote web credentials; rerun Batch 8 manually
