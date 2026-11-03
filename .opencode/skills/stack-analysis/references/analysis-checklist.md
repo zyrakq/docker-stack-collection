@@ -57,6 +57,9 @@ stack-conventions §20 (deployment model), §17 (clone-in-tmp).
       A (core group + its database) runs the standalone core gate;
       outer groups add `step-ca-trust` where a link goes by https
       domain, then a cross-group link gate over step-ca domains.
+- [ ] Per group: gate prerequisites listed (input data, executors,
+      credentials); each one's extension marked `required-for-gate`,
+      staged before that group's gate.
 - [ ] Exemplar: local unit with UI + optional multi-user server + relay
       → local unit core/Stage A; server, relay later rings.
 - [ ] Exemplar: two groups on possibly different hosts calling by https

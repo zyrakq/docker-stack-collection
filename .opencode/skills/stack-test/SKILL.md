@@ -60,7 +60,10 @@ run the `stack-analysis` skill gap mode first.
   product extensions. Tier order: Stage A is the CORE group standalone
   (no outer rings); then one gate per outer group, then a cross-group
   link gate — calls between groups by step-ca domain succeed with
-  `step-ca-trust` applied. After health checks pass, drive
+  `step-ca-trust` applied. A gate that cannot run for lack of a
+  prerequisite (data, agent, credentials) is NOT passed: promote the
+  needed extension to `required-for-gate` in DEPLOYMENT.md, implement
+  it, re-run — never advance to an outer ring over an unexercised core. After health checks pass, drive
   `https://<VIRTUAL_HOST>` with agent-browser and execute the
   DEPLOYMENT.md **functional gate scenario** — the cross-part
   end-to-end flow that proves the functional base, not just a

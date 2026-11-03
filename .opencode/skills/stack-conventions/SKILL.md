@@ -402,6 +402,12 @@ Definitions:
 - **Link** — inter-group call: protocol, direction, by public https
   domain or not. Such a link from a possibly-remote group makes
   `step-ca-trust` (§14) mandatory for the caller group.
+- **Gate-enabling extension** — a catalog extension a group's gate
+  prerequisite needs (input data, executor/agent, credentials). Status
+  `required-for-gate`: implemented before that group's gate, no menu
+  confirmation. Discovered at planning (DEPLOYMENT.md) or during
+  testing (gate cannot run → promote, update DEPLOYMENT.md, implement,
+  re-run the gate before any outer ring).
 - **Functional gate scenario** — the cross-part end-to-end flow that
   proves the functional base; defined in DEPLOYMENT.md, executed as the
   Stage A browser gate (§9) by `stack-test`.

@@ -53,6 +53,13 @@ model this skill produces.
    another group by public https domain, record the link and make the
    `step-ca-trust` extension (§14) MANDATORY for the caller group. Not for
    intra-group links; never split simple components into separate groups.
+9. **Gate-enabling extensions.** A group's gate scenario must be a real
+   run of the product's main work, not an empty shell. List its
+   prerequisites (input data, executors/agents, credentials); any
+   catalog extension a prerequisite needs becomes REQUIRED for that
+   group, staged before its gate and before any outer ring. Several
+   valid variants → implement the minimal one, offer the rest in the
+   catalog.
 
 ## Workflow
 

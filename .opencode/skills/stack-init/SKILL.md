@@ -122,7 +122,8 @@ with the reason recorded in DEPLOYMENT.md, never silently skipped.
 11. **Build & verify the base:** `cd app/ && sb build`, then follow the
     `stack-test` skill through the Stage A gate — Stage A (core group
     + database) runs the standalone core gate; then each outer group's
-    gate and the cross-group link gate. Model vs gate mismatch → update
+    gate and the cross-group link gate. `required-for-gate` extensions
+    are implemented before their group's gate (§20). Model vs gate mismatch → update
     DEPLOYMENT.md (living doc, §20) and re-run the stage.
 
 ### Phase 2 — pgrust stage (mandatory infra, always attempted)
