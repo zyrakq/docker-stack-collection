@@ -249,3 +249,4 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - where: vibe-kanban host -> remote (`/api/auth/local/login` 502)
 - symptom: `failed to verify TLS certificate: UnknownIssuer`
 - fix: mount step-ca root_ca.crt, set `SSL_CERT_FILE`; file must be readable by uid 10001 (mode 644) or the app panics "No CA certificates were loaded"
+- fix (final): vibe-kanban host `step-ca-trust` extension: root user entrypoint wrapper builds system bundle + step-ca root (chmod 644), sets SSL_CERT_FILE and HOME=/home/appuser (else PermissionDenied), drops to uid 10001 via setpriv; CA from external volume `step-ca-data` with `subpath: certs`
