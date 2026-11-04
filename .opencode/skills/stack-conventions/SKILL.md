@@ -113,9 +113,11 @@ Inner structure of a project dir (e.g. `app/`):
 
 ## 3. Naming (services, containers, networks, volumes)
 
-- Service names carry the stack identity: `<stack>-<role>` (e.g.
-  `<stack>-app`, `<stack>-db`). NEVER generic, anonymous, or
-  role-only names (`app`, `db`, `server`, `remote-db`, `electric`).
+- Service names carry the stack identity. The main product service is named
+  exactly `<stack>` (e.g. `aionui`); additional parts are `<stack>-<role>`
+  (e.g. `<stack>-db`, `<stack>-worker`). The `-app` suffix is BANNED
+  (user rule). NEVER generic, anonymous, or role-only names (`app`, `db`,
+  `server`, `remote-db`, `electric`).
 - `container_name`, when present, MUST equal the service name — no
   mismatched pairs. Either omit it (the service name is then the container
   name) or set it to exactly the service name.

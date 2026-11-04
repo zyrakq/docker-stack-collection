@@ -417,7 +417,7 @@ sibling directory is identical except the image default.
 
 ```yaml
 services:
-  <stack>-app:
+  <stack>:
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@<stack>-db:5432/${POSTGRES_DB}}
     depends_on:
@@ -483,7 +483,7 @@ BEFORE (defect — hardcoded literals, not overridable):
 
 ```yaml
 services:
-  <stack>-app:
+  <stack>:
     environment:
       RUST_LOG: info
       SERVER_LISTEN_ADDR: 0.0.0.0:8080
@@ -493,7 +493,7 @@ AFTER (every value overridable from `.env`):
 
 ```yaml
 services:
-  <stack>-app:
+  <stack>:
     environment:
       RUST_LOG: ${RUST_LOG:-info}
       SERVER_LISTEN_ADDR: ${SERVER_LISTEN_ADDR:-0.0.0.0:8080}

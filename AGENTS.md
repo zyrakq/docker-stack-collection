@@ -109,8 +109,9 @@ Any work on a stack (create, modify, extend, modernize) MUST load the
   confirmation before implementation. Missing functional-base parts are
   completed BEFORE any extension work; stack-test Stage A (product
   parts + database) runs the DEPLOYMENT.md functional gate scenario.
-- Naming: services and containers are `<stack>-<role>` (e.g. `<stack>-db`,
-  `<stack>-app`); `container_name` equals the service name; networks
+- Naming: the main product service/container is exactly `<stack>`; other
+  parts are `<stack>-<role>` (e.g. `<stack>-db`). The `-app` suffix is
+  BANNED — never `<stack>-app`. `container_name` equals the service name; networks
   `<stack>-network`, volumes `<stack>-<purpose>`. No generic names, no
   unused `PROJECT_NAME`-style vars.
 - Env: every compose env value is overridable (`${VAR:-default}` /
