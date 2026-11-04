@@ -373,3 +373,8 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: token positive/negative checks against `http://localhost:8787/api/info`, `/api/health`, `/api/config` etc. all return 404 with and without `Authorization: Bearer` — looks like auth is broken; the `/api/*` strings in the UI bundle and binary are client-side/mounted-elsewhere, not server routes
 - cause: server routes are registered at the ROOT (`/health`, `/status`, `/whoami`, `/capabilities`, `/workspaces`, `/tokens`, `/w/:id/...`) via `addRoute` in `apps/server/src/routes/core.ts`; there is no `/api` prefix on the server
 - fix: probe `GET /status` or `/whoami` with `Authorization: Bearer $OPENWORK_TOKEN` — 200 with correct token, 401 without/wrong; `/health` is the unauthenticated healthcheck
+- note: строка `Host token: <uuid>` в логах старта и CORS-заголовок
+  `X-OpenWork-Host-Token` — ОТДЕЛЬНЫЙ механизм (host-token auth для
+  `/tokens` и т.п.), эфемерный на каждый запуск; с ним `Authorization:
+  Bearer <uuid>` даёт 401 `Invalid bearer token`. Для HTTP-аутентификации
+  клиента использовать только `Bearer $OPENWORK_TOKEN`
