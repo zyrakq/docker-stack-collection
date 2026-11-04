@@ -94,13 +94,17 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
   а не `sb` — симлинк `~/.local/bin/sb -> target/release/stackbuilder`
 
 ## P-006: sb build requires external yq by default
-- hits: 1 | status: mitigated | first: 2026-10-31 | last: 2026-10-31
+- hits: 1 | status: fixed | first: 2026-10-31 | last: 2026-11-04
 - where: sb build
 - symptom: `sb build` падает "yq is required but not available" на хостах без
   системного yq
 - workaround: `yaml_merger = "rust"` в `[build]` секции stackbuilder.toml
   (встроенный Rust-мерджер); также зафиксировано в STASKBUILDER.md (L10)
-- fix: —
+- fix: `yaml_merger = "rust"` удалён из stackbuilder.toml opencode-stack
+  (commit 19d10e0) — sb build снова использует внешний yq; на хосте
+  используется бинарник mikefarah yq v4.44.3 в /tmp/opencode/bin (PATH
+  prepended), т.к. системный /usr/bin/yq — python jq-wrapper (kislyuk,
+  `yq 4.4.5 / jq-1.8.2`), который sb отвергает (см. P-033)
 
 ## P-007: upstream release tag does not compile — build from fixed commit
 - hits: 1 | status: mitigated | first: 2026-10-31 | last: 2026-10-31
@@ -159,7 +163,7 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
   хост не трогать
 
 ## P-010: sb auto-generates a no-extension base variant per environment
-- hits: 1 | status: fixed | first: 2026-11-01 | last: 2026-11-01
+- hits: 1 | status: fixed | first: 2026-11-01 | last: 2026-11-04
 - where: stackbuilder (`sb build`) — per-env combos
 - symptom: при `combos = [...]` на окружение sb генерирует не только
   `build/<env>/<combo>/`, но и дополнительный вариант
@@ -172,7 +176,9 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
   же каталог)
 - workaround: —
 - fix: `skip_base_generation = true` в `[build]` stackbuilder.toml —
-  дерево становится ровно `build/<env>/<combo>/` по списку combos
+  дерево становится ровно `build/<env>/<combo>/` по списку combos;
+  подтверждено в opencode-stack rework: ровно один комбо на окружение
+  (`entire` / `entire-trust`), комбинации расширений схлопнуты
 
 ## P-011: upstream migration hardcodes database name `remote`
 - hits: 1 | status: fixed | first: 2026-11-01 | last: 2026-11-01
@@ -309,7 +315,7 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - hits: 1 | status: fixed | first: 2026-11-04 | last: 2026-11-04
 - where: opencode-stack plugins extension (dockerfile_inline RUN loop)
 - symptom: `for s in ...; do sh "$s"; done` in dockerfile_inline — compose warns `The "s" variable is not set` and bakes an empty string into the layer
-- fix: escape shell vars in dockerfile_inline as `$$var` (same rule as healthchecks); only `${VAR:-}` forms are meant for compose interpolation
+- fix: escape shell vars in dockerfile_inline as `$$var` (same rule as healthchecks); only `${VAR:-}` forms are meant for compose interpolation; в opencode rework dockerfile_inline RUN-цикл удалён полностью — скрипты установки коммичены в `app/plugins/` и COPY-ятся в образ (`COPY entrypoint.sh plugins* /opt/plugins-build/` терпит отсутствие папки plugins)
 
 ## P-029: pip dependency-group installs abort all-or-nothing on py3.14 (Alpine 3.24)
 - hits: 1 | status: open | first: 2026-11-04 | last: 2026-11-04
@@ -328,4 +334,20 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - where: opencode-stack step-ca-trust gate (TLS verification inside `opencode-stack-app`)
 - symptom: `openssl` not found in the app container (Alpine 3.24.3 base); busybox `ssl_client` rejects `-connect`/`-servername` (usage: `ssl_client [-s FD] [-I] -n SNI` — it is a helper applet invoked by wget, not a standalone client); in-container fingerprint greps print vacuous output (empty fingerprints match everything)
 - fix: run a throwaway `docker run --rm --network <net> alpine:3.20` container and `apk add -q openssl` there for all TLS chain checks (each `docker run` is fresh — re-install every time); verify trust by contrasting `openssl s_client -CAfile` with/without the root: untrusted gives "unable to get local issuer", trusted-but-expired gives only "certificate has expired"
+
+## P-032: `sb build` wipes the build-dir `plugins/` folder
+- hits: 1 | status: open | first: 2026-11-04 | last: 2026-11-04
+- where: opencode-stack plugins extension (user-supplied `plugins/` folder next to the generated `docker-compose.yml`)
+- symptom: after copying ready-made install scripts from `app/plugins/` into `build/<env>/plugins/` and setting `PLUGINS_*` toggles, a later `sb build` regenerates the build dir and silently removes the copied `plugins/` folder; the next `docker compose build` runs with no install scripts and the plugins mechanism stays inert
+- fix (workaround): re-copy the scripts from `app/plugins/` after every `sb build` (documented in `app/plugins/README.md` and `app/README.md`); root cause is sb's build-dir regeneration, not yet addressed in sb itself
+
+## P-033: системный yq — это python jq-wrapper, sb его отвергает
+- hits: 1 | status: mitigated | first: 2026-11-04 | last: 2026-11-04
+- where: sb build / host tooling (opencode-stack)
+- symptom: системный `/usr/bin/yq` — это kislyuk python-обёртка над jq
+  (`yq 4.4.5 / jq-1.8.2`), а не mikefarah yq; sb отвергает его как
+  несовместимую реализацию и сборка падает
+- workaround: бинарник mikefarah yq v4.44.3 в /tmp/opencode/bin, PATH
+  prepended; проверка — `yq --version` должен показывать mikefarah v4.x
+- fix: —
 
