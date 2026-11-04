@@ -477,9 +477,9 @@ Notes:
   `/var/lib/postgresql/data`).
 - The leading colon in `COMPOSE_EXTENDS=:docker-compose.db.yml` lets
   multiple extensions chain correctly.
-- DB choice is a named combo in `stackbuilder.toml` (`postgresql` /
-  `pgrust`); pgrust becomes the default combo when it passes the Stage A2
-  gate (§9).
+- DB choice: the `entire` combo lists `database/postgresql` or
+  `database/pgrust`; pgrust replaces postgresql there when it passes the
+  Stage A2 gate (§9).
 
 ## 12. Env wiring — before/after
 

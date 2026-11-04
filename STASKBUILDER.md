@@ -57,8 +57,17 @@ No globbing/fallback when restoring `.env` files into regenerated dirs.
 Init scaffolds the old shape; new stacks need hand-written
 `[build.environments]` config.
 
+### L14. Script-style features can't be combined as extensions — `proposal`
+Features needing scripts/entrypoint hooks cannot be modeled as combinable
+extensions. Agents hacked them in as separate non-combinable extensions,
+producing combos like `forwarding-repo-sync-X`.
+
 ## Interim workarounds (within current capabilities)
 
+- **Optional `plugins/` dir** (one example idea for L14, not mandated) —
+  `plugins/` next to `docker-compose.yml` (absent by default, git-ignored),
+  a committed `plugins-available/` dir, `dockerfile_inline` COPYs from
+  `plugins/`, and the base image's `entrypoint.sh` picks the scripts up.
 - **Hand-written combos** — enumerate cross-products as named combos
   (easytier idiom).
 - **`env_file_patterns`** — preserve app-native config files across builds

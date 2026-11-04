@@ -112,8 +112,8 @@ with the reason recorded in DEPLOYMENT.md, never silently skipped.
 8. **Database stage (mandatory infra, always attempted):** prepare the
    `database/postgresql` extension exactly per stack-conventions §8 —
    dual-file idiom, verbatim fragments in `stack-conventions`
-   `references/patterns.md` §11; wire the `postgresql` combo in
-   `stackbuilder.toml`. Unresolvable blocker → REFUSE the stage with
+   `references/patterns.md` §11; list `database/postgresql` in the
+   `entire` combo of `stackbuilder.toml`. Unresolvable blocker → REFUSE the stage with
    the reason recorded in DEPLOYMENT.md (§20) — never silently skip.
 9. **Register in stacks.csv** (collection root): append the row
    `stacks/<category>/<...>/<stack>;-;unverified` — url is `-` when there is
@@ -129,9 +129,10 @@ with the reason recorded in DEPLOYMENT.md, never silently skipped.
 ### Phase 2 — pgrust stage (mandatory infra, always attempted)
 
 12. Add the `database/pgrust` variant (identical except the `image:`
-    default), rebuild, and run the **Stage A2 gate**. Clean pass → make
-    `pgrust` the default combo (§9). Failure → keep `postgresql` default
-    and record why in the component README.
+    default), swap it into the `entire` combo in place of
+    `database/postgresql` (never both), rebuild, and run the **Stage A2
+    gate**. Clean pass → keep `database/pgrust` in `entire`. Failure →
+    revert to `database/postgresql` and record why in the component README.
 
 ### Phase 3 — oidc stage (mandatory infra, always attempted)
 
