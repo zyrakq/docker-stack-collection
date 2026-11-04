@@ -212,8 +212,9 @@ Order for bringing up a new stack or adding components:
    DB extension. NO oidc, NO s3, no other extensions.
 3. Build, deploy, test — Stage A gate (browser E2E per `stack-test`).
    MUST pass.
-4. Add the `pgrust` variant; rebuild; test. If pgrust comes up without
-   problems → pgrust becomes the default/base variant.
+4. Swap `database/pgrust` into `entire` in place of `database/postgresql`;
+   rebuild; test. Clean → keep pgrust. Problem → revert to postgresql
+   and note why in the component README.
 5. oidc (if the app supports it): add the extension, Stage B gate; keep
    the tested no-oidc variant as proof of the pre-OIDC step.
 6. s3: the base uses simple volume mounts. Only after base works: add the

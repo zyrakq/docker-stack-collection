@@ -70,10 +70,11 @@ run the `stack-analysis` skill gap mode first.
   single-container core flow. MUST pass before any further stage work.
   Model vs gate mismatch → update `DEPLOYMENT.md` (living doc, §20) and
   re-run the stage.
-- **Stage A2 — DB alternative (pgrust):** rebuild with the `pgrust` combo,
-  same browser gate. Clean pass → `pgrust` becomes the default combo
-  (stack-conventions §9). Failure → keep `postgresql` default and record
-  why in the component README.
+- **Stage A2 — DB alternative (pgrust):** swap the `database/pgrust`
+  extension into `entire` in place of `database/postgresql`, rebuild,
+  same browser gate. Clean pass → keep pgrust (stack-conventions §9).
+  Failure → revert `entire` to `database/postgresql` and record why in
+  the component README.
 - **Stage B — oidc enabled:** env-based (rebuild with the `oidc`
   extension) or UI-based (provider configured in the app's own web UI),
   then re-verify in the browser.
@@ -104,10 +105,10 @@ Follow `references/verification-procedure.md` in order. Summary:
    stage, no oidc): clean TLS, local login, the DEPLOYMENT.md
    functional gate scenario (cross-part E2E), screenshot artifact
    (`references/browser-e2e.md` §1).
-7. **Stage A2 browser gate** (DB alternative): rebuild with the `pgrust`
-   combo, run the same Stage A flow (`references/browser-e2e.md` §1); on
-   a clean pass promote `pgrust` to the default combo (stack-conventions
-   §9).
+7. **Stage A2 browser gate** (DB alternative): swap `database/pgrust` into
+   `entire` in place of `database/postgresql`, run the same Stage A flow
+   (`references/browser-e2e.md` §1); clean pass → keep pgrust, failure →
+   revert to postgresql and note why (stack-conventions §9).
 8. TLS-terminating services: cert-wait behavior verified (kanidm
    delayed-start sleep entrypoint; coturn gosu poll loop).
 9. `STEP_CA_TRUST=true` installs the CA bundle into the container;
