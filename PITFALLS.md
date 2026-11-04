@@ -268,3 +268,39 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - where: vibe-kanban host variants (repo-sync / repo-local share project `vibe-kanban-host`)
 - symptom: `vibe-kanban-host-network` disappears for other containers
 - fix: `up -d` of the next variant recreates it; run down before switching variants
+
+## P-022: ghcr tags for opencode have no `v` prefix
+- hits: 1 | status: fixed | first: 2026-11-04 | last: 2026-11-04
+- where: opencode-stack (image refs in compose/.env.example/docs)
+- symptom: `ghcr.io/anomalyco/opencode:v2.2.5` pull fails manifest unknown
+- fix: tag is `ghcr.io/anomalyco/opencode:2.2.5` (upstream release tag is `v2.2.5`, ghcr tag drops the `v`)
+
+## P-023: compose `up` skips dockerfile_inline build when image tag exists
+- hits: 1 | status: fixed | first: 2026-11-04 | last: 2026-11-04
+- where: opencode-stack base compose (dockerfile_inline FROM-layer)
+- symptom: after changing the FROM-layer, `docker compose up -d` reuses the stale local image; config changes never land
+- fix: run `docker compose up -d --build` (or `docker compose build` first); `down` does not remove the built image
+
+## P-024: exported shell env var silently overrides compose .env
+- hits: 1 | status: fixed | first: 2026-11-04 | last: 2026-11-04
+- where: opencode-stack gate runs (OPENCODE_SERVER_PASSWORD)
+- symptom: container gets a stale/empty password from the agent's shell env instead of the value in `app/build/forwarding/.env`; auth gate behaves inconsistently
+- fix: always run compose as `env -u OPENCODE_SERVER_PASSWORD docker compose ...` from the forwarding dir
+
+## P-025: opencode server rejects `?auth_token=` — Basic header only
+- hits: 1 | status: fixed | first: 2026-11-04 | last: 2026-11-04
+- where: opencode-stack healthcheck + all gate curl calls
+- symptom: `GET ...?auth_token=<password>` returns 401 even with the correct password
+- fix: HTTP Basic only: `-u opencode:<password>` / `Authorization: Basic base64(opencode:<password>)`
+
+## P-026: opencode legacy auth.json import migration does not import credentials
+- hits: 1 | status: open | first: 2026-11-04 | last: 2026-11-04
+- where: opencode-stack data volume (`/data/opencode/auth.json` + opencode.db), upstream migration `20260805200742_import_legacy_credentials`
+- symptom: fresh db created with auth.json already present still has an empty credential table; `opencode auth list` shows nothing; model calls fail `provider.no-route`
+- fix (workaround): `POST /api/credential` `{"integrationID":"openrouter","label":"API key","value":{"type":"key","key":"<key>"},"activate":true}`; root cause of the skipped import unresolved
+
+## P-027: opencode model IDs use dots, not the release-style dashes
+- hits: 1 | status: fixed | first: 2026-11-04 | last: 2026-11-04
+- where: opencode-stack gate session model selection
+- symptom: session with model `anthropic/claude-haiku-4-5` fails `provider.no-route` even though the provider is available
+- fix: catalog ID is `anthropic/claude-haiku-4.5` — always pick IDs from `GET /api/model`, never guess from release tags

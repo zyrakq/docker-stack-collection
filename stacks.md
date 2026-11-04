@@ -110,3 +110,4 @@ Generated from [`stacks.csv`](stacks.csv) by `.githooks/gen-stacks-md.sh` — do
 | `stacks/self-hosting/media-streaming/sunshine` | [repo](https://github.com/zyrakq/sunshine-stack.git) | unverified ❓ |
 | `stacks/self-hosting/media-streaming/youtube/invidious` | [repo](https://github.com/zyrakq/invidious-stack.git) | unverified ❓ |
 | `stacks/self-hosting/media-streaming/youtube/metube` | - | incomplete 🚧 |
+| `stacks/self-hosting/ai-services/automation/opencode-stack` | - | incomplete 🚧 |
