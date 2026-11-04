@@ -57,10 +57,18 @@ No globbing/fallback when restoring `.env` files into regenerated dirs.
 Init scaffolds the old shape; new stacks need hand-written
 `[build.environments]` config.
 
-### L14. Script-style features can't be combined as extensions — `proposal`
+### L14. Script-style features can't be combined as extensions — `settled`
 Features needing scripts/entrypoint hooks cannot be modeled as combinable
 extensions. Agents hacked them in as separate non-combinable extensions,
 producing combos like `forwarding-repo-sync-X`.
+
+Resolved in opencode-stack: script-style features ship as a committed
+`app/plugins/` folder of ready-made install scripts; users opt in by
+copying them into a git-ignored `plugins/` folder next to the generated
+`docker-compose.yml`; the extension's `dockerfile_inline` COPYs that
+folder (absence-tolerant glob) and runs `install-*.sh` at build time; the
+base image's `entrypoint.sh` does the config injection. Combos collapsed
+to one per environment (`entire` / `entire-trust`).
 
 ## Interim workarounds (within current capabilities)
 
