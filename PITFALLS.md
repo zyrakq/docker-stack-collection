@@ -256,3 +256,15 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - where: vibe-kanban Stage D gate
 - symptom: `client/pair` lives on the host server, release build forbids pairing to itself; in-app browser disconnected, no agent-browser CLI
 - fix: needs second host machine + attached desktop browser + remote web credentials; rerun Batch 8 manually
+
+## P-020: repo-local bind mount not writable by uid 10001
+- hits: 1 | status: fixed | first: 2026-11-04 | last: 2026-11-04
+- where: vibe-kanban host `repo-local` extension (`REPOS_PATH`)
+- symptom: host container (uid 10001) cannot write into the bind-mounted repo
+- fix: host-side permissions are the user's job (chown/ACL, or `chmod -R a+rwX` for tests); stack never changes them
+
+## P-021: `docker compose down` in one host variant dir removes the shared network
+- hits: 1 | status: fixed | first: 2026-11-04 | last: 2026-11-04
+- where: vibe-kanban host variants (repo-sync / repo-local share project `vibe-kanban-host`)
+- symptom: `vibe-kanban-host-network` disappears for other containers
+- fix: `up -d` of the next variant recreates it; run down before switching variants
