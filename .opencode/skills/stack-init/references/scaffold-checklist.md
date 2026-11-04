@@ -89,7 +89,7 @@ copy from live stacks:
 
 - [ ] pgrust — `components/extensions/database/pgrust/` (same shape as
       the postgresql stage, `malisper/pgrust:v0.2` image default);
-      promote to default combo on a clean Stage A2 pass.
+      swap into `entire` in place of postgresql; keep on a clean Stage A2 pass, else revert.
 - [ ] oidc — `components/extensions/oidc/` (patterns.md §6) and
       `step-ca-trust/` (patterns.md §7) where applicable.
 - [ ] s3 — `components/extensions/s3-storage/` (patterns.md §8) where

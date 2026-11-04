@@ -52,8 +52,8 @@ alternative DB engine:
       (verification-procedure.md §1–4).
 - [ ] Same Stage A flow: page loads, TLS clean, local login, the
       DEPLOYMENT.md functional gate scenario, screenshot artifact.
-- [ ] Clean pass → `pgrust` becomes the default combo (stack-conventions
-      §9). Failure → keep `postgresql` as the default combo and record
+- [ ] Clean pass → keep `database/pgrust` in `entire` (stack-conventions
+      §9). Failure → revert `entire` to `database/postgresql` and record
       why in the component README.
 
 ## 2. Stage B — oidc enabled
