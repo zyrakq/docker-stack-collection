@@ -96,6 +96,8 @@ Follow `references/verification-procedure.md` in order. Summary:
 
 0. `bash <skills-dir>/stack-conventions/scripts/check-stack.sh <stack-dir>`
    (`<skills-dir>` = parent of this skill's dir) — must print no violations.
+   Also `bash <skills-dir>/stack-conventions/scripts/check-gitkeep.sh <stack-dir>`
+   — must print nothing (`--fix` applies).
 1. `cd app/ && sb build` — check the `build/<env>/<combo>/` output structure.
 2. `cd build/<env>/<combo>/ && cp .env.example .env` and edit values.
 3. `docker compose config` — must validate.
