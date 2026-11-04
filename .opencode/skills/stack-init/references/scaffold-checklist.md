@@ -20,6 +20,7 @@ from the collection root — do not invent license/gitignore text.
 - [ ] `.gitmessage` — copy verbatim from the collection root.
 - [ ] `LICENSE-APACHE`, `LICENSE-MIT` — copy verbatim from the collection
       root.
+- [ ] (submodule dirs: NEVER add `.gitkeep` or any file inside them)
 - [ ] `.gitmodules` + `modules/ssl-automation/{letsencrypt-manager,step-ca-manager}`
       submodules — ONLY if the stack joins an SSL stack. URLs:
       `https://github.com/zyrakq/step-ca-manager-stack.git`,

@@ -18,6 +18,12 @@ while IFS= read -r dir; do
   fi
 done < <(find "$d" -mindepth 0 \( -name .git -o -name .stackbuilder -o -name build -o -name node_modules -o -name .vscode -o \( -type d -exec test -e {}/.git \; ! -path "$d" \) \) -prune -o -type d -print)
 
+if [[ -f $d/.gitmodules ]]; then
+  while read -r _ sp; do
+    [[ -e $d/$sp/.gitkeep ]] && v ".gitkeep inside submodule: $sp"
+  done < <(git -C "$d" config -f .gitmodules --get-regexp '\.path$')
+fi
+
 while IFS= read -r t; do
   rel=${t#"$d"/}
   awk '/^\[/{s=($0=="[build.combos]")} s&&/^[A-Za-z0-9_"-]+[ ]*=/{gsub(/[ "=].*/,"",$1);print $1}' "$t" |
