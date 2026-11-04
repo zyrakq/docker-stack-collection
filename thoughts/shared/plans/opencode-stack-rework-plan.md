@@ -372,12 +372,12 @@ git add app/build && git commit -m "chore(app): rebuild committed build outputs 
 **File:** `stacks/self-hosting/ai-services/automation/opencode-stack/app/README.md`
 **Depends:** 3.1
 
-- Quick Start step 2 paths: `build/forwarding/` → `build/forwarding/entire/` (same for letsencrypt; step-ca → `build/step-ca/entire-trust/`).
+- Quick Start paths stay flat: `build/forwarding/`, `build/letsencrypt/`, `build/step-ca/` (each env has exactly one combo — `skip_base_generation=true` — so NO combo subdirectory; only annotate the step-ca comment with "(entire-trust combo)").
 - Project Structure: add `plugins/` (ready-made install scripts, copied into build-dir `plugins/` folders) alongside components/.
 - Extensions section: rewrite the `plugins` bullet (line ~99) to the new mechanism (inert without folder; copy from `app/plugins/`; toggles; base entrypoint injection; sb rebuild wipes the folder — re-copy). Note `repo-local` is a swap-in alternative (edit the combo in `stackbuilder.toml`), and combos are now `entire` / `entire-trust`.
 - Replace "`sb build` generates all combo directories under `build/`" wording with the single-combo-per-env layout.
 
-**Verify:** `grep -n 'build/forwarding/$' app/README.md` returns nothing; plugins bullet mentions `app/plugins/`.
+**Verify:** `grep -n 'build/forwarding/$' app/README.md` returns nothing (Quick Start `cd` lines correctly end in `build/forwarding/` etc. — flat layout); plugins bullet mentions `plugins/` (link to `app/plugins/`).
 **Commit (stack repo):** `docs(app): plugins-folder mechanism and entire-combo paths`
 
 ### Task 4.3: Stack-root README — quick start path
