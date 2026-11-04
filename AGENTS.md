@@ -70,8 +70,7 @@ Git does not track empty directories, and IDEs hide or collapse a folder
 whose only content is another folder — intermediate directories disappear
 from the project tree. Rule:
 
-- Whenever a directory contains only other directories (or nothing at
-  all), put an empty `.gitkeep` file in it and commit it.
+- Whenever a directory contains only other directories, put an empty `.gitkeep` file in it and commit it.
 - Apply this everywhere you create or restructure directories — in this
   repo and in stack repos. If you add `a/b/c.txt` and `a` would contain
   nothing but `b`, also create `a/.gitkeep`.

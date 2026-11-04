@@ -21,8 +21,8 @@ while IFS= read -r dir; do
       echo "REMOVE $rel/.gitkeep (dir has files)"
       (( fix )) && rm "$dir/.gitkeep" || bad=1
     fi
-  elif (( ! files )); then
-    echo "ADD    $rel/.gitkeep ($( (( subs )) && echo only subdirs || echo empty))"
+  elif (( ! files && subs )); then
+    echo "ADD    $rel/.gitkeep (only subdirs)"
     (( fix )) && : > "$dir/.gitkeep" || bad=1
   fi
 done < <(find "$root" \( -name .git -o -name node_modules -o -name .stackbuilder \) -prune -o \

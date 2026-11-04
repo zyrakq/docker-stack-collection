@@ -26,7 +26,7 @@ build on these rules.
 
 - **Folder name** never has the `-stack` suffix (only the git repo name may).
 - **`.gitkeep`**: empty file, only in a directory containing nothing but
-  subdirectories (or nothing). Remove it once the directory gains files.
+  subdirectories. Remove it once the directory gains files.
   **NEVER inside a git submodule** (any dir with `.git`, e.g. each
   `modules/ssl-automation/*`): its contents belong to another repo, the
   parent only stores a gitlink. Never create, edit or delete any file
