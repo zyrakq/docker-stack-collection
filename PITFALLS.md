@@ -304,3 +304,22 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - where: opencode-stack gate session model selection
 - symptom: session with model `anthropic/claude-haiku-4-5` fails `provider.no-route` even though the provider is available
 - fix: catalog ID is `anthropic/claude-haiku-4.5` — always pick IDs from `GET /api/model`, never guess from release tags
+
+## P-028: compose interpolates every `$var` inside dockerfile_inline at config time
+- hits: 1 | status: fixed | first: 2026-11-04 | last: 2026-11-04
+- where: opencode-stack plugins extension (dockerfile_inline RUN loop)
+- symptom: `for s in ...; do sh "$s"; done` in dockerfile_inline — compose warns `The "s" variable is not set` and bakes an empty string into the layer
+- fix: escape shell vars in dockerfile_inline as `$$var` (same rule as healthchecks); only `${VAR:-}` forms are meant for compose interpolation
+
+## P-029: pip dependency-group installs abort all-or-nothing on py3.14 (Alpine 3.24)
+- hits: 1 | status: open | first: 2026-11-04 | last: 2026-11-04
+- where: opencode-stack plugins extension (headroom install in the image build)
+- symptom: installing headroom-ai's full dependency set in one `pip install` fails wholesale when any single package lacks a py3.14 musl wheel (magika has none; ast-grep-cli ships gnu-only wheels)
+- fix (workaround): install the CLI `--no-deps`, then stage deps: one core group, then the rest one at a time; magika is safe to drop (lazy import inside try/except), ast-grep absence only degrades a fallback
+
+## P-030: rtk `init` is global-only for OpenCode plugins
+- hits: 1 | status: fixed | first: 2026-11-04 | last: 2026-11-04
+- where: opencode-stack plugins extension (rtk install script)
+- symptom: `rtk init --opencode` errors "OpenCode plugin is global-only"; `rtk hook opencode` alone is just the stdin hook processor and generates nothing
+- fix: run `rtk init -g --opencode` (non-interactive defaults to "N" for the settings.json prompt — harmless), then copy the generated `/root/.config/opencode/plugins/rtk.ts` to the baked plugin dir
+
