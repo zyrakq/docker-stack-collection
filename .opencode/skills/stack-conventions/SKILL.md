@@ -34,6 +34,9 @@ build on these rules.
   run `git submodule update --init`, don't "fix" it. `.gitkeep` applies
   only to real (non-submodule) dirs, e.g. `modules/` itself if it holds
   no files.
+  Verify with `scripts/check-gitkeep.sh [--fix] <stack-dir>` (prints
+  ADD/REMOVE lines; skips submodules and gitignored dirs) — run it after
+  any directory change and before every commit.
 - **`.vscode/settings.json`** is mandatory at the stack root:
   ```json
   {
