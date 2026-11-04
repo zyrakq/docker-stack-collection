@@ -2,21 +2,21 @@
 
 **Goal:** Add ONE extension `opencode` to `stacks/self-hosting/ai-services/automation/vibe-kanban` component `app/host` that delivers opencode settings (provider API keys, `OPENCODE_CONFIG_CONTENT`, optional `opencode.json`) to the host container.
 
-**Architecture:** Env-only settings via `${VAR:-}` in the fragment; the optional global config file is delivered with `dockerfile_inline` (FROM the unchanged base image, `COPY --chown` to `~/.config/opencode/opencode.json`), shipped as `opencode.json.example` and preserved/copied into `build/` via `env_file_patterns` (numa idiom). A named volume `vibe-kanban-host-opencode` persists the npm cache (`/home/appuser/.npm`). Combos `step-ca-opencode-repo-sync` / `step-ca-opencode-repo-local` (step-ca variant first).
+**Architecture:** Env-only settings via `${VAR:-}` in the fragment; the optional global config file is delivered with `dockerfile_inline` (FROM the unchanged base image, `COPY --chown` to `~/.config/opencode/opencode.json`), shipped as `opencode.json.example` and preserved/copied into `build/` via `env_file_patterns` (numa idiom). No new volumes (opencode state lives in `/data/opencode`). Combos `step-ca-opencode-repo-sync` / `step-ca-opencode-repo-local` (step-ca variant first).
 
 **Design:** none (request-driven; decisions below).
 
 Stack root (`$S`): `stacks/self-hosting/ai-services/automation/vibe-kanban`; component (`$H`): `$S/app/host`. Stack is its own git repo — commit stack files inside `$S`; this plan lives in the main repo.
 
 ## Verified against upstream (BloopAI/vibe-kanban @7c38070, 2026-11-04)
-- `crates/executors/src/executors/opencode.rs`: executor spawns `npx -y opencode-ai@1.4.7 serve --hostname 127.0.0.1 --port 0` (pinned 1.4.7; the image's global `opencode-ai@latest` is NOT used unless `base_command_override`). npx therefore downloads into `~/.npm` at first run -> needs network + cache.
+- `crates/executors/src/executors/opencode.rs`: executor spawns `npx -y opencode-ai@1.4.7 serve --hostname 127.0.0.1 --port 0` (pinned 1.4.7; the image's global `opencode-ai@latest` is NOT used unless `base_command_override`). npx downloads the package at first run (no cache volume; reinstall after container recreate is accepted).
 - Env: executor sets `NPM_CONFIG_LOGLEVEL`, `NODE_NO_WARNINGS`, `NO_COLOR`, `OPENCODE_SERVER_USERNAME/PASSWORD`, `OPENCODE_PERMISSION` (when not auto-approve), then `ExecutionEnv.with_profile(cmd).apply_to_command`; no `env_clear` -> container env (provider keys) is inherited by the child. `env.rs`: profile env (`CmdOverrides.env`) overrides.
 - `setup_compaction_env` READS the existing `OPENCODE_CONFIG_CONTENT` and MERGES `compaction` JSON into it (not overwrites) -> user-supplied value is supported.
 - XDG: image sets `XDG_DATA_HOME=/data`, so opencode data/auth.json = `/data/opencode` (already persisted by `vibe-kanban-host-data`, NOT `~/.local/share/opencode`). Config dir = `~/.config/opencode` (= `/home/appuser/.config/opencode`).
 - opencode docs (opencode.ai/docs/config): precedence remote < global `~/.config/opencode/opencode.json` < `OPENCODE_CONFIG` < project < `.opencode` < `OPENCODE_CONFIG_CONTENT`; `{env:VAR}` substitution supported in config; configs merged.
 
 ## Decisions
-- Do NOT mount a volume on `~/.config/opencode` (a volume would shadow the COPY'd config and freeze it after first creation). Volume `vibe-kanban-host-opencode` mounts `/home/appuser/.npm`; inline Dockerfile pre-creates it owned by 10001 so the volume inherits ownership (works with step-ca-trust `user: root` + setpriv drop). opencode state/auth already lives in `/data/opencode`.
+- Do NOT mount any volume for opencode (user decision: no npm-cache volume; a volume on `~/.config/opencode` would also shadow the COPY'd config). opencode state/auth already lives in `/data/opencode`.
 - Extension overrides `image:` with `${OPENCODE_IMAGE:-localhost/vibe-kanban-host-opencode:0.1.45}` so the build does not retag the base tag; `FROM ${IMAGE:-localhost/vibe-kanban-host:0.1.45}`.
 - Config file `opencode.json` default content `{}`-compatible with `{env:...}` references; keys are never baked into the image (use `{env:ANTHROPIC_API_KEY}`).
 - Mutually exclusive combos unchanged: opencode combines with exactly one repo extension.
@@ -48,8 +48,8 @@ services:
       dockerfile_inline: |
         FROM ${IMAGE:-localhost/vibe-kanban-host:0.1.45}
         USER root
-        RUN mkdir -p /home/appuser/.config/opencode /home/appuser/.npm \
-            && chown -R 10001:10001 /home/appuser/.config /home/appuser/.npm
+        RUN mkdir -p /home/appuser/.config/opencode \
+            && chown -R 10001:10001 /home/appuser/.config
         COPY --chown=10001:10001 opencode.json /home/appuser/.config/opencode/opencode.json
         USER 10001
     environment:
@@ -60,12 +60,6 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GROQ_API_KEY: ${GROQ_API_KEY:-}
       OPENCODE_MODEL: ${OPENCODE_MODEL:-}
-    volumes:
-      - vibe-kanban-host-opencode:/home/appuser/.npm
-
-volumes:
-  vibe-kanban-host-opencode:
-    name: vibe-kanban-host-opencode
 ```
 Note: empty-string `OPENCODE_CONFIG_CONTENT` must not break upstream merge — verify in 4.1 (if opencode rejects empty string, switch to omitting via `${OPENCODE_CONFIG_CONTENT:-{}}`). Check the base's final `USER` in `images/vibe-kanban-host/Dockerfile` and replace `USER 10001` with it.
 
@@ -126,14 +120,14 @@ step-ca-opencode-repo-local = ["step-ca-trust", "opencode", "repo-local"]
 ```
 - `[build.environments.step-ca]`: `combos = ["step-ca-opencode-repo-sync", "step-ca-opencode-repo-local", "step-ca-repo-sync", "step-ca-repo-local"]` (step-ca variant first; existing combos kept).
 
-**Verify:** `cd $H && sb build` succeeds; `build/step-ca/step-ca-opencode-repo-sync/docker-compose.yml` contains the `build:` block, volume `vibe-kanban-host-opencode`, `user: root` entrypoint from step-ca-trust; `docker compose config -q` on each opencode combo.
+**Verify:** `cd $H && sb build` succeeds; `build/step-ca/step-ca-opencode-repo-sync/docker-compose.yml` contains the `build:` block, `user: root` entrypoint from step-ca-trust; `docker compose config -q` on each opencode combo.
 **Commit:** `feat(host): wire opencode extension and combos`
 
 ## Batch 3: Docs (parallel, one file each)
 
 - 3.1 `$S/DEPLOYMENT.md`: catalog row `| opencode (host settings: provider keys, config) | product | implemented | host; combines with one repo extension + step-ca-trust |`; remove/adjust nothing else. Also replace "extra executor CLIs" row note only if it overlaps (leave).
 - 3.2 `$S/UPSTREAM.md` (append-only): row `| 2026-11-04 | 7c3807084daad0d9d315064f60fa869de254f027 | localhost/vibe-kanban-host-opencode:0.1.45 (FROM base) | opencode executor: npx opencode-ai@1.4.7, inherits env, merges OPENCODE_CONFIG_CONTENT; opencode data in /data/opencode |`.
-- 3.3 `$H/README.md`: extension section: env vars table, `cp components/extensions/opencode/opencode.json.example` flow, volume purpose (npm cache), note data in `/data/opencode`, mutual exclusivity with repo ext, combos.
+- 3.3 `$H/README.md`: extension section: env vars table, `cp components/extensions/opencode/opencode.json.example` flow, note data in `/data/opencode`, mutual exclusivity with repo ext, combos.
 - 3.4 `/home/archuser/projects/docker-stack-collection/PITFALLS.md` (main repo): append only if 4.1 hits an obstacle (e.g. build `image:` retag, empty env var, volume ownership); otherwise skip.
 
 ## Batch 4: Gate
@@ -142,7 +136,7 @@ step-ca-opencode-repo-local = ["step-ca-trust", "opencode", "repo-local"]
 Step-ca variant FIRST, never touching the live step-ca-manager:
 1. `cd $H && sb build`; `docker compose config -q` for both opencode combos.
 2. Up `step-ca-opencode-repo-sync` with `ANTHROPIC_API_KEY=sk-test`, `OPENCODE_CONFIG_CONTENT='{"autoupdate":false}'`.
-3. Checks: `docker exec vibe-kanban-host sh -c 'id; echo $ANTHROPIC_API_KEY; ls -ld /home/appuser/.npm; cat /home/appuser/.config/opencode/opencode.json'`; `/home/appuser/.npm` owned 10001 and writable after setpriv drop.
-4. Browser E2E (agent-browser): open host UI, create task with OPENCODE executor, verify opencode process starts (`docker exec ... ps | grep opencode-ai`), `/home/appuser/.npm/_npx` populated, `docker exec ... npx opencode-ai@1.4.7 debug config` (as 10001) shows provider options and merged config (key resolved from env).
+3. Checks: `docker exec vibe-kanban-host sh -c 'id; echo $ANTHROPIC_API_KEY; cat /home/appuser/.config/opencode/opencode.json'`.
+4. Browser E2E (agent-browser): open host UI, create task with OPENCODE executor, verify opencode process starts (`docker exec ... ps | grep opencode-ai`), `docker exec ... npx opencode-ai@1.4.7 debug config` (as 10001) shows provider options and merged config (key resolved from env).
 5. Repeat quickly for `step-ca-opencode-repo-local`; confirm `/repos` still works (repo gate not regressed).
 6. Update PITFALLS.md (3.4) and README status; commit in $S; push NOTHING.
