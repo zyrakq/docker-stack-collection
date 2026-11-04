@@ -323,3 +323,9 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: `rtk init --opencode` errors "OpenCode plugin is global-only"; `rtk hook opencode` alone is just the stdin hook processor and generates nothing
 - fix: run `rtk init -g --opencode` (non-interactive defaults to "N" for the settings.json prompt — harmless), then copy the generated `/root/.config/opencode/plugins/rtk.ts` to the baked plugin dir
 
+## P-031: opencode image has no `openssl`; busybox `ssl_client` is helper-only
+- hits: 1 | status: fixed | first: 2026-11-04 | last: 2026-11-04
+- where: opencode-stack step-ca-trust gate (TLS verification inside `opencode-stack-app`)
+- symptom: `openssl` not found in the app container (Alpine 3.24.3 base); busybox `ssl_client` rejects `-connect`/`-servername` (usage: `ssl_client [-s FD] [-I] -n SNI` — it is a helper applet invoked by wget, not a standalone client); in-container fingerprint greps print vacuous output (empty fingerprints match everything)
+- fix: run a throwaway `docker run --rm --network <net> alpine:3.20` container and `apk add -q openssl` there for all TLS chain checks (each `docker run` is fresh — re-install every time); verify trust by contrasting `openssl s_client -CAfile` with/without the root: untrusted gives "unable to get local issuer", trusted-but-expired gives only "certificate has expired"
+
