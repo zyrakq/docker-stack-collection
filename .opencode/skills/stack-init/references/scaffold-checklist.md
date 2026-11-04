@@ -70,8 +70,7 @@ from the collection root — do not invent license/gitignore text.
 
 ## Collection root
 
-- [ ] Append to `stacks.csv`: `stacks/<path>;-;unverified` (semicolon-separated;
-      `-` url when no remote; do not touch other rows).
+- [ ] Register the stack in the project's stack manifest, if one exists.
 
 ## First build (Stage A gate)
 

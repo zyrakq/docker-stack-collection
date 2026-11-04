@@ -75,8 +75,8 @@ run the `stack-analysis` skill gap mode first.
   (stack-conventions §9). Failure → keep `postgresql` default and record
   why in the component README.
 - **Stage B — oidc enabled:** env-based (rebuild with the `oidc`
-  extension) or UI-based (provider configured in the app's own web UI —
-  gitea, zerobyte), then re-verify in the browser.
+  extension) or UI-based (provider configured in the app's own web UI),
+  then re-verify in the browser.
 - **S3 round-trip — always last:** only when the `s3-storage` extension is
   present, after Stage B.
 

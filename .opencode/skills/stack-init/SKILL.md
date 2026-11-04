@@ -38,12 +38,12 @@ with the reason recorded in DEPLOYMENT.md, never silently skipped.
 ### Phase 0 — deployment model & upstream provenance
 
 1. **Determine stack type & category.** Ask the user if unclear. Choose the
-   category path `stacks/<category>/<subcategory>/<stack-name>/` following
-   existing entries in `stacks.csv`.
+   location: create the stack dir wherever the project keeps stacks (follow
+   the project's layout, ask if unclear).
 2. **Create the stack repo.**
    ```bash
-   mkdir -p stacks/<category>/<...>/<stack>
-   cd stacks/<category>/<...>/<stack>
+   mkdir -p <stack-dir>
+   cd <stack-dir>
    git init
    ```
 3. **Upstream provenance.** Ask the user for the upstream repo URL(s) — one
@@ -115,9 +115,8 @@ with the reason recorded in DEPLOYMENT.md, never silently skipped.
    `references/patterns.md` §11; list `database/postgresql` in the
    `entire` combo of `stackbuilder.toml`. Unresolvable blocker → REFUSE the stage with
    the reason recorded in DEPLOYMENT.md (§20) — never silently skip.
-9. **Register in stacks.csv** (collection root): append the row
-   `stacks/<category>/<...>/<stack>;-;unverified` — url is `-` when there is
-   no remote yet.
+9. **Register the stack** in the project's stack manifest, if it has one
+   (follow its format; no remote yet → empty/placeholder url).
 10. **Clean artifacts:** delete `.kilocode/`, `.clinerules/` if present.
 11. **Build & verify the base:** `cd app/ && sb build`, then follow the
     `stack-test` skill through the Stage A gate — Stage A (core group

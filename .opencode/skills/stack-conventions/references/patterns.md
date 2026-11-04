@@ -260,51 +260,47 @@ STEP_CA_TRUST=true
 STEP_CA_TRUST_RESTART=true
 ```
 
-## 8. s3-storage extension fragment (gitea)
-
-Source: gitea stack (embedded verbatim)
+## 8. s3-storage extension fragment (`<app>`)
 
 ```yaml
 services:
-  gitea:
+  <app>:
     environment:
-      GITEA__storage__STORAGE_TYPE: ${GITEA__storage__STORAGE_TYPE:-minio}
-      GITEA__storage__MINIO_ENDPOINT: ${GITEA__storage__MINIO_ENDPOINT:-minio:9000}
-      GITEA__storage__MINIO_ACCESS_KEY_ID: ${GITEA__storage__MINIO_ACCESS_KEY_ID}
-      GITEA__storage__MINIO_SECRET_ACCESS_KEY: ${GITEA__storage__MINIO_SECRET_ACCESS_KEY}
-      GITEA__storage__MINIO_IAM_ENDPOINT: ${GITEA__storage__MINIO_IAM_ENDPOINT:-}
-      GITEA__storage__MINIO_BUCKET: ${GITEA__storage__MINIO_BUCKET:-gitea}
-      GITEA__storage__MINIO_BASE_PATH: ${GITEA__storage__MINIO_BASE_PATH:-}
-      GITEA__storage__MINIO_LOCATION: ${GITEA__storage__MINIO_LOCATION:-us-east-1}
-      GITEA__storage__MINIO_USE_SSL: ${GITEA__storage__MINIO_USE_SSL:-false}
-      GITEA__storage__MINIO_INSECURE_SKIP_VERIFY: ${GITEA__storage__MINIO_INSECURE_SKIP_VERIFY:-false}
-      GITEA__storage__SERVE_DIRECT: ${GITEA__storage__SERVE_DIRECT:-true}
-      GITEA__storage__MINIO_BUCKET_LOOKUP_TYPE: ${GITEA__storage__MINIO_BUCKET_LOOKUP_TYPE:-auto}
+      <APP>__storage__STORAGE_TYPE: ${<APP>__storage__STORAGE_TYPE:-minio}
+      <APP>__storage__MINIO_ENDPOINT: ${<APP>__storage__MINIO_ENDPOINT:-minio:9000}
+      <APP>__storage__MINIO_ACCESS_KEY_ID: ${<APP>__storage__MINIO_ACCESS_KEY_ID}
+      <APP>__storage__MINIO_SECRET_ACCESS_KEY: ${<APP>__storage__MINIO_SECRET_ACCESS_KEY}
+      <APP>__storage__MINIO_IAM_ENDPOINT: ${<APP>__storage__MINIO_IAM_ENDPOINT:-}
+      <APP>__storage__MINIO_BUCKET: ${<APP>__storage__MINIO_BUCKET:-<app>}
+      <APP>__storage__MINIO_BASE_PATH: ${<APP>__storage__MINIO_BASE_PATH:-}
+      <APP>__storage__MINIO_LOCATION: ${<APP>__storage__MINIO_LOCATION:-us-east-1}
+      <APP>__storage__MINIO_USE_SSL: ${<APP>__storage__MINIO_USE_SSL:-false}
+      <APP>__storage__MINIO_INSECURE_SKIP_VERIFY: ${<APP>__storage__MINIO_INSECURE_SKIP_VERIFY:-false}
+      <APP>__storage__SERVE_DIRECT: ${<APP>__storage__SERVE_DIRECT:-true}
+      <APP>__storage__MINIO_BUCKET_LOOKUP_TYPE: ${<APP>__storage__MINIO_BUCKET_LOOKUP_TYPE:-auto}
 ```
-
-Source: gitea stack (embedded verbatim)
 
 ```env
 # S3 Storage
-GITEA__storage__STORAGE_TYPE=minio
-GITEA__storage__MINIO_ENDPOINT=minio:9000
-GITEA__storage__MINIO_ACCESS_KEY_ID=
-GITEA__storage__MINIO_SECRET_ACCESS_KEY=
-GITEA__storage__MINIO_IAM_ENDPOINT=
-GITEA__storage__MINIO_BUCKET=gitea
-GITEA__storage__MINIO_BASE_PATH=
-GITEA__storage__MINIO_LOCATION=us-east-1
-GITEA__storage__MINIO_USE_SSL=false
-GITEA__storage__MINIO_INSECURE_SKIP_VERIFY=false
-GITEA__storage__SERVE_DIRECT=true
-GITEA__storage__MINIO_BUCKET_LOOKUP_TYPE=auto
+<APP>__storage__STORAGE_TYPE=minio
+<APP>__storage__MINIO_ENDPOINT=minio:9000
+<APP>__storage__MINIO_ACCESS_KEY_ID=
+<APP>__storage__MINIO_SECRET_ACCESS_KEY=
+<APP>__storage__MINIO_IAM_ENDPOINT=
+<APP>__storage__MINIO_BUCKET=<app>
+<APP>__storage__MINIO_BASE_PATH=
+<APP>__storage__MINIO_LOCATION=us-east-1
+<APP>__storage__MINIO_USE_SSL=false
+<APP>__storage__MINIO_INSECURE_SKIP_VERIFY=false
+<APP>__storage__SERVE_DIRECT=true
+<APP>__storage__MINIO_BUCKET_LOOKUP_TYPE=auto
 ```
 
-Second exemplar (SPACES_* vars) — Source: linkwarden stack (embedded verbatim)
+Second exemplar (SPACES_* vars):
 
 ```yaml
 services:
-  linkwarden:
+  <app>:
     environment:
       SPACES_ENDPOINT: ${SPACES_ENDPOINT}
       SPACES_KEY: ${SPACES_KEY}
@@ -314,14 +310,12 @@ services:
       SPACES_FORCE_PATH_STYLE: ${SPACES_FORCE_PATH_STYLE:-true}
 ```
 
-Source: linkwarden stack (embedded verbatim)
-
 ```env
 # S3 Storage
 SPACES_ENDPOINT=http://minio:9000
 SPACES_KEY=
 SPACES_SECRET=
-SPACES_BUCKET_NAME=linkwarden
+SPACES_BUCKET_NAME=<app>
 SPACES_REGION=us-east-1
 SPACES_FORCE_PATH_STYLE=true
 ```

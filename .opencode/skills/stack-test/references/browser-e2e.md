@@ -73,37 +73,25 @@ alternative DB engine:
 Configure the provider in the app UI FIRST, save, then run the same browser
 login check as 2a, plus the email-linking assertion.
 
-**gitea**:
+**Generic UI-only app** (adapt to the app's UI):
 
-- [ ] Site Administration → Authentication Sources → Add new **OAuth2**
-      source.
-- [ ] Provider: OpenID Connect; Client ID / Client Secret from the kanidm
-      client.
-- [ ] OpenID Connect Auto Discovery URL:
+- [ ] Open the app's authentication/SSO settings, add an **OpenID Connect**
+      provider; Client ID / Client Secret from the kanidm client.
+- [ ] Discovery/issuer URL:
       `https://<kanidm-domain>/oauth2/openid/<client-name>/.well-known/openid-configuration`.
-- [ ] Redirect URI registered in kanidm:
-      `https://<gitea-domain>/user/oauth2/<provider>/callback`.
-- [ ] `STEP_CA_TRUST=true` AND `STEP_CA_TRUST_RESTART=true` REQUIRED —
-      gitea's outbound TLS to kanidm must trust the step-ca chain or the
-      discovery/save fails.
-- [ ] Save, then sign in via the new source on the login page.
-
-**zerobyte** (follow the steps verbatim):
-
-- [ ] Provider ID: `kanidm`.
-- [ ] Issuer URL: `https://<kanidm-domain>/oauth2/openid/zerobyte`.
-- [ ] Discovery endpoint:
-      `https://<kanidm-domain>/oauth2/openid/zerobyte/.well-known/openid-configuration`.
-- [ ] Redirect URL: `${BASE_URL}/api/auth/sso/callback/${providerId}`.
-- [ ] "Link matching emails to existing accounts": **On**.
-- [ ] Save, then run the browser login check.
+- [ ] Redirect URI registered in kanidm must equal the callback URL the app
+      shows/documents.
+- [ ] Enable the app's "link matching emails to existing accounts" option.
+- [ ] If the app's outbound TLS to kanidm fails: `STEP_CA_TRUST=true` AND
+      `STEP_CA_TRUST_RESTART=true` REQUIRED (trust the step-ca chain).
+- [ ] Save, then sign in via the new provider on the login page.
 
 ## 3. Failure triage
 
 | Symptom | Cause | Fix |
 |---|---|---|
 | Cert error / warning in the browser | CA trust not installed on the browser host | §0 prerequisites — never an app bug |
-| Redirect loop / invalid callback | Wrong callback URL in the kanidm client (or app) | Match the redirect exactly: gitea `/user/oauth2/<provider>/callback`, zerobyte `${BASE_URL}/api/auth/sso/callback/${providerId}` |
+| Redirect loop / invalid callback | Wrong callback URL in the kanidm client (or app) | Match the redirect exactly to the app's documented callback URL |
 | kanidm login fails / access denied | Test user not in the required group; scope map wrong | `kanidm-oidc` skill cookbook |
 | UI save fails / discovery error | App cannot TLS-verify kanidm | `STEP_CA_TRUST` + `STEP_CA_TRUST_RESTART` both set; app-specific CA envs (`REQUESTS_CA_BUNDLE`, `SSL_CERT_FILE`) |
 | Failure caused by the live manager setup | step-ca-manager stack | Switch to the forwarding variant; NEVER touch the manager stack |

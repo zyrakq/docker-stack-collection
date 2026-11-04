@@ -8,7 +8,7 @@ Reasons behind each convention in `SKILL.md`. When an assumption breaks
    skills carry it without server infrastructure. MCP only if limits are hit.
 2. **Location `.opencode/skills/` at collection root.** OpenCode discovers
    project skills from the project root toward the current directory, so
-   skills work even when a session starts inside `stacks/<category>/<stack>/`.
+   skills work even when a session starts inside a stack directory.
    Specs and rationale live as supporting files inside each skill directory —
    they travel with the skill.
 3. **No host bind mounts.** Bind mounts break multi-host docker contexts and
@@ -74,7 +74,6 @@ Reasons behind each convention in `SKILL.md`. When an assumption breaks
     correct value depends on the deployment environment (public URLs, TLS
     defaults) has no single right default — declaring it in base
     guarantees a wrong default somewhere. Each overlay owns its default.
-22. **Self-contained skills (no `stacks/` path pointers).** Stacks are
+22. **Self-contained skills (no path pointers into stacks).** Stacks are
     independent repos that move and change; skills that point into them
-    rot silently. Patterns are embedded verbatim; attribution is by stack
-    name only.
+    rot silently. Patterns are embedded verbatim; no attribution to specific stacks.

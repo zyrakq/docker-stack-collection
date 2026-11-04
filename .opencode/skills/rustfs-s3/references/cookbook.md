@@ -50,7 +50,7 @@ Minimal read-write bucket policy JSON:
 2. Copy the extension fragment shape from the embedded s3-storage
    fragments in the `stack-conventions` skill
    (`references/patterns.md` §8) — env-only fragments
-   (`GITEA__storage__*` or `SPACES_*` var shapes).
+   (`<APP>__storage__*` or `SPACES_*` var shapes).
 3. Fill the app's `.env` with endpoint, key id, secret, bucket.
 4. Verify with a round-trip per the `stack-test` skill (put/get/delete).
 

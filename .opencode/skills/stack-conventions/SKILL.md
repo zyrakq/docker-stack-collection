@@ -232,10 +232,10 @@ passes its gate.
   step.
 - Provider is kanidm. Issuer convention:
   `https://<kanidm-domain>/oauth2/openid/<client-name>`.
-- UI-only OIDC apps (gitea, zerobyte): the provider is configured in the
-  app's own web interface, NOT via env — env only enables OAuth2 support
-  (gitea `GITEA__oauth2__ENABLE`). Account linking relies on matching
-  email (zerobyte: "Link matching emails to existing accounts: On"). The
+- UI-only OIDC apps: the provider is configured in the app's own web
+  interface, NOT via env — env at most enables OAuth2 support. Account
+  linking relies on matching email (enable the app's email-linking
+  option). The
   per-app UI configuration steps are embedded in the `stack-test` skill
   (`references/browser-e2e.md`).
 - Staged testing is MANDATORY for every stack (§9): verify the base
@@ -248,7 +248,7 @@ passes its gate.
 - The base implementation uses simple named volumes — S3 is wired ONLY
   after the base passes its gate (staged protocol, §9).
 - Prefer native S3 support: extension `s3-storage`, env-only fragment
-  (gitea `GITEA__storage__*`, linkwarden `SPACES_*` var shapes — embedded
+  (`<APP>__storage__*`, `SPACES_*` var shapes — embedded
   fragments in `references/patterns.md` §8).
 - Otherwise s3fs-fuse is the fallback — ONLY on volumes with NO database
   data; NEVER mount a shared DB dir via s3fs.
@@ -301,15 +301,14 @@ Three canonical patterns (verbatim snippets in `references/patterns.md`):
 
 ## 16. Operational gotcha
 
-`stacks/` is gitignored by the collection repo and each stack is its own git
-repo. Root-level glob/grep sees NOTHING inside `stacks/` — always target a
-specific stack path, e.g. `stacks/<category>/<...>/<stack>/app/...`.
+Each stack may be its own git repo, possibly gitignored by the parent
+project. Root-level glob/grep may see NOTHING inside it — always target the
+specific stack path.
 
 ## 17. Upstream provenance
 
 Every stack records WHERE its deployment configs come from in a per-stack
-`UPSTREAM.md` at the stack root. Provenance must travel with the stack repo
-(`stacks/` is gitignored by the collection repo). The `stack-init`,
+`UPSTREAM.md` at the stack root. Provenance must travel with the stack repo. The `stack-init`,
 `stack-modernize`, and `stack-test` skills maintain the file; this section is
 the canonical format definition.
 

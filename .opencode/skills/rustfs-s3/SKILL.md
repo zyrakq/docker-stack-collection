@@ -16,7 +16,7 @@ Full command cookbook: read `references/cookbook.md`.
 
 - Create buckets, users/keys, and policies on the rustfs instance.
 - Wire apps via the `s3-storage` extension env fragments
-  (gitea `GITEA__storage__*`, linkwarden `SPACES_*`).
+  (app-specific `<APP>__storage__*` / `SPACES_*` var shapes).
 
 ## Instance facts
 

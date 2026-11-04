@@ -51,7 +51,7 @@ Staged per `browser-e2e.md`. Stage A MUST pass before any extension work.
   - [ ] Env-based (`oidc` extension): rebuild, redeploy, browser login via
         the SSO button → kanidm → callback → session; email-matching
         assertions.
-  - [ ] UI-based (gitea, zerobyte): configure the provider in the app's web
+  - [ ] UI-based: configure the provider in the app's web
         UI first, save, then the same browser login check + email linking.
 - [ ] S3 (when present): round-trip — create bucket, put object, get object,
       delete (see `rustfs-s3` skill cookbook).
