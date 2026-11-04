@@ -366,3 +366,10 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
   любых source-built образов на bun/node с нативными зависимостями —
   сразу закладывать тулчейн в build-стадию
 
+
+## P-035: openwork-server routes are UNPREFIXED — /api/* probes all 404
+- hits: 1 | status: fixed | first: 2026-11-04 | last: 2026-11-04
+- where: openwork-stack smoke / token checks (openwork-server 0.18.4)
+- symptom: token positive/negative checks against `http://localhost:8787/api/info`, `/api/health`, `/api/config` etc. all return 404 with and without `Authorization: Bearer` — looks like auth is broken; the `/api/*` strings in the UI bundle and binary are client-side/mounted-elsewhere, not server routes
+- cause: server routes are registered at the ROOT (`/health`, `/status`, `/whoami`, `/capabilities`, `/workspaces`, `/tokens`, `/w/:id/...`) via `addRoute` in `apps/server/src/routes/core.ts`; there is no `/api` prefix on the server
+- fix: probe `GET /status` or `/whoami` with `Authorization: Bearer $OPENWORK_TOKEN` — 200 with correct token, 401 without/wrong; `/health` is the unauthenticated healthcheck
