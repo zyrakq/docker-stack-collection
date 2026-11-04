@@ -352,3 +352,17 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
   prepended; проверка — `yq --version` должен показывать mikefarah v4.x
 - fix: —
 
+## P-034: bun install без python/make/g++ ломает node-gyp нативные модули
+- hits: 1 | status: fixed | first: 2026-11-04 | last: 2026-11-04
+- where: source-built images (aionui stack, Dockerfile build stage)
+- symptom: `bun install` падает на install-скрипте `better-sqlite3`:
+  `gyp ERR! find Python` → `error: install script from "better-sqlite3"
+  exited with 1`; bun-образ не содержит python3 и C-тулчейн, а нативные
+  модули собираются node-gyp на этапе install
+- cause: node-gyp требует python3 + make + g++; slim/bun базовые образы их
+  не несут
+- fix: добавить `python3 make g++` в apt-get install build-стадии
+  Dockerfile (aionui, commit `fix(images): correct build for gate`); для
+  любых source-built образов на bun/node с нативными зависимостями —
+  сразу закладывать тулчейн в build-стадию
+
