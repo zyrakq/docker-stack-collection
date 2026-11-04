@@ -336,10 +336,11 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - fix: run a throwaway `docker run --rm --network <net> alpine:3.20` container and `apk add -q openssl` there for all TLS chain checks (each `docker run` is fresh — re-install every time); verify trust by contrasting `openssl s_client -CAfile` with/without the root: untrusted gives "unable to get local issuer", trusted-but-expired gives only "certificate has expired"
 
 ## P-032: `sb build` wipes the build-dir `plugins/` folder
-- hits: 1 | status: open | first: 2026-11-04 | last: 2026-11-04
+- hits: 1 | status: fixed | first: 2026-11-04 | last: 2026-11-04
 - where: opencode-stack plugins extension (user-supplied `plugins/` folder next to the generated `docker-compose.yml`)
 - symptom: after copying ready-made install scripts from `app/plugins/` into `build/<env>/plugins/` and setting `PLUGINS_*` toggles, a later `sb build` regenerates the build dir and silently removes the copied `plugins/` folder; the next `docker compose build` runs with no install scripts and the plugins mechanism stays inert
 - fix (workaround): re-copy the scripts from `app/plugins/` after every `sb build` (documented in `app/plugins/README.md` and `app/README.md`); root cause is sb's build-dir regeneration, not yet addressed in sb itself
+- fix: plugins redesigned as a pure base feature (commit 02e1517): install scripts moved to `app/components/base/plugins/`, and sb's copier walks the entire base component dir recursively, so `sb build` now auto-copies `plugins/` into every build dir — nothing to re-copy; the plugins extension and the manual copy step are gone
 
 ## P-033: системный yq — это python jq-wrapper, sb его отвергает
 - hits: 1 | status: mitigated | first: 2026-11-04 | last: 2026-11-04
