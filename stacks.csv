@@ -105,4 +105,4 @@ stacks/self-hosting/media-streaming/bookmarks/slash;https://github.com/zyrakq/sl
 stacks/self-hosting/media-streaming/sunshine;https://github.com/zyrakq/sunshine-stack.git;unverified
 stacks/self-hosting/media-streaming/youtube/invidious;https://github.com/zyrakq/invidious-stack.git;unverified
 stacks/self-hosting/media-streaming/youtube/metube;-;incomplete
-stacks/self-hosting/ai-services/automation/opencode-stack;-;completed
+stacks/self-hosting/ai-services/automation/opencode;-;completed
