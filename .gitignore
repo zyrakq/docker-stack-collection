@@ -101,6 +101,7 @@ stacks/self-hosting/communication/nostr/noauth/
 stacks/self-hosting/finance/hledger-web/
 stacks/self-hosting/integration-services/rsshub/
 stacks/self-hosting/media-streaming/book-management/stump/
+stacks/self-hosting/media-streaming/book-management/tome/
 stacks/self-hosting/media-streaming/bookmarks/karakeep/
 stacks/self-hosting/media-streaming/bookmarks/linkwarden/
 stacks/self-hosting/media-streaming/bookmarks/readeck/
