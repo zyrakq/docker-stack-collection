@@ -501,7 +501,7 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - fix: use `system oauth2 add-redirect-url` (singular); scope maps are managed with `system oauth2 update-scope-map` (alias of create-scope-map); identity check is `self whoami` (no top-level `whoami`). PKCE is enabled by default on new clients; `groups` claim emerges natively from the `groups` scope in 1.11 — no custom claim-map needed.
 
 ## P-050: `archive/tar: write too long` on compose config copy — empty `VIRTUAL_HOST` produces empty config target filename
-- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
+- hits: 2 | status: open | first: 2026-11-05 | last: 2026-11-05
 - where: tome stack, step-ca build layer `docker compose up` (vhost config registration)
 - symptom: `docker compose up` fails with `archive/tar: write too long` before any container starts
 - cause: compose `configs` target `/vhost.d/${VIRTUAL_HOST}` with `VIRTUAL_HOST` unset in the build `.env` → empty destination filename, tar writer chokes
