@@ -81,6 +81,7 @@ stacks/self-hosting/ai-services/chats/librechat/
 stacks/self-hosting/ai-services/chats/libre-webui/
 stacks/self-hosting/ai-services/chats/open-coreui/
 stacks/self-hosting/ai-services/chats/open-webui/
+stacks/self-hosting/ai-services/mcp/nanomcp/
 stacks/self-hosting/ai-services/model-serving/litellm/
 stacks/self-hosting/ai-services/model-serving/ollama/
 stacks/self-hosting/ai-services/model-serving/open-assistant/
