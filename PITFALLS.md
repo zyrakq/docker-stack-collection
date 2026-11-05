@@ -293,6 +293,12 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: container gets a stale/empty password from the agent's shell env instead of the value in `app/build/forwarding/.env`; auth gate behaves inconsistently
 - fix: always run compose as `env -u OPENCODE_SERVER_PASSWORD docker compose ...` from the forwarding dir
 
+## P-026: raw-curl GHCR manifest probes give misleading 404 — use `docker manifest inspect`
+- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
+- where: tome stack Phase 0 (ghcr.io/bndct-devops/tome tag probe)
+- symptom: tokens + Accept-header curls against `https://ghcr.io/v2/.../manifests/<tag>` returned 404/`MANIFEST_UNKNOWN` (with contradictory "OCI index found" bodies) for tags that actually exist; `docker manifest inspect` proves truth. Also ghcr tags may drop the `v` prefix (cf. P-022): tome ships `2.8.0`, not `v2.8.0`
+- fix: verify registry tags only via `docker manifest inspect <repo>:<tag>` / `docker buildx imagetools inspect`; treat curl probes as unreliable for GHCR
+
 ## P-025: opencode server rejects `?auth_token=` — Basic header only
 - hits: 1 | status: fixed | first: 2026-11-04 | last: 2026-11-04
 - where: opencode-stack healthcheck + all gate curl calls
