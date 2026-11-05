@@ -623,7 +623,7 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - fix: always verify bucket backends with an explicit temp alias: `MC_CONFIG_DIR=/tmp/opencode/<dir> mc alias set tmp http://<container-ip>:9000 <ak> <sk>`, then `mc ls tmp/<bucket>/`. Rule: never use a bare word prefix in mc paths unless `mc alias list` shows it
 
 ## P-063: `sb build` requires mikefarah yq v4 on PATH — the system `/usr/bin/yq` is a jq-wrapper and breaks the build
-- hits: 1
+- hits: 2
 - status: fixed
 - first: 2026-11-05
 - last: 2026-11-05
@@ -680,3 +680,17 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: app runs fine but writes to a volume fail with permission errors (omnibus: upload → 400 "ebook library is not writable"); `ls -ld` inside the container shows the mountpoint owned by `root:root` while sibling volumes are correctly owned
 - cause: Docker creates a named-volume mountpoint with the image's directory if it exists, else as root. The omnibus image has no `/books`//`/audiobooks` dirs and its entrypoint deliberately chowns only `/config` + `/cache` — library roots are left root-owned
 - fix: one-shot init service in base compose: same image, `user: "0:0"`, `entrypoint: sh -c "chown ${PUID:-1000}:${PGID:-1000} <volumes>"`, `restart: "no"`; main service gets `depends_on: <init>: condition: service_completed_successfully`. Verify with `docker exec <svc> ls -ld <volumes>` after `up`
+
+## P-069: debian-slim /bin/sh (dash) has no /dev/tcp — compose healthchecks must use curl
+- hits: 1 | status: fixed | first: 2026-11-05 | last: 2026-11-05
+- where: nanomcp stack (any CMD-SHELL healthcheck on debian-slim images)
+- symptom: healthcheck `exec 3<>/dev/tcp/127.0.0.1/7331` never succeeds; container stuck unhealthy while the app is fine
+- cause: /dev/tcp is a bashism; debian-slim ships dash as /bin/sh, which does not support it
+- fix: use curl in the healthcheck (`curl -s -o /dev/null -m 4 http://127.0.0.1:7331/healthz`); keep image HEALTHCHECK and compose healthcheck identical
+
+## P-070: credential stores that join dir + `<key>.json` — token file lives flat in the data dir, not a credentials/ subdir
+- hits: 1 | status: fixed | first: 2026-11-05 | last: 2026-11-05
+- where: nanomcp stack entrypoint seeding (upstream `credentials.zig pathOf` joins store dir + `<key>.json`; store dir = `<base>/userdata` per `state.zig`)
+- symptom: token seeded into `userdata/credentials/inbound-token.json` (0600, correct content) but gateway still answers 401 with a valid bearer
+- cause: the credential store's directory IS the userdata dir; `pathOf` produces `<userdata>/inbound-token.json` — the `credentials/` subdir guess was wrong
+- fix: seed at the flat path `<userdata>/inbound-token.json` (0600); when a 401-with-bearer persists, read the upstream's pathOf/state code to find the real store dir before guessing paths
