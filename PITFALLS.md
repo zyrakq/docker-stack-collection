@@ -698,7 +698,7 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - fix: seed at the flat path `<userdata>/inbound-token.json` (0600); when a 401-with-bearer persists, read the upstream's pathOf/state code to find the real store dir before guessing paths
 
 ## P-071: compose `${VAR:-default}` treats an EMPTY shell override as unset — empty-value gate runs need an override file
-- hits: 1 | status: fixed | first: 2026-11-05 | last: 2026-11-05
+- hits: 2 | status: fixed | first: 2026-11-05 | last: 2026-11-05
 - where: nanomcp Stage A gate (a) (any scenario that must run with a var explicitly EMPTY while the merged compose gives it a non-empty default)
 - symptom: `NANOMCP_SEED_STUB_URL= docker compose up` still seeded the stub — the container got the `.env`/default URL and healthz showed `tools: 1` instead of the required `tools: 0`
 - cause: `:-` (and `-`) substitution treats empty as unset, so an empty shell var loses to the compose default AND to `.env`; compose has no way to express "empty wins" inline
@@ -722,3 +722,10 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - workaround: удовлетворён check-stack.sh (основной гейт, согласуется с
   правилом .gitkeep в AGENTS.md); расхождение с check-gitkeep.sh записано
 - fix: —
+
+## P-073: nanomcp stdio extension gate gotchas — seeded entries persist in the named volume; tool names sanitize `-` to `_`
+- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
+- where: nanomcp mcp-gateway-stdio gate (any scenario flipping a seeding flag off/on between runs)
+- symptom: (a) after running with `NANOMCP_STDIO_HELPER=1`, a later run with the flag empty still shows the stdio-helper entry and `tools: 2` — the servers.json seed lives in the `nanomcp-userdata` named volume, so flag removal alone is not inertness; (b) calling the helper tool as `stdio-helper__echo` returns "unknown tool" — the gateway namespaces tools under the server ALIAS with `-` sanitized to `_`, so the real name is `stdio_helper__echo`
+- cause: (a) seeding is create-or-upsert into persistent state, never a delete; (b) alias-to-tool-name sanitization in the gateway's tool naming
+- fix: (a) inertness re-tests need `docker compose down -v` (fresh volume) plus a compose override file setting the flag to `""` (P-071 pattern); (b) use the sanitized name `stdio_helper__echo` in tools/call — documented in DEPLOYMENT.md
