@@ -430,3 +430,24 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: with `*.example.com` vhosts the companion never issues certificates; cert-wait hangs
 - cause: `*.example.com` does not resolve in this environment; the live step-ca-companion only issues certs for names it can see via the unbound redirect
 - fix: use `*.af` vhosts (e.g. `openwork.af`, `openwork-api.af`) — they resolve via the live unbound redirect and get certs in seconds; `*.example.com` placeholders stay only in `.env.example` docs
+
+## P-043: sb build fails with "yq is required but not available" on hosts without yq
+- hits: 1 | status: fixed | first: 2026-11-05 | last: 2026-11-05
+- where: koito stack — first `sb build` in app/
+- symptom: build aborts after "Configuration validation passed" with `Failed to initialize build executor: yq is required but not available`
+- cause: sb's default YAML merger shells out to yq v4+, which is not installed on the host (and host package installs are forbidden)
+- fix: set `yaml_merger = "rust"` under `[build]` in stackbuilder.toml (pattern already used by vibe-kanban stacks); sb then uses its built-in Rust merger
+
+## P-044: gabehf/koito image has no curl/wget — healthcheck must use bash /dev/tcp
+- hits: 1 | status: fixed | first: 2026-11-05 | last: 2026-11-05
+- where: koito stack — base compose healthcheck
+- symptom: no curl, wget, nc, python, perl or busybox in the image (debian:bookworm-slim + libvips only); standard HTTP healthchecks impossible
+- cause: upstream keeps the image minimal; bash 5.2 IS present and supports /dev/tcp pseudo-device connections
+- fix: CMD-SHELL `bash -c 'exec 3<>/dev/tcp/127.0.0.1/${PORT}; printf "GET /path HTTP/1.0\r\n\r\n" >&3; head -1 <&3 | grep -q " 200"'` — NOTE the slash syntax `/dev/tcp/host/port`; the colon syntax `/dev/tcp/host:port` fails with "No such file or directory"
+
+## P-045: Docker Hub tags for gabehf/koito are v-prefixed
+- hits: 1 | status: fixed | first: 2026-11-05 | last: 2026-11-05
+- where: koito stack — DEPLOYMENT.md image pin vs Docker Hub reality
+- symptom: `gabehf/koito:0` (as guessed in DEPLOYMENT.md) does not exist; pull fails
+- cause: upstream publishes only v-prefixed tags (v0, v0.3, v0.3.2, latest)
+- fix: pin `${IMAGE:-gabehf/koito:v0}`; verified via Docker Hub API + live pull + health smoke test; row appended to UPSTREAM.md
