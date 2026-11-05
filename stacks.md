@@ -84,9 +84,11 @@ Generated from [`stacks.csv`](stacks.csv) by `.githooks/gen-stacks-md.sh` — do
 | `stacks/self-hosting/ai-services/chats/open-coreui` | [repo](https://github.com/zyrakq/open-coreui-stack.git) | incomplete 🚧 |
 | `stacks/self-hosting/ai-services/chats/aionui` | - | unverified ❓ |
 | `stacks/self-hosting/ai-services/chats/open-webui` | [repo](https://github.com/zyrakq/open-webui-stack.git) | unverified ❓ |
+| `stacks/self-hosting/ai-services/mcp/nanomcp` | - | completed ✅ |
 | `stacks/self-hosting/ai-services/model-serving/litellm` | [repo](https://github.com/zyrakq/litellm-stack.git) | unverified ❓ |
 | `stacks/self-hosting/ai-services/model-serving/ollama` | [repo](https://github.com/zyrakq/ollama-stack.git) | unverified ❓ |
 | `stacks/self-hosting/ai-services/model-serving/open-assistant` | [repo](https://github.com/zyrakq/open-assistant-stack.git) | incomplete 🚧 |
+| `stacks/self-hosting/ai-services/mcp/nanomcp` | - | completed ✅ |
 | `stacks/self-hosting/cms/strapi` | [repo](https://github.com/zyrakq/strapi-stack.git) | incomplete 🚧 |
 | `stacks/self-hosting/communication/matrix/backend/conduit` | [repo](https://github.com/zyrakq/conduit-stack.git) | unverified ❓ |
 | `stacks/self-hosting/communication/matrix/backend/palpo` | [repo](https://github.com/zyrakq/palpo-stack.git) | incomplete 🚧 |
