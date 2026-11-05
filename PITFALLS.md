@@ -499,3 +499,24 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: `system oauth2 add-redirect-urls` / `create-scope-map` / top-level `whoami` not found or not behaving as older kanidm cooking notes describe
 - cause: kanidm 1.11.2 renamed/singularized several oauth2 subcommands
 - fix: use `system oauth2 add-redirect-url` (singular); scope maps are managed with `system oauth2 update-scope-map` (alias of create-scope-map); identity check is `self whoami` (no top-level `whoami`). PKCE is enabled by default on new clients; `groups` claim emerges natively from the `groups` scope in 1.11 — no custom claim-map needed.
+
+## P-050: `archive/tar: write too long` on compose config copy — empty `VIRTUAL_HOST` produces empty config target filename
+- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
+- where: tome stack, step-ca build layer `docker compose up` (vhost config registration)
+- symptom: `docker compose up` fails with `archive/tar: write too long` before any container starts
+- cause: compose `configs` target `/vhost.d/${VIRTUAL_HOST}` with `VIRTUAL_HOST` unset in the build `.env` → empty destination filename, tar writer chokes
+- fix: fill the step-ca env vars (`VIRTUAL_HOST`, `VIRTUAL_PORT`, `LETSENCRYPT_HOST`, `LETSENCRYPT_EMAIL`, `TOME_PUBLIC_URL`) in `build/<env>/*/.env` before `up`; stack then starts cleanly
+
+## P-051: Tome OIDC redirect URL is `/api/auth/oidc/callback`, NOT `/auth/callback`
+- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
+- where: tome stack oidc extension + Kanidm OAuth2 client `tome`
+- symptom: SSO callback would 404/fail redirect validation even though OIDC config endpoint reports enabled
+- cause: `/auth/callback` is the frontend post-login route (`TOME_OIDC_POST_LOGIN_REDIRECT` default), easily confused with the OIDC redirect; upstream docs (sso.md) require the callback to EXACTLY match `https://<host>/api/auth/oidc/callback`
+- fix: register `https://tome.af/api/auth/oidc/callback` in Kanidm (`system oauth2 add-redirect-url`, strict-redirect enabled) and default `TOME_OIDC_REDIRECT_URL` to it in the extension fragment; removed the wrong `/auth/callback` entry
+
+## P-052: kanidmd container has no shell and no kanidm CLI — run `kanidm/tools` sidecar instead of `docker exec`
+- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
+- where: any Kanidm admin operation on the live step-ca-manager instance
+- symptom: `docker exec kanidmd sh` / `kanidm` / `ls` all fail (`exec: "sh": executable file not found`); kanidm CLI absent from the server image
+- cause: kanidmd image is a minimal single-binary container (entrypoint `/sbin/kanidmd server`)
+- fix: `docker run --rm --network host --user 0:0 -e HOME=/tmp/kanidmcfg -v <scratch>:/tmp/kanidmcfg -v <scratch>/root_ca.crt:/etc/ssl/certs/ca-certificates.crt:ro kanidm/tools:1.11.2 kanidm ...` — token cache persists in the scratch mount; root CA bind-mount is required (kanidm.af uses step-ca internal TLS, else `InvalidCertificate(UnknownIssuer)`)
