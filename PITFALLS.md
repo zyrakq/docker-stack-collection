@@ -394,3 +394,10 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: `POST /workspaces` returns 404 (route not found) even with valid token
 - cause: `GET /workspaces` (listing) exists, but workspace CREATION has no HTTP API route — it is done through the web UI, not the API
 - fix: for key-free smoke, verify `GET /workspaces` returns 200 (listing); create data via the UI or rely on pre-seeded SQLite state, never attempt API-based workspace creation
+
+## P-038: sb build does not restore .env for newly added environments
+- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
+- where: openwork stack — added environment `forwarding-review` to stackbuilder.toml
+- symptom: after `sb build`, `build/<new-env>/` contains only docker-compose.yml + .env.example; no `.env` restored (existing envs got theirs)
+- cause: sb preserves/restores `.env` only for environments that already had one before the build; a brand-new environment starts without one
+- fix: copy the generated `build/<new-env>/.env.example` to `.env` manually and fill gate values (OPENWORK_TOKEN, REPO_SYNC_URL, etc.) before `docker compose up`
