@@ -600,3 +600,13 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: after `sb build`, the merged `build/<env>/<ext>/docker-compose.yml` was byte-identical to the base variant — the `REKORD_ACCESS_KEY` environment key vanished without any warning; the extension silently did nothing
 - cause: the rust YAML merger mis-parses a plain (unquoted) scalar containing ": " (the required-var message "…is required: 32-256 chars…" has one); the whole environment key drops out of the merged map
 - fix: double-quote the value — `REKORD_ACCESS_KEY: "${REKORD_ACCESS_KEY:?REKORD_ACCESS_KEY is required: …}"`; compose interpolation works inside quotes and the key survives the merge (verified in all 3 envs). Rule: quote any `${VAR:?…}` value whose message contains ": "
+
+## P-061: layered compose resolves relative build contexts against the FIRST -f file's dir — pass `--project-directory .`
+- hits: 1
+- status: fixed
+- first: 2026-11-05
+- last: 2026-11-05
+- where: re-kord s3fs-fuse extension gate (layered `up` from `app/build/forwarding/` with per-extension fragment subdirs); any stack whose extension fragments use a relative `build.context:`
+- symptom: layered `docker compose -f base/... -f <ext>/... up --build` fails with `unable to prepare context: path ".../base/s3fs-fuse" not found` even though the context dir exists next to the extension fragment
+- cause: compose resolves relative `build.context` paths against the directory of the FIRST `-f` file (here `base/`), not the cwd and not the fragment that declares the build
+- fix: add `--project-directory .` to the layered command (run from the build-env root) so `context: s3fs-fuse` resolves to `build/<env>/s3fs-fuse/`; stackbuilder already copies the entrypoint script into that subdir. Documented in the re-kord s3fs-fuse fragment comment
