@@ -118,3 +118,4 @@ Generated from [`stacks.csv`](stacks.csv) by `.githooks/gen-stacks-md.sh` — do
 | `stacks/self-hosting/media-streaming/music/polaris` | - | unverified ❓ |
 | `stacks/self-hosting/media-streaming/music/re-kord` | - | unverified ❓ |
 | `stacks/self-hosting/media-streaming/music/navidrome` | - | unverified ❓ |
+| `stacks/self-hosting/media-streaming/book-management/omnibus` | - | unverified ❓ |
