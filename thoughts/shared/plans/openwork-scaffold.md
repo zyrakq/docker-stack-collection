@@ -446,3 +446,275 @@ Implementers commit per task in the openwork stack repo
 (`stacks/self-hosting/ai-services/automation/openwork/`), conventional
 messages (`feat(stack): ...`). This plan itself is committed in the
 collection repo as `docs: openwork scaffold plan`.
+
+---
+
+## Batch 4 — Extensions (one per implementation cycle, each gated)
+
+User-confirmed extension order (binding): 1) `openwork-inference` →
+2) `review` → 3) `otel-lgtm` → 4) TLS environment gate (letsencrypt or
+step-ca). **One extension per implementation cycle** — never start the next
+extension before the current one's stack-test gate passes and its
+README/DEPLOYMENT.md status is flipped. Each cycle ends with a gate run under
+the `stack-test` skill. All gates are **key-free** (no real provider key is
+available): token positive/negative checks, route health, persistence after
+restart, and — for otel-lgtm — OTLP trace emission WITHOUT model inference.
+Server routes are UNPREFIXED (PITFALLS P-035): use `/status`, `/whoami`,
+`/workspaces`, `/tokens` — never `/api/*`.
+
+Shared rules for every extension task group:
+
+- Fragments live in `app/components/extensions/<name>/docker-compose.yml` +
+  `.env.example`, mirroring the shape of `app/components/extensions/model-keys/`
+  (service-scoped env passthrough, `${VAR:-}` everywhere, extension vars ONLY
+  in the fragment's `.env.example`).
+- Every new image follows the `source-image` skill: `app/images/<image>/Dockerfile`,
+  pinned upstream tag/commit, empty build context, never vendor upstream source;
+  compose references it via `image: ${IMAGE:-localhost/<image>:<tag>}`.
+- `app/stackbuilder.toml`: add the extension to `[build] extensions` and a new
+  combo (see per-extension task); existing combos `entire`/`entire-trust` stay
+  untouched so the base build is unaffected.
+- Docs flip per cycle: DEPLOYMENT.md extension-catalog row status
+  `available` → `implemented (gate: <date>)` + app README gets an
+  extensions section entry. Commit docs with the extension's last task.
+- Commit protocol unchanged: per-task conventional commits in the stack repo.
+
+### Extension 4.1 — openwork-inference (model-keys wiring, BYO-key)
+
+Builds on the existing `model-keys` fragment (Batch 2, Tasks 2.9/2.10) which
+already passes `ANTHROPIC_API_KEY`/`OPENROUTER_API_KEY`/`OPENAI_API_KEY` into
+the `openwork` service. This extension adds the upstream inference-gateway
+container between openwork-server and the provider, BYO-key via env.
+
+#### Task 4.1.1: Upstream build-ability check (no file changes)
+**Depends:** none
+At pinned upstream commit `ae67215d` (see UPSTREAM.md), clone-in-tmp
+(reference-only) and check: does `Dockerfile.gateway` (or equivalent gateway
+source) exist in the **MIT tree**, and does the published ghcr image
+(`ghcr.io/...gateway`) have a usable tag? Two outcomes:
+- buildable from MIT → proceed to 4.1.2 with a source-built image;
+- EE-only / not buildable → record a refusal note in DEPLOYMENT.md
+  (extension-catalog row stays `available`, add "refused: EE-only image,
+  not buildable from MIT tree — BYO-key via model-keys fragment only"),
+  skip 4.1.2–4.1.6, and run only the model-keys gate (4.1.7 minus gateway
+  checks). Report the outcome; do not improvise around licensing.
+**Verify:** decision recorded in DEPLOYMENT.md before any code is written.
+
+#### Task 4.1.2: Gateway image (only if 4.1.1 = buildable)
+**File:** `app/images/openwork-gateway/Dockerfile`
+**Depends:** 4.1.1
+Follow the `source-image` skill and the shape of `app/images/openwork-host/Dockerfile`:
+clone upstream at the pinned commit, build the gateway target, runtime stage
+minimal. Tag built locally as `localhost/openwork-gateway:0.18.4`.
+**Verify:** `docker build` succeeds; image runs `--help` without error.
+
+#### Task 4.1.3: openwork-inference fragment compose (only if buildable)
+**File:** `app/components/extensions/openwork-inference/docker-compose.yml`
+**Depends:** 4.1.2
+Services: `openwork-inference` (container_name identical, network
+`openwork-network`, `image: ${IMAGE:-localhost/openwork-gateway:0.18.4}`,
+healthcheck per upstream gateway's health route, restart policy
+`unless-stopped`) plus env additions to the existing `openwork` service
+pointing server-side inference at the gateway (upstream var names — take them
+verbatim from the upstream gateway docs/compose; values as
+`${OPENWORK_INFERENCE_*:-default}`). Provider keys still enter via the
+`model-keys` fragment (BYO-key) — this fragment must NOT duplicate key vars.
+**Verify:** `sb build` with the new combo merges cleanly; `docker compose config` exits 0.
+
+#### Task 4.1.4: openwork-inference .env.example (only if buildable)
+**File:** `app/components/extensions/openwork-inference/.env.example`
+**Depends:** 4.1.3
+Only vars the fragment's compose actually references (`IMAGE`,
+`OPENWORK_INFERENCE_*`), with the "meaningful only with the
+openwork-inference extension" comment, mirroring `step-ca-trust/.env.example` style.
+**Verify:** var names match 4.1.3 exactly.
+
+#### Task 4.1.5: stackbuilder combo (only if buildable)
+**File:** `app/stackbuilder.toml`
+**Depends:** 4.1.3
+Add `"openwork-inference"` to `[build] extensions` and combo
+`entire-inference = ["model-keys", "repo-sync", "openwork-inference"]`.
+Leave `entire`/`entire-trust` and all `[build.environments]` blocks unchanged.
+**Verify:** `sb build` lists the new combo; base combos still build.
+
+#### Task 4.1.6: Docs flip (only if buildable)
+**Files:** `DEPLOYMENT.md`, `app/README.md`
+**Depends:** 4.1.5
+DEPLOYMENT.md row → `implemented (gate: <date>)`; app README extensions
+section: openwork-inference entry (what it does, BYO-key via model-keys,
+combo name, build step for the gateway image).
+**Verify:** docs match the actual files/commands.
+
+#### Task 4.1.7: stack-test gate — Stage A′ (inference)
+**Depends:** 4.1.6 (or 4.1.1-refusal for the model-keys-only variant)
+Under the `stack-test` skill, forwarding environment + new combo:
+`sb build` → `docker compose config` → `up -d` → all services healthy →
+`/health` 200 → token positive/negative on UNPREFIXED `/status` + `/whoami`
+→ gateway health endpoint 200 (if built) → throwaway project + workspace
+listing via `/workspaces` → `docker compose restart` → state survives.
+**No real provider key: no model inference is exercised.** Tear down after.
+**Verify:** all checks pass; failures reported, never host-fixed.
+
+### Extension 4.2 — review app
+
+#### Task 4.2.1: Upstream wiring verification (no file changes)
+**Depends:** Extension 4.1 cycle closed
+Clone-in-tmp at pinned commit; read `apps/review` (Next.js): confirm the env
+vars/URLs it needs to reach `openwork-host` (DEPLOYMENT.md flags this wiring
+as "verify upstream-first"), its health route, and its production build
+command. Record findings (var names, port 3011, build cmd) in the task report
+— they feed 4.2.2/4.2.3 verbatim.
+**Verify:** wiring contract documented before implementation.
+
+#### Task 4.2.2: Review image
+**File:** `app/images/openwork-review/Dockerfile`
+**Depends:** 4.2.1
+`source-image` skill: clone pinned upstream, build the Next.js app
+(`apps/review`), runtime stage minimal, expose 3011. Tag
+`localhost/openwork-review:0.18.4`.
+**Verify:** `docker build` succeeds; container starts and listens on 3011.
+
+#### Task 4.2.3: review fragment compose
+**File:** `app/components/extensions/review/docker-compose.yml`
+**Depends:** 4.2.2
+Service `openwork-review` (container_name identical, `openwork-network`,
+`image: ${IMAGE:-localhost/openwork-review:0.18.4}`, healthcheck on its
+health route, `restart: unless-stopped`) with the upstream-verified env vars
+from 4.2.1 as `${REVIEW_*:-default}` pointing at `http://openwork:8787`.
+No changes to the `openwork` service unless 4.2.1 proved them necessary.
+**Verify:** merged config validates; `docker compose config` exits 0.
+
+#### Task 4.2.4: review .env.example
+**File:** `app/components/extensions/review/.env.example`
+**Depends:** 4.2.3
+Only `IMAGE` + the `REVIEW_*` vars from 4.2.3, with the
+"meaningful only with the review extension" comment.
+**Verify:** var names match 4.2.3 exactly.
+
+#### Task 4.2.5: stackbuilder combo
+**File:** `app/stackbuilder.toml`
+**Depends:** 4.2.3
+Add `"review"` to `[build] extensions`; combo
+`entire-review = ["model-keys", "repo-sync", "review"]` (compose with
+openwork-inference only if the user asks for a combined combo later).
+**Verify:** `sb build` lists `entire-review`; base combos unchanged.
+
+#### Task 4.2.6: Docs flip
+**Files:** `DEPLOYMENT.md`, `app/README.md`
+**Depends:** 4.2.5
+Row → `implemented (gate: <date>)`; README entry (port 3011, wiring, combo).
+**Verify:** docs match actual files.
+
+#### Task 4.2.7: stack-test gate — Stage A″ (review)
+**Depends:** 4.2.6
+Forwarding env + `entire-review`: build → config → up → all healthy →
+`/health` 200 → review UI answers on its published port (HTTP 200, no TLS) →
+token checks on `/status` + `/whoami` → restart → state survives. Key-free.
+**Verify:** all checks pass; teardown after.
+
+### Extension 4.3 — otel-lgtm (observability)
+
+No precedent fragment exists in the collection (opencode has none; the
+`grafana`/`loki` monitoring stacks are standalone products, not fragments) —
+this fragment is modeled directly on upstream `docker-compose.otel-lgtm.yml`.
+
+#### Task 4.3.1: Upstream reference check (no file changes)
+**Depends:** Extension 4.2 cycle closed
+Clone-in-tmp at pinned commit; read `docker-compose.otel-lgtm.yml` verbatim:
+which images (expected LGTM pattern — Loki, Grafana, Tempo, OTel collector),
+which env vars enable OTLP export in openwork-server, which ports/volumes.
+Record the exact upstream service/var list in the task report.
+**Verify:** upstream contract documented before implementation.
+
+#### Task 4.3.2: otel-lgtm fragment compose
+**File:** `app/components/extensions/otel-lgtm/docker-compose.yml`
+**Depends:** 4.3.1
+Mirror the upstream file's shape, renamed to collection naming: services
+`openwork-lgtm` (all-in-one `grafana/otel-lgtm` image if upstream uses it, or
+the upstream's individual services as `openwork-loki`/`openwork-tempo`/
+`openwork-grafana`/`openwork-otel-collector` — follow what 4.3.1 found;
+container_name = service name, `openwork-network`, named volume
+`openwork-lgtm-data` for the observability store, healthchecks,
+`restart: unless-stopped`, published Grafana port
+`${OPENWORK_GRAFANA_PUBLISH_PORT:-3000}`) plus OTLP env additions on the
+existing `openwork` service (`OTEL_EXPORTER_OTLP_ENDPOINT` etc., values
+`${OTEL_*:-default}` pointing at the collector service name). Published
+images only — no source build unless 4.3.1 shows upstream builds its own.
+**Verify:** merged config validates; `docker compose config` exits 0.
+
+#### Task 4.3.3: otel-lgtm .env.example
+**File:** `app/components/extensions/otel-lgtm/.env.example`
+**Depends:** 4.3.2
+`IMAGE` vars (if any) + `OTEL_*` + `OPENWORK_GRAFANA_PUBLISH_PORT`, with the
+"meaningful only with the otel-lgtm extension" comment.
+**Verify:** var names match 4.3.2 exactly.
+
+#### Task 4.3.4: stackbuilder combo
+**File:** `app/stackbuilder.toml`
+**Depends:** 4.3.2
+Add `"otel-lgtm"` to `[build] extensions`; combo
+`entire-otel = ["model-keys", "repo-sync", "otel-lgtm"]`.
+**Verify:** `sb build` lists `entire-otel`; base combos unchanged.
+
+#### Task 4.3.5: Docs flip
+**Files:** `DEPLOYMENT.md`, `app/README.md`
+**Depends:** 4.3.4
+Row → `implemented (gate: <date>)`; README entry (what OTLP captures, Grafana
+port, combo, data volume/persistence note).
+**Verify:** docs match actual files.
+
+#### Task 4.3.6: stack-test gate — Stage A‴ (observability, key-free)
+**Depends:** 4.3.5
+Forwarding env + `entire-otel`: build → config → up → all healthy →
+`/health` 200 → token checks on `/status` + `/whoami` → **generate traces
+without model inference**: the token-authenticated API calls themselves
+(`/workspaces`, `/tokens`, throwaway project creation) must produce
+openwork-server spans → query Grafana's API (or Tempo search) for the
+received traces and Loki for server logs → `docker compose restart` →
+traces/logs still queryable (volume persistence). Tear down after.
+**Verify:** traces visible in Grafana without any provider key.
+
+### Extension 4.4 — TLS environment gate (letsencrypt or step-ca)
+
+The TLS overlays already exist from Batch 1/2 (`app/components/environments/
+{letsencrypt,step-ca}` + `step-ca-trust` extension); only the `forwarding`
+environment has ever been smoke-tested. This cycle runs the real gate for
+**one** TLS environment — default **step-ca** (stack-test skill: step-ca
+variant first, never touching the live step-ca-manager setup), unless the
+user names letsencrypt.
+
+#### Task 4.4.1: Overlay pre-flight (no file changes expected)
+**Depends:** Extension 4.3 cycle closed
+`sb build` the chosen environment; diff its merged `.env.example` against the
+base: every environment-dependent var (public URLs, TLS-derived defaults)
+must be declared ONLY in the overlay, never base (stack-conventions §7).
+Fix any leakage found (small compose/overlay edits + own commit) before gating.
+**Verify:** overlay-only env rule holds; `docker compose config` exits 0.
+
+#### Task 4.4.2: TLS environment gate
+**Depends:** 4.4.1
+Under the `stack-test` skill, chosen environment: build → config → up →
+cert-wait (step-ca: internal CA issuance via the step-ca-manager module,
+read-only; letsencrypt: ACME issuance) → all services healthy → HTTPS
+endpoints answer with valid certs (step-ca: trust root installed via
+`step-ca-trust`) → UI loads → token positive/negative on `/status` +
+`/whoami` over HTTPS → restart → state + certs survive. Key-free.
+**Verify:** all checks pass; failures reported, never host-fixed.
+
+#### Task 4.4.3: Docs flip
+**Files:** `DEPLOYMENT.md`, `app/README.md`, root `README.md`
+**Depends:** 4.4.2
+TLS overlay row → `implemented (gate: <date>, <environment>)`; READMEs note
+the gated environment and how to pick the other one.
+**Verify:** docs match actual files.
+
+---
+
+## Batch 4 out of scope (explicit)
+
+- Real provider-key gate (Stage A step 4: agent session + approval flow) —
+  deferred until the user supplies a key; none of Batch 4 depends on it.
+- Combining multiple extensions into one combo beyond the per-extension
+  combos defined above (add only on explicit user request).
+- Any extension not in the user-confirmed order (e.g. repo-local swap-in
+  guidance stays as documented in Batch 2).
