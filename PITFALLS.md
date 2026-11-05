@@ -550,3 +550,13 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - fix: committed in tome `fae2ad5` — group env defaults in all 4 compose fragments (component + 3 build) now use nested SPN fallback `${NAME:-tome_users@${TOME_OIDC_KANIDM_DOMAIN:-kanidm.af}}` (new var `TOME_OIDC_KANIDM_DOMAIN`, default `kanidm.af`); `.env.example` carries SPN values + the new var. Nested `${A:-b@${B:-dom}}` resolves correctly to the SPN default and stays env-overridable (verify: `/tmp/opencode/nesttest/docker-compose.yml` + layered `docker compose ... config` showing `tome_admins@kanidm.af`). CAUTION: `${VAR:-...}` per-file fallbacks still cannot override a var already set by `--env-file X.env` (substitution happens per-file before merge) — that only affects override-in-overlay flows, not the default. Kanidm-side alternative (if ever allowed): the `groups_name` scope emits short names.
 
 
+
+## polaris config user lacks admin rights (admin endpoints reject)
+
+- hits: 1
+- status: fixed
+- last: 2026-11-05
+- where: polaris stack Stage A gate (stacks/self-hosting/media-streaming/music/polaris)
+- symptom: `POST /api/auth` succeeds for the TOML `[[users]]` entry but returns `is_admin: false`; `/api/initial_setup` reports `has_any_users: false`; every admin endpoint (`/api/index_status`, `/api/trigger_index`, `/api/users`, `/api/mount_dirs`) replies "Administrator permission is required"
+- cause: polaris 0.16.1 `User::is_admin()` only matches `admin == Some(true)` (src/app/config/user.rs:15-17) — the TOML user entry needs an explicit `admin = true`; `/api/initial_setup` actually reports `has_any_admin` (src/server/axum/api.rs:112). Also `[[mount_dirs]]` field is `source`, not `path` (0.16.1 schema).
+- fix: committed in polaris `4ae4cf9` — `admin = true` added to the `[[users]]` entry and `source = "/music"` in base + all 3 build `polaris.toml.example` copies; redeploy with `docker compose up -d --build` (config is baked via `dockerfile_inline` COPY — without `--build` a cached image with stale config is reused). Gate then passed fully (login is_admin:true → index UpToDate 3 songs → album detail → thumbnail 200 JPEG → audio 200 → uid 1000 → down -v reseed OK).
