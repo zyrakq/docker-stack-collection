@@ -621,3 +621,23 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: `mc ls rek/re-kord-music/...` and even `mc ls rek/definitely-not-a-bucket-xyz` exit 0 with S3-style output; `mc cp ... rek/<bucket>/<key>` "succeeds" but the object never reaches the S3 server
 - cause: `rek` is not an alias or hostname (no DNS entry, nothing listens there) — mc falls back to treating `rek/...` as a path relative to cwd and lists/copies the LOCAL filesystem, printing it in the same S3-listing format, so the mistake is invisible in the output
 - fix: always verify bucket backends with an explicit temp alias: `MC_CONFIG_DIR=/tmp/opencode/<dir> mc alias set tmp http://<container-ip>:9000 <ak> <sk>`, then `mc ls tmp/<bucket>/`. Rule: never use a bare word prefix in mc paths unless `mc alias list` shows it
+
+## P-063: `sb build` requires mikefarah yq v4 on PATH — the system `/usr/bin/yq` is a jq-wrapper and breaks the build
+- hits: 1
+- status: fixed
+- first: 2026-11-05
+- last: 2026-11-05
+- where: navidrome stack builds (`sb build` in any stack's `app/`); every session running stackbuilder
+- symptom: `sb build` fails or misbehaves because it shells out to `yq` and picks up `/usr/bin/yq`, which is the jq-compatible wrapper (different CLI), not mikefarah yq v4
+- cause: stackbuilder expects the mikefarah yq v4 CLI (its filter syntax), but the distro `yq` on PATH is a different tool with the same name
+- fix: keep a real mikefarah yq binary in scratch (e.g. `/tmp/opencode/bin/yq`, v4.54.1) and run `PATH=/tmp/opencode/bin:$PATH sb build` so it resolves first
+
+## P-064: sb-generated `.env` has NO trailing newline — appended vars merge into the last line
+- hits: 1
+- status: fixed
+- first: 2026-11-05
+- last: 2026-11-05
+- where: navidrome s3fs-fuse-music gate (appending secret creds from a scratch file onto the sb-generated `build/<env>/<combo>/.env`); any workflow that appends to a stackbuilder-generated `.env`
+- symptom: after `cat creds.env >> .env`, the first appended var became part of the last generated line (`RUSTFS_SECRET_KEY=RUSTFS_ACCESS_KEY=...`), so compose saw an empty `RUSTFS_ACCESS_KEY` and the entrypoint aborted with "RUSTFS_ACCESS_KEY is required" in a restart loop
+- cause: stackbuilder writes the concatenated `.env.example` content without a final newline; `>>` concatenation then glues the next file's first line onto it
+- fix: append a newline before the extra file: `cp fragment/.env.example .env && printf '\n' >> .env && cat creds.env >> .env`. Rule: never append to an sb-generated `.env` without ensuring a trailing newline first
