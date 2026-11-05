@@ -610,3 +610,13 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: layered `docker compose -f base/... -f <ext>/... up --build` fails with `unable to prepare context: path ".../base/s3fs-fuse" not found` even though the context dir exists next to the extension fragment
 - cause: compose resolves relative `build.context` paths against the directory of the FIRST `-f` file (here `base/`), not the cwd and not the fragment that declares the build
 - fix: add `--project-directory .` to the layered command (run from the build-env root) so `context: s3fs-fuse` resolves to `build/<env>/s3fs-fuse/`; stackbuilder already copies the entrypoint script into that subdir. Documented in the re-kord s3fs-fuse fragment comment
+
+## P-062: minio `mc` silently treats an unknown alias as a LOCAL filesystem path
+- hits: 1
+- status: fixed
+- first: 2026-11-05
+- last: 2026-11-05
+- where: re-kord s3fs-fuse gate (verifying bucket contents on the live RustFS); any session using `mc` without a configured alias
+- symptom: `mc ls rek/re-kord-music/...` and even `mc ls rek/definitely-not-a-bucket-xyz` exit 0 with S3-style output; `mc cp ... rek/<bucket>/<key>` "succeeds" but the object never reaches the S3 server
+- cause: `rek` is not an alias or hostname (no DNS entry, nothing listens there) — mc falls back to treating `rek/...` as a path relative to cwd and lists/copies the LOCAL filesystem, printing it in the same S3-listing format, so the mistake is invisible in the output
+- fix: always verify bucket backends with an explicit temp alias: `MC_CONFIG_DIR=/tmp/opencode/<dir> mc alias set tmp http://<container-ip>:9000 <ak> <sk>`, then `mc ls tmp/<bucket>/`. Rule: never use a bare word prefix in mc paths unless `mc alias list` shows it
