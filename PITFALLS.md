@@ -357,6 +357,8 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - workaround: бинарник mikefarah yq v4.44.3 в /tmp/opencode/bin, PATH
   prepended; проверка — `yq --version` должен показывать mikefarah v4.x
 - fix: —
+- hits: 3 | last: 2026-11-05 (nanomcp stack: sb build снова упал без
+  /tmp/opencode/bin в PATH; `export PATH=/tmp/opencode/bin:$PATH` перед sb)
 
 ## P-034: bun install без python/make/g++ ломает node-gyp нативные модули
 - hits: 1 | status: fixed | first: 2026-11-04 | last: 2026-11-04
@@ -708,3 +710,15 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: `up -d` reports "container name ... already in use" even though `down -v` reported removal
 - cause: removal/creation race in the compose project with fixed `container_name` (same root as P-013's conflict noise)
 - fix: retry `up -d` after a few seconds and confirm with `docker ps --filter name=<stack>`; the second attempt succeeds — no host-level cleanup needed
+
+## P-035: check-stack.sh и check-gitkeep.sh противоречат друг другу про .gitkeep
+- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
+- where: stack-test step 0 / stack-conventions scripts (nanomcp stack)
+- symptom: check-stack.sh требует .gitkeep в ЛЮБОЙ директории без файлов
+  (app/components с 3 сабдирами — VIOLATION "missing"), а check-gitkeep.sh
+  требует УДАЛИТЬ .gitkeep там, где сабдиров > 1 ("not exactly one subdir").
+  Оба скрипта вызываются stack-test'ом с требованием "must print nothing" —
+  удовлетворить оба невозможно для одной директории
+- workaround: удовлетворён check-stack.sh (основной гейт, согласуется с
+  правилом .gitkeep в AGENTS.md); расхождение с check-gitkeep.sh записано
+- fix: —
