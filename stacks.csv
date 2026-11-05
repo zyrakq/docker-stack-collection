@@ -83,7 +83,6 @@ stacks/self-hosting/ai-services/mcp/nanomcp;-;completed
 stacks/self-hosting/ai-services/model-serving/litellm;https://github.com/zyrakq/litellm-stack.git;unverified
 stacks/self-hosting/ai-services/model-serving/ollama;https://github.com/zyrakq/ollama-stack.git;unverified
 stacks/self-hosting/ai-services/model-serving/open-assistant;https://github.com/zyrakq/open-assistant-stack.git;incomplete
-stacks/self-hosting/ai-services/mcp/nanomcp;-;completed
 stacks/self-hosting/cms/strapi;https://github.com/zyrakq/strapi-stack.git;incomplete
 stacks/self-hosting/communication/matrix/backend/conduit;https://github.com/zyrakq/conduit-stack.git;unverified
 stacks/self-hosting/communication/matrix/backend/palpo;https://github.com/zyrakq/palpo-stack.git;incomplete
