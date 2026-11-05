@@ -668,7 +668,7 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - fix: use `127.0.0.1` explicitly in healthcheck URLs (`http://127.0.0.1:80/healthz`)
 
 ## P-067: check-stack.sh gitkeep/yaml_merger checks are stale — check-gitkeep.sh + tome exemplar are canon
-- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
+- hits: 2 | status: open | first: 2026-11-05 | last: 2026-11-05
 - where: omnibus stack creation (any new stack validated with the repo's check scripts)
 - symptom: `check-stack.sh` flags missing `.gitkeep` in dirs that DO have one per the refined rule, and/or demands `yaml_merger = "rust"` in stackbuilder.toml, contradicting what existing verified stacks (tome exemplar) actually contain
 - cause: check-stack.sh predates the refined `.gitkeep` rule (`.gitkeep` ONLY in exactly-one-subdir dirs) and the yaml_merger default change; it was not updated
