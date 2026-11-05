@@ -522,8 +522,8 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - fix: `docker run --rm --network host --user 0:0 -e HOME=/tmp/kanidmcfg -v <scratch>:/tmp/kanidmcfg -v <scratch>/root_ca.crt:/etc/ssl/certs/ca-certificates.crt:ro kanidm/tools:1.11.2 kanidm ...` — token cache persists in the scratch mount; root CA bind-mount is required (kanidm.af uses step-ca internal TLS, else `InvalidCertificate(UnknownIssuer)`)
 
 ## P-053: `sb build` wipes build-layer `.env` files on every run
-- hits: 2 | status: open | first: 2026-11-05 | last: 2026-11-05
+- hits: 3 | status: open | first: 2026-11-05 | last: 2026-11-05
 - where: tome stack `app/` `sb build` (all environments)
 - symptom: after `sb build`, each `build/<env>/<layer>/.env` is truncated to a 23-line skeleton (secrets like `TOME_OIDC_CLIENT_SECRET`, passphrases gone); output shows "⚠ Skipped .env file (content conflict)" x4, "Creating backup for 6 files that couldn't be restored", "Restoration completed: 0 restored successfully"
 - cause: sb regenerates build `.env` from component `.env` + fragment `.env.example` and refuses to auto-restore when content conflicts; its own backup lands in `app/.stackbuilder/backup/backup_<ts>/` as `<env>_<layer>_.env`
-- fix (workaround): restore from the timestamped `.stackbuilder/backup/` dir (or a pre-build copy) after every `sb build`; keep a pre-build copy in `/tmp/opencode` as second source. Unresolved upstream behavior — always verify line counts + secret keys before `docker compose up`
+- fix (workaround): restore from the timestamped `.stackbuilder/backup/` dir (or a pre-build copy) after every `sb build`; keep a pre-build copy in `/tmp/opencode` as second source. Unresolved upstream behavior — always verify line counts + secret keys before `docker compose up`. Note (hit#3): sb does auto-backup/auto-restore, but the tracked set covers only the 6 layer files present at backup time; newly added per-extension build dirs (koreader-tomesync, send-to-device-smtp, outbound-notify, auto-import) get fresh skeleton `.env` — that is expected, only the 6 tracked layer files need restoring.
