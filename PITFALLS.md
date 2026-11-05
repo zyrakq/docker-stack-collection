@@ -451,3 +451,24 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: `gabehf/koito:0` (as guessed in DEPLOYMENT.md) does not exist; pull fails
 - cause: upstream publishes only v-prefixed tags (v0, v0.3, v0.3.2, latest)
 - fix: pin `${IMAGE:-gabehf/koito:v0}`; verified via Docker Hub API + live pull + health smoke test; row appended to UPSTREAM.md
+
+## P-046: браузерный E2E без agent-browser — dockerized headless Chromium + самописный CDP-драйвер
+- hits: 1 | status: mitigated | first: 2026-11-05 | last: 2026-11-05
+- where: стек-тестирование (browser E2E gate) — koito stack Stage A
+- symptom: agent-browser CLI не установлен, `npm`/`npx` на хосте отсутствуют
+  (есть только bare `node`), браузерных бинарников нет; host package
+  installs запрещены — браузерный gate заблокирован целиком
+- cause: браузерная инфраструктура агента не доехала до этой машины; ставить
+  ничего на хост нельзя (iron rules)
+- workaround: docker-разрешено → `docker run -d --rm --network host
+  --shm-size=512m zenika/alpine-chrome:latest --no-sandbox --headless=new
+  --remote-debugging-address=0.0.0.0 --remote-debugging-port=9222 about:blank`,
+  управлять через CDP собственным dependency-free драйвером (Node 26 имеет
+  встроенные fetch + WebSocket): `/tmp/opencode/koito-e2e/cdp.mjs` —
+  connect/eval/navigate/shot + `Input.dispatchMouseEvent`/`dispatchKeyEvent`
+- fix: —
+- note: React SPA игнорирует JS-овый `.click()` на табах/кнопках — нужно
+  щёлкать настоящими CDP mouse-событиями по центру rect элемента и печатать
+  через `Input.dispatchKeyEvent`; полный токен из UI можно достать тем же
+  авторизованным fetch из контекста страницы (cookie сессии подхватывается
+  автоматически)
