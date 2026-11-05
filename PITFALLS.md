@@ -666,3 +666,17 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: container `Up (unhealthy)` with `wget: can't connect to remote host: Connection refused`, while `wget http://127.0.0.1/...` inside the container works
 - cause: musl resolves `localhost` to ::1 first; nginx `listen 80` binds IPv4-only, so the ::1 attempt is refused
 - fix: use `127.0.0.1` explicitly in healthcheck URLs (`http://127.0.0.1:80/healthz`)
+
+## P-067: check-stack.sh gitkeep/yaml_merger checks are stale — check-gitkeep.sh + tome exemplar are canon
+- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
+- where: omnibus stack creation (any new stack validated with the repo's check scripts)
+- symptom: `check-stack.sh` flags missing `.gitkeep` in dirs that DO have one per the refined rule, and/or demands `yaml_merger = "rust"` in stackbuilder.toml, contradicting what existing verified stacks (tome exemplar) actually contain
+- cause: check-stack.sh predates the refined `.gitkeep` rule (`.gitkeep` ONLY in exactly-one-subdir dirs) and the yaml_merger default change; it was not updated
+- fix: treat `check-gitkeep.sh` + the tome exemplar as canon for gitkeep placement and yaml_merger; ignore stale check-stack.sh findings on those two topics (no fix to the script yet — needs user decision)
+
+## P-068: images without baked-in volume dirs leave fresh named-volume mountpoints root-owned — add an init-chown service
+- hits: 1 | status: fixed | first: 2026-11-05 | last: 2026-11-05
+- where: omnibus stack gate (any image whose entrypoint chowns only some volumes, e.g. linuxserver.io-style PUID/PGID images)
+- symptom: app runs fine but writes to a volume fail with permission errors (omnibus: upload → 400 "ebook library is not writable"); `ls -ld` inside the container shows the mountpoint owned by `root:root` while sibling volumes are correctly owned
+- cause: Docker creates a named-volume mountpoint with the image's directory if it exists, else as root. The omnibus image has no `/books`//`/audiobooks` dirs and its entrypoint deliberately chowns only `/config` + `/cache` — library roots are left root-owned
+- fix: one-shot init service in base compose: same image, `user: "0:0"`, `entrypoint: sh -c "chown ${PUID:-1000}:${PGID:-1000} <volumes>"`, `restart: "no"`; main service gets `depends_on: <init>: condition: service_completed_successfully`. Verify with `docker exec <svc> ls -ld <volumes>` after `up`
