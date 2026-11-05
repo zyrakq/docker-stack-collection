@@ -641,3 +641,18 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: after `cat creds.env >> .env`, the first appended var became part of the last generated line (`RUSTFS_SECRET_KEY=RUSTFS_ACCESS_KEY=...`), so compose saw an empty `RUSTFS_ACCESS_KEY` and the entrypoint aborted with "RUSTFS_ACCESS_KEY is required" in a restart loop
 - cause: stackbuilder writes the concatenated `.env.example` content without a final newline; `>>` concatenation then glues the next file's first line onto it
 - fix: append a newline before the extra file: `cp fragment/.env.example .env && printf '\n' >> .env && cat creds.env >> .env`. Rule: never append to an sb-generated `.env` without ensuring a trailing newline first
+
+## P-065: nested viper config keys map to env names with dot→underscore — `ND_EXTAUTH_USERHEADER`, not `ND_EXTAUTHUSERHEADER`
+- hits: 2
+- status: fixed
+- first: 2026-11-05
+- last: 2026-11-05
+- where: navidrome extauth-proxy gate (ExtAuth.TrustedSources / UserHeader / LogoutURL); any app using viper with `SetEnvPrefix` + `SetEnvKeyReplacer(strings.NewReplacer(".", "_"))` + `AutomaticEnv`
+- symptom: fragment set `ND_EXTAUTHTRUSTEDSOURCES=...` etc.; navidrome ignored all three (ExtAuth stayed disabled) while the same names looked plausible next to flat keys like `ND_LOGLEVEL`
+- cause: viper env keys are the nested config path with `.` replaced by `_` — `extauth.trustedsources` → `ND_EXTAUTH_TRUSTEDSOURCES`. The concatenated form is simply a different (unknown) key
+- fix: derive env names from the nested key path, not from concatenation: `extauth.userheader` → `ND_EXTAUTH_USERHEADER`. Rule: for viper apps, env name = prefix + nested path with dots→underscores; verify against the app's config source, not `strings` on the binary (env names are not string literals)
+- last: 2026-11-05
+- where: navidrome extauth-proxy gate
+- symptom: `sb build` de-staged/wiped the run-dir `.env` (EXTAUTH_USER empty → proxy ran in plain-proxy mode, gate failed with no auth payload)
+- cause: sb build regenerates `build/<env>/<combo>/.env` from `.env.example` files; a hand-created run-dir `.env` is not preserved
+- fix: after EVERY `sb build`, re-create the run-dir `.env` before a gate run: `printf 'EXTAUTH_USER=gateuser\nND_LOGLEVEL=trace\n' > .env && chmod 600 .env`. Note the P-064 `grep -q X .env || printf` idiom fails when `.env` does not exist — check existence first or just recreate wholesale
