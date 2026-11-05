@@ -663,3 +663,14 @@ docker ps --filter name=polaris --format '{{.Names}} {{.Status}}'   # polaris he
 - database/postgresql, pgrust, oidc, s3-storage stages — REFUSED in DEPLOYMENT.md §3; never implement.
 - s3fs-fuse media volume, DDNS toggle — extension-menu items (Phase 5, user confirmation only).
 - Removing the parent-tracked `DEPLOYMENT.md` from the collection repo index — deferred until polaris has a remote.
+
+---
+
+## Deviations from plan (as executed, 2026-11-05)
+
+1. **Executor subagent unavailable** ("Subagent depth limit reached") — plan executed directly by the orchestrating agent.
+2. **sb build output layout**: `build/<env>/` directly (stump idiom), NOT `build/<env>/<combo>/` — no-extension stacks have no combos, so no combo subdir level. Task 2.2/3.1 paths adjusted.
+3. **stackbuilder.toml**: empty combos are invalid in sb ("Combo must contain at least one extension"). No-extension idiom (stump): `extensions_dirs = []`, NO `[build.combos]`, NO per-env blocks. `yaml_merger = "rust"` required (host yq is the Python jq-wrapper, rejected by sb) — sb-builtin fallback recommended by sb's own error message; also used by koito/tome/vibe-kanban.
+4. **`.gitignore` must NOT ignore `build/`**: check-stack.sh flags it as a violation; koito/stump track `app/build/` output in git (koito: 12 build files tracked). `.gitignore` = `.env` + `.stackbuilder/` only. Supersedes the scaffold-checklist "must ignore build/" line.
+5. **`.gitkeep` set**: only `app/images/.gitkeep`. check-gitkeep.sh REMOVES .gitkeep from dirs with ≠1 subdir, so `app/components` (2 subdirs) and `app/components/environments` (3 subdirs) get none; the resulting check-stack.sh ".gitkeep missing" violations there match koito/tome precedent (accepted).
+6. **Dockerfile web-fetcher fix**: polaris-web `web.zip` extracts to `webx/web/index.html`; original `cp -a /tmp/webx/*/ /web/` nested it as `/web/web/index.html` and the `test -f /web/index.html` guard failed (curl was never the problem). Replaced with `srcdir=$(find /tmp/webx -maxdepth 2 -name index.html -printf '%h' | head -1)` + copy from that dir.
