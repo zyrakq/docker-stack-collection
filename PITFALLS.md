@@ -492,3 +492,10 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: OPDS basic auth with email → 401; KOSync probes at `/v1/*` return the SPA HTML (catch-all); KOSync auth with MD5 of the password → 401; `PUT /api/v1/syncs/progress` without `percentage` → 400; Bearer token from `POST /api/tokens/` on `/api/tome-sync/*` → 401 "Invalid API key"
 - cause: `get_current_user_basic` matches `User.username` (email not accepted); kosync router prefix `/v1` mounted under `/api` → `/api/v1/`, and `_get_kosync_user` compares the userkey **as stored** (plaintext, whatever `POST /users/create` received — no MD5); progress PUT requires `document`+`progress`+`percentage`+`device`; TomeSync `_get_api_key_user` queries the `api_keys` table (plugin keys via `POST /api/plugin/api-keys`), while `/api/tokens/` writes the separate `api_tokens` table
 - fix: OPDS: `-u 'Gate Librarian:GatePass123!'`; KOSync: headers `X-Auth-User`/`X-Auth-Key` with the plaintext key, routes under `/api/v1/`; progress PUT body `{"document","progress","percentage","device"}`; TomeSync: create key via `POST /api/plugin/api-keys` (JWT from `/api/auth/login`), send as `Authorization: Bearer tk_…`
+
+## P-049: kanidm CLI 1.11.2 cookbook deviations — subcommand names differ from older docs
+- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
+- where: kanidm-admin subagent, OAuth2 client provisioning for the tome stack
+- symptom: `system oauth2 add-redirect-urls` / `create-scope-map` / top-level `whoami` not found or not behaving as older kanidm cooking notes describe
+- cause: kanidm 1.11.2 renamed/singularized several oauth2 subcommands
+- fix: use `system oauth2 add-redirect-url` (singular); scope maps are managed with `system oauth2 update-scope-map` (alias of create-scope-map); identity check is `self whoami` (no top-level `whoami`). PKCE is enabled by default on new clients; `groups` claim emerges natively from the `groups` scope in 1.11 — no custom claim-map needed.
