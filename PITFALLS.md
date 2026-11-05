@@ -694,3 +694,17 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: token seeded into `userdata/credentials/inbound-token.json` (0600, correct content) but gateway still answers 401 with a valid bearer
 - cause: the credential store's directory IS the userdata dir; `pathOf` produces `<userdata>/inbound-token.json` — the `credentials/` subdir guess was wrong
 - fix: seed at the flat path `<userdata>/inbound-token.json` (0600); when a 401-with-bearer persists, read the upstream's pathOf/state code to find the real store dir before guessing paths
+
+## P-071: compose `${VAR:-default}` treats an EMPTY shell override as unset — empty-value gate runs need an override file
+- hits: 1 | status: fixed | first: 2026-11-05 | last: 2026-11-05
+- where: nanomcp Stage A gate (a) (any scenario that must run with a var explicitly EMPTY while the merged compose gives it a non-empty default)
+- symptom: `NANOMCP_SEED_STUB_URL= docker compose up` still seeded the stub — the container got the `.env`/default URL and healthz showed `tools: 1` instead of the required `tools: 0`
+- cause: `:-` (and `-`) substitution treats empty as unset, so an empty shell var loses to the compose default AND to `.env`; compose has no way to express "empty wins" inline
+- fix: a compose override file that sets the key to an empty string in `environment:` (`docker compose -f docker-compose.yml -f override.yml up -d`, override: `NANOMCP_SEED_STUB_URL: ""`), plus `compose stop` for services the scenario excludes; verify with `docker exec <svc> env`
+
+## P-072: `compose up` after `down -v` can fail with a stale container_name conflict — benign, verify with `docker ps`
+- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
+- where: nanomcp gate runs (any stack re-running `up` right after `down -v` with fixed `container_name`s)
+- symptom: `up -d` reports "container name ... already in use" even though `down -v` reported removal
+- cause: removal/creation race in the compose project with fixed `container_name` (same root as P-013's conflict noise)
+- fix: retry `up -d` after a few seconds and confirm with `docker ps --filter name=<stack>`; the second attempt succeeds — no host-level cleanup needed
