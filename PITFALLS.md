@@ -378,3 +378,19 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
   `/tokens` и т.п.), эфемерный на каждый запуск; с ним `Authorization:
   Bearer <uuid>` даёт 401 `Invalid bearer token`. Для HTTP-аутентификации
   клиента использовать только `Bearer $OPENWORK_TOKEN`
+
+
+## P-036: sb build for openwork stack must run from app/, not stack root
+- hits: 1 | status: fixed | first: 2026-11-05 | last: 2026-11-05
+- where: openwork stack (`stacks/self-hosting/ai-services/automation/openwork`) — `sb build`
+- symptom: `sb build` from the stack root fails (no project found); cost one failed run
+- cause: `stackbuilder.toml` lives in `app/`, not the stack root, for this stack
+- fix: run `sb build` from the stack's `app/` directory always; check where `stackbuilder.toml` sits before assuming cwd
+
+
+## P-037: openwork-server `POST /workspaces` → 404 — workspace creation is UI-driven
+- hits: 1 | status: fixed | first: 2026-11-05 | last: 2026-11-05
+- where: openwork-stack smoke tests (openwork-server 0.18.4)
+- symptom: `POST /workspaces` returns 404 (route not found) even with valid token
+- cause: `GET /workspaces` (listing) exists, but workspace CREATION has no HTTP API route — it is done through the web UI, not the API
+- fix: for key-free smoke, verify `GET /workspaces` returns 200 (listing); create data via the UI or rely on pre-seeded SQLite state, never attempt API-based workspace creation
