@@ -415,3 +415,18 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: `GET /api/datasources/proxy/uid/tempo/api/traces/<id>` without header returns protobuf/garbage; parsing `batches[].spans[]` finds nothing
 - cause: Tempo defaults to a non-JSON representation without the Accept header; the JSON layout puts spans under `batches[].scopeSpans[].spans[]`, not `batches[].spans[]`
 - fix: add `-H 'Accept: application/json'` and read spans at `batches[].scopeSpans[].spans[]`; Loki matcher must be non-empty-compatible, e.g. `{service_name="opencode"}`
+
+## P-041: step-ca-trust wrapper requires a baked ENTRYPOINT in the wrapped image
+- hits: 1 | status: fixed | first: 2026-11-05 | last: 2026-11-05
+- where: openwork stack — TLS (step-ca) gate, openwork container restart-looping
+- symptom: openwork container restart-loops with exit 0 and no error output once the step-ca-trust extension's wrapper entrypoint applies; works fine without the extension
+- cause: the wrapper ends with `exec "$@"`, but a compose `entrypoint:` override replaces the image's default entrypoint on a CMD-only image — `$@` is empty, exec runs nothing, container exits 0 silently
+- fix: image must bake its own `/entrypoint.sh` + `ENTRYPOINT` (openwork: `app/images/openwork-host/Dockerfile`); the wrapper then ends `exec /entrypoint.sh "$@"` and CMD still reaches the server. Rule for ANY future image wrapped by step-ca-trust: no CMD-only images
+- commit (openwork): 9215a27
+
+## P-042: TLS vhost `*.example.com` placeholders never get certs — use `*.af` for gates
+- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
+- where: openwork stack — TLS (step-ca) gate via live step-ca-manager companion
+- symptom: with `*.example.com` vhosts the companion never issues certificates; cert-wait hangs
+- cause: `*.example.com` does not resolve in this environment; the live step-ca-companion only issues certs for names it can see via the unbound redirect
+- fix: use `*.af` vhosts (e.g. `openwork.af`, `openwork-api.af`) — they resolve via the live unbound redirect and get certs in seconds; `*.example.com` placeholders stay only in `.env.example` docs
