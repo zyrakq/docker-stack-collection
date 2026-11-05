@@ -478,3 +478,17 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
   через `Input.dispatchKeyEvent`; полный токен из UI можно достать тем же
   авторизованным fetch из контекста страницы (cookie сессии подхватывается
   автоматически)
+
+## P-047: agent-browser needs `--args "--no-sandbox"` + local bun install (pnpm global bin not in PATH)
+- hits: 1 | status: fixed | first: 2026-11-05 | last: 2026-11-05
+- where: tome stack Stage A browser E2E gate (also applies to any stack gate on this host)
+- symptom: `agent-browser open` fails with "Chrome exited early … No usable sandbox!"; `npx` absent on host; `pnpm add -g` installs to `~/.local/share/pnpm/bin` which is not in PATH (and `pnpm bin -g` itself errors ERR_PNPM_GLOBAL_BIN_DIR_NOT_IN_PATH)
+- cause: AppArmor-disabled unprivileged user namespaces on this host kill Chrome's sandbox; host has bare `node`/`bun`/`pnpm` only
+- fix: install locally in the scratch dir — `cd /tmp/opencode && bun add agent-browser` → run as `./node_modules/.bin/agent-browser --session <name> --args "--no-sandbox" <cmd>`; the `--args` flag must come before the subcommand. Complements P-046 (dockerized-Chromium fallback, no longer needed)
+
+## P-048: tome API auth quirks — OPDS basic auth uses username, KOSync lives at /api/v1 with plaintext userkey, TomeSync needs a *plugin* key (not an api-token)
+- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
+- where: tome stack Stage A gate — OPDS/KOSync/TomeSync endpoint probes
+- symptom: OPDS basic auth with email → 401; KOSync probes at `/v1/*` return the SPA HTML (catch-all); KOSync auth with MD5 of the password → 401; `PUT /api/v1/syncs/progress` without `percentage` → 400; Bearer token from `POST /api/tokens/` on `/api/tome-sync/*` → 401 "Invalid API key"
+- cause: `get_current_user_basic` matches `User.username` (email not accepted); kosync router prefix `/v1` mounted under `/api` → `/api/v1/`, and `_get_kosync_user` compares the userkey **as stored** (plaintext, whatever `POST /users/create` received — no MD5); progress PUT requires `document`+`progress`+`percentage`+`device`; TomeSync `_get_api_key_user` queries the `api_keys` table (plugin keys via `POST /api/plugin/api-keys`), while `/api/tokens/` writes the separate `api_tokens` table
+- fix: OPDS: `-u 'Gate Librarian:GatePass123!'`; KOSync: headers `X-Auth-User`/`X-Auth-Key` with the plaintext key, routes under `/api/v1/`; progress PUT body `{"document","progress","percentage","device"}`; TomeSync: create key via `POST /api/plugin/api-keys` (JWT from `/api/auth/login`), send as `Authorization: Bearer tk_…`
