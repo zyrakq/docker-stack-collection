@@ -115,3 +115,4 @@ Generated from [`stacks.csv`](stacks.csv) by `.githooks/gen-stacks-md.sh` — do
 | `stacks/self-hosting/ai-services/automation/openwork` | - | unverified ❓ |
 | `stacks/self-hosting/media-streaming/music/koito` | - | unverified ❓ |
 | `stacks/self-hosting/media-streaming/book-management/tome` | - | completed ✅ |
+| `stacks/self-hosting/media-streaming/music/polaris` | - | unverified ❓ |
