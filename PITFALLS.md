@@ -590,3 +590,13 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: `curl --cacert /step/certs/root_ca.crt` fails with "option --cacert: is badly used here" in alpine/curl:latest and curlimages/curl (curl 8.23)
 - cause: newer curl builds restrict --cacert usage context; also the step-ca root CA inside volume `step-ca-data` sits at `/home/step/certs/root_ca.crt` mode 600 uid 1000 — unreadable by the image's non-root curl_user
 - fix: run the container as root with the volume mounted and `export SSL_CERT_FILE=<ca-path>`; e.g. `docker run --rm -v step-ca-data:/step:ro --network step-ca-network --entrypoint sh alpine/curl:latest -c 'export SSL_CERT_FILE=/step/certs/root_ca.crt; curl --resolve <vhost>:443:<proxy-ip> https://<vhost>/...'`. Note: `/step/certs/root_ca.crt` works because the volume's `certs` subpath content is exposed at the mount root — verify the actual path with `ls` if a mount uses `subpath`
+
+## P-060: sb rust YAML merger silently drops env keys whose plain scalar contains ": " — double-quote `${VAR:?msg}` values
+- hits: 1
+- status: fixed
+- first: 2026-11-05
+- last: 2026-11-05
+- where: re-kord access-key extension fragment (`app/components/extensions/access-key/docker-compose.yml`); any extension using the `${VAR:?message with colons}` fail-fast idiom
+- symptom: after `sb build`, the merged `build/<env>/<ext>/docker-compose.yml` was byte-identical to the base variant — the `REKORD_ACCESS_KEY` environment key vanished without any warning; the extension silently did nothing
+- cause: the rust YAML merger mis-parses a plain (unquoted) scalar containing ": " (the required-var message "…is required: 32-256 chars…" has one); the whole environment key drops out of the merged map
+- fix: double-quote the value — `REKORD_ACCESS_KEY: "${REKORD_ACCESS_KEY:?REKORD_ACCESS_KEY is required: …}"`; compose interpolation works inside quotes and the key survives the merge (verified in all 3 envs). Rule: quote any `${VAR:?…}` value whose message contains ": "
