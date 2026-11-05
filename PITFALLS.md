@@ -349,8 +349,8 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - fix: plugins redesigned as a pure base feature (commit 02e1517): install scripts moved to `app/components/base/plugins/`, and sb's copier walks the entire base component dir recursively, so `sb build` now auto-copies `plugins/` into every build dir — nothing to re-copy; the plugins extension and the manual copy step are gone
 
 ## P-033: системный yq — это python jq-wrapper, sb его отвергает
-- hits: 1 | status: mitigated | first: 2026-11-04 | last: 2026-11-04
-- where: sb build / host tooling (opencode-stack)
+- hits: 2 | status: mitigated | first: 2026-11-04 | last: 2026-11-05
+- where: sb build / host tooling (opencode-stack, navidrome stack)
 - symptom: системный `/usr/bin/yq` — это kislyuk python-обёртка над jq
   (`yq 4.4.5 / jq-1.8.2`), а не mikefarah yq; sb отвергает его как
   несовместимую реализацию и сборка падает
