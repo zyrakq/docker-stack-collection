@@ -485,6 +485,7 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: `agent-browser open` fails with "Chrome exited early … No usable sandbox!"; `npx` absent on host; `pnpm add -g` installs to `~/.local/share/pnpm/bin` which is not in PATH (and `pnpm bin -g` itself errors ERR_PNPM_GLOBAL_BIN_DIR_NOT_IN_PATH)
 - cause: AppArmor-disabled unprivileged user namespaces on this host kill Chrome's sandbox; host has bare `node`/`bun`/`pnpm` only
 - fix: install locally in the scratch dir — `cd /tmp/opencode && bun add agent-browser` → run as `./node_modules/.bin/agent-browser --session <name> --args "--no-sandbox" <cmd>`; the `--args` flag must come before the subcommand. Complements P-046 (dockerized-Chromium fallback, no longer needed)
+- note (2026-11-05, navidrome gate): after `open`, the session can sit at `about:blank` with an empty DOM (snapshot/eval return nothing) even though `open` printed the target URL — a plain re-`open <url>` in the same session restores the page; also never abbreviate the CLI into a single `$AB` string variable, zsh then treats the whole string as one command path
 
 ## P-048: tome API auth quirks — OPDS basic auth uses username, KOSync lives at /api/v1 with plaintext userkey, TomeSync needs a *plugin* key (not an api-token)
 - hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
