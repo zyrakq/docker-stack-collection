@@ -401,3 +401,17 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: after `sb build`, `build/<new-env>/` contains only docker-compose.yml + .env.example; no `.env` restored (existing envs got theirs)
 - cause: sb preserves/restores `.env` only for environments that already had one before the build; a brand-new environment starts without one
 - fix: copy the generated `build/<new-env>/.env.example` to `.env` manually and fill gate values (OPENWORK_TOKEN, REPO_SYNC_URL, etc.) before `docker compose up`
+
+## P-039: openwork apps/server has zero OTel instrumentation at pin ae67215d
+- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
+- where: openwork stack — otel-lgtm extension gate (Tempo/Loki verification)
+- symptom: after wiring OTEL_* env onto the `openwork` service, Tempo shows only service.name `opencode` traces (sql.execute, Npm.add, …); no spans for server HTTP requests; server stdout never reaches Loki
+- cause: upstream `apps/server` @ ae67215d has no OpenTelemetry instrumentation at all (git grep: none); `DEN_OBSERVABILITY_BACKEND`/`OTEL_SERVICE_NAME` gating exists only in ee/ (den-api/den-web). The OTEL_* env is consumed by the in-process opencode runtime (OPENWORK_MANAGE_OPENCODE=1)
+- fix: none possible at this pin — gate traces/logs via the opencode runtime's exports (service.name `opencode`); do not expect server request spans
+
+## P-040: Tempo single-trace JSON needs `Accept: application/json`; spans nest under scopeSpans
+- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
+- where: openwork stack — otel-lgtm gate, Grafana API trace inspection
+- symptom: `GET /api/datasources/proxy/uid/tempo/api/traces/<id>` without header returns protobuf/garbage; parsing `batches[].spans[]` finds nothing
+- cause: Tempo defaults to a non-JSON representation without the Accept header; the JSON layout puts spans under `batches[].scopeSpans[].spans[]`, not `batches[].spans[]`
+- fix: add `-H 'Accept: application/json'` and read spans at `batches[].scopeSpans[].spans[]`; Loki matcher must be non-empty-compatible, e.g. `{service_name="opencode"}`
