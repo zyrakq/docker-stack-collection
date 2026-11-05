@@ -656,3 +656,13 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: fragment set `ND_EXTAUTHTRUSTEDSOURCES=...` etc.; navidrome ignored all three (ExtAuth stayed disabled) while the same names looked plausible next to flat keys like `ND_LOGLEVEL`
 - cause: viper env keys are the nested config path with `.` replaced by `_` — `extauth.trustedsources` → `ND_EXTAUTH_TRUSTEDSOURCES`. The concatenated form is simply a different (unknown) key
 - fix: derive env names from the nested key path, not from concatenation: `extauth.userheader` → `ND_EXTAUTH_USERHEADER`. Rule: for viper apps, env name = prefix + nested path with dots→underscores; verify against the app's config source, not `strings` on the binary (env names are not string literals)
+
+## P-066: Alpine healthcheck `wget http://localhost/...` fails — localhost resolves to ::1, service listens IPv4-only
+- hits: 1
+- status: fixed
+- first: 2026-11-05
+- last: 2026-11-05
+- where: navidrome extauth-proxy healthcheck (nginx:alpine); any Alpine-based container healthcheck hitting a service bound to 0.0.0.0
+- symptom: container `Up (unhealthy)` with `wget: can't connect to remote host: Connection refused`, while `wget http://127.0.0.1/...` inside the container works
+- cause: musl resolves `localhost` to ::1 first; nginx `listen 80` binds IPv4-only, so the ::1 attempt is refused
+- fix: use `127.0.0.1` explicitly in healthcheck URLs (`http://127.0.0.1:80/healthz`)
