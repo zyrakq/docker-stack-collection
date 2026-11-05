@@ -431,11 +431,11 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - commit (openwork): 9215a27
 
 ## P-042: TLS vhost `*.example.com` placeholders never get certs — use `*.af` for gates
-- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
-- where: openwork stack — TLS (step-ca) gate via live step-ca-manager companion
-- symptom: with `*.example.com` vhosts the companion never issues certificates; cert-wait hangs
-- cause: `*.example.com` does not resolve in this environment; the live step-ca-companion only issues certs for names it can see via the unbound redirect
-- fix: use `*.af` vhosts (e.g. `openwork.af`, `openwork-api.af`) — they resolve via the live unbound redirect and get certs in seconds; `*.example.com` placeholders stay only in `.env.example` docs
+- hits: 2 | status: open | first: 2026-11-05 | last: 2026-11-05
+- where: openwork stack; polaris stack (VIRTUAL_HOST=polaris.example.com in letsencrypt/step-ca .env.example)
+- symptom: with `*.example.com` vhosts the companion never issues certificates; cert-wait hangs; nginx-proxy serves `ssl_reject_handshake on` for the vhost → `tlsv1 unrecognized name` on every TLS request
+- cause: `*.example.com` does not resolve in this environment; the live step-ca-companion only issues certs for names it can see via the unbound redirect (unbound has `local-zone: "af." redirect → 192.168.99.1` only)
+- fix: use `*.af` vhosts (e.g. `openwork.af`, `openwork-api.af`, `polaris.af`) — they resolve via the live unbound redirect and get certs in seconds; `*.example.com` placeholders stay only in `.env.example` docs. polaris fix committed in `53fbf5a`
 
 ## P-043: sb build fails with "yq is required but not available" on hosts without yq
 - hits: 1 | status: fixed | first: 2026-11-05 | last: 2026-11-05
@@ -570,3 +570,23 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: image history shows an ever-growing stack of `COPY --chown=... polaris.toml.example /config/polaris.toml` layers (one per `docker compose up -d --build`, ~1 per rebuild seen at 11:02–11:06 timestamps); made a transient rebuild loop look like an external watcher — alarmed diagnosis ("cyclic recreate", suspect docker-gen) while the real loop was a crash-restart of a container with a corrupted config
 - cause: `dockerfile_inline: "FROM ${IMAGE:-localhost/polaris:0.16.1}\nCOPY ..."` builds a child of the image's own tag and retags it with the same tag → each rebuild adds one config layer; combined with a stale/corrupt bake (duplicate `admin = true` from a mid-edit build, caught only by container restart log "TOML parse error ... duplicate key"), the repeated rebuild+recreate looks like an endless cycle. No external process was involved (ps shows no compose/watcher).
 - fix: treat as expected consequence, not a bug: `docker compose up -d --build` is required for config changes (P-023) and layers accumulate — diagnose "recreate loop" by (a) checking container logs for crash errors first, (b) comparing image-copy timestamps with own `up --build` invocations. Reset accumulation by rebuilding the base image via its Dockerfile when the layer pile-up matters. Copy the config's exit-code transcript from `docker logs`, not the last-healthy state.
+
+## P-058: dockerfile_inline `RUN apt-get` fails on non-root base images — add `USER root` first
+- hits: 1
+- status: fixed
+- first: 2026-11-05
+- last: 2026-11-05
+- where: polaris s3fs-fuse extension (`app/components/extensions/s3fs-fuse/docker-compose.yml`, both dockerfile_inline blocks)
+- symptom: `docker compose up --build` fails in the dockerfile_inline build with apt-get permission errors (base image `localhost/polaris:0.16.1` runs as uid 1000, so `apt-get update && apt-get install` cannot write)
+- cause: dockerfile_inline inherits the base image's USER; apt needs root
+- fix: add `USER root` as the first instruction after `FROM ${IMAGE:-...}` in every dockerfile_inline that runs apt-get (or any root-only command); committed in polaris `53fbf5a`
+
+## P-059: curl 8.23 (alpine/curl, curlimages/curl) rejects `--cacert` — use `SSL_CERT_FILE` as root
+- hits: 1
+- status: open
+- first: 2026-11-05
+- last: 2026-11-05
+- where: gate testing against step-ca TLS vhosts from throwaway curl containers (polaris gate, any `*.af` vhost)
+- symptom: `curl --cacert /step/certs/root_ca.crt` fails with "option --cacert: is badly used here" in alpine/curl:latest and curlimages/curl (curl 8.23)
+- cause: newer curl builds restrict --cacert usage context; also the step-ca root CA inside volume `step-ca-data` sits at `/home/step/certs/root_ca.crt` mode 600 uid 1000 — unreadable by the image's non-root curl_user
+- fix: run the container as root with the volume mounted and `export SSL_CERT_FILE=<ca-path>`; e.g. `docker run --rm -v step-ca-data:/step:ro --network step-ca-network --entrypoint sh alpine/curl:latest -c 'export SSL_CERT_FILE=/step/certs/root_ca.crt; curl --resolve <vhost>:443:<proxy-ip> https://<vhost>/...'`. Note: `/step/certs/root_ca.crt` works because the volume's `certs` subpath content is exposed at the mount root — verify the actual path with `ls` if a mount uses `subpath`
