@@ -527,3 +527,26 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: after `sb build`, each `build/<env>/<layer>/.env` is truncated to a 23-line skeleton (secrets like `TOME_OIDC_CLIENT_SECRET`, passphrases gone); output shows "⚠ Skipped .env file (content conflict)" x4, "Creating backup for 6 files that couldn't be restored", "Restoration completed: 0 restored successfully"
 - cause: sb regenerates build `.env` from component `.env` + fragment `.env.example` and refuses to auto-restore when content conflicts; its own backup lands in `app/.stackbuilder/backup/backup_<ts>/` as `<env>_<layer>_.env`
 - fix (workaround): restore from the timestamped `.stackbuilder/backup/` dir (or a pre-build copy) after every `sb build`; keep a pre-build copy in `/tmp/opencode` as second source. Unresolved upstream behavior — always verify line counts + secret keys before `docker compose up`. Note (hit#3): sb does auto-backup/auto-restore, but the tracked set covers only the 6 layer files present at backup time; newly added per-extension build dirs (koreader-tomesync, send-to-device-smtp, outbound-notify, auto-import) get fresh skeleton `.env` — that is expected, only the 6 tracked layer files need restoring.
+
+## P-054: multi `-f` compose up loads only the first layer's `.env`
+- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
+- where: staged stack bring-ups with layered compose (`kill-switches` + `base` + extensions), e.g. tome oidc stage
+- symptom: vars declared in an extension layer with `?err` enforcement fail or interpolate to defaults even though the extension's own `.env` defines them
+- cause: `--env-file` defaults to `./.env` relative to the FIRST compose file; later `-f` files' sibling `.env` files are not picked up when the first layer has none
+- fix: always pass `--env-file <final-layer-dir>/.env` explicitly on every `up`/`down` when layering multi `-f` compose files from different directories
+
+## P-055: container-level CA trust: compose `volume.subpath` mounts for apps that use the system trust store
+- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
+- where: tome stack OIDC stage (upstream image, httpx 0.28 → system CA store; no bind-mount policy allows cert files)
+- symptom: TLS calls to kanidm.af fail with `InvalidCertificate(UnknownIssuer)` even though step-ca signed the cert
+- cause: upstream image wheels trust the *system* store (no pip cert-file switch), and the app container has no path to the step-ca root CA; host curl is also broken (P-018) so verification must be dockerized
+- fix: untracked test-only overlay (4th `-f`) mounting the external volume at `volume.subpath: certs` → files land at the target root (`/stepca/root_ca.crt` without a `certs/` dir), plus `SSL_CERT_FILE: /stepca/root_ca.crt`; works on compose 5.6.1 + engine 29.9.2. Verify network-wise with `alpine/curl` attached to `step-ca-network` using `--cacert /step/certs/root_ca.crt`. NOTE: overlay is test-only and must NOT be committed with the stack.
+
+## P-056: Kanidm plain `groups` claim emits UUID + SPN (no short names) — apps doing exact-match group checks break
+- hits: 1 | status: fixed | first: 2026-11-05 | last: 2026-11-05
+- where: tome OIDC stage E2E (`s.oidc_allowed_group not in groups` gate in `backend/services/oidc.py`)
+- symptom: SSO completes, code exchanged, callback 302 → but UI shows "not permitted to sign in"; audit `auth.oidc_denied` details `{"reason": "not in allowed group"}` although the user IS a member of the mapped group
+- cause: Kanidm's `groups` scope emits each group's UUID **and** SPN values only (`name@domain`), never the short name (v1.11.2 `oauth2.rs`: `groups implies uuid + spn`); Tome compares exact strings against short names like `tome_users`
+- fix: keep `.env` short names for committed tracked files untouched; override the group envs to SPN form (`tome_users@kanidm.af`) in the untracked test overlay (last `-f` wins). CAUTION: this only works with literal values — if `--env-file` `X.env` already defines the var, `${VAR:-spn-default}` in the overlay resolves to the env-file value (variable substitution happens per-file, then compose merges interpolated values), so `${VAR:-...}` fallbacks are useless for overriding env-file values; hardcode or use a differently-named var. Kanidm-side alternative (if ever allowed): the `groups_name` scope emits short names.
+
+
