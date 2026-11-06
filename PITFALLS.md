@@ -799,3 +799,17 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: `mc alias set ... http://127.0.0.1:9000` or `http://localhost:9000` fails with "Client sent an HTTP request to an HTTPS server" (or an ISO-8859/decode error in some paths) even though RustFS itself is fine
 - cause: something else on the host already listens on 127.0.0.1:9000 with TLS; the live rustfs container publishes no host port and sits on the step-ca-network, so the only working endpoint from the host is its container IP
 - fix: use the container IP: `MC_HOST_<alias>="http://<user>:<secret>@172.20.0.3:9000"` (get the IP via `docker inspect rustfs --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'`); combine with P-062's rule — never trust a bare-word mc path
+
+## P-082: BookLore (ghcr.io/booklore-app/booklore:latest, Spring 7) resolves remote-auth header names case-sensitively — they must be ALL-LOWERCASE
+- hits: 1 | status: fixed | first: 2026-11-06 | last: 2026-11-06
+- where: booklore remote-auth gate (any stack using remauth/forward-auth header injection into BookLore)
+- symptom: `/api/v1/auth/remote` returns 400 "Remote-User header is missing" even though the proxy injects the header correctly; direct curl with `-H 'Remote-User: x'` (mixed case) fails, `-H 'remote-user: x'` succeeds
+- cause: the running image (newer Spring Framework 7 / Java 25 than the pinned upstream commit) does a case-sensitive `.toLowerCase` map lookup against the config value — header names like `Remote-User`/`REMOTE-USER` never match; only `remote-user` resolves
+- fix: set all four header names lowercase in every artifact (component fragment defaults, `.env.example`s, generated build `.env`s): `remote-user`, `remote-name`, `remote-email`, `remote-groups`. Regen builds with `sb build` after the fix and re-probe through the proxy before concluding anything else is broken
+
+## P-083: persisted named volume keeps OLD credentials; a fresh gate `.env` generates NEW ones → DB auth failure at repeated gates
+- hits: 1 | status: fixed | first: 2026-11-06 | last: 2026-11-06
+- where: booklore remote-auth gate (any stack gate re-run where the DB service container is recreated but a named DB volume persists across combos)
+- symptom: after re-generating the build and recreating the compose project, the app fails to reach its DB (auth/connection errors) though the DB container is healthy
+- cause: MariaDB credentials live inside the persisted volume's mysql.user table, not env; regenerating `.env` produced a new random `DATABASE_PASSWORD` that no longer matches the volume's stored grant
+- fix: before any booklore gate re-run, copy the PERSISTED credentials into the new build's `.env` (`DATABASE_PASSWORD=491960efc1be1ce179b9ac0cf5a2fbcd`, `MYSQL_ROOT_PASSWORD=8ef018a7975c59f2621d316b84b5bdfd`) — or `docker volume rm` the DB volume if stale data is disposable. General rule: on volume-backed DBs, `.env` DB passwords are sticky across gates
