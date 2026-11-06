@@ -759,8 +759,8 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - fix: verify actual GHCR tag list before pinning (`docker manifest inspect` / GHCR page); record provenance in UPSTREAM.md; bookorbit fixed to `ghcr.io/bookorbit/bookorbit:3.6.0` (commit a514fd2)
 
 ## P-076: host port 3000 already allocated during stack-test scratch runs
-- hits: 1 | status: open | first: 2026-11-06 | last: 2026-11-06
+- hits: 2 | status: open | first: 2026-11-06 | last: 2026-11-06
 - where: bookorbit Stage A2 pgrust swap (any stack-test `docker compose up` in a scratch dir while another stack or a previous run holds the port)
 - symptom: `docker compose up -d` fails with "Bind for 0.0.0.0:3000 failed: port is already allocated" even though the compose project itself is fresh
 - cause: the host port is shared across all stacks/scratch runs; the default `BOOKORBIT_PORT=3000` collides with whatever already listens on 3000
-- fix: none yet — workaround: override the port var in the scratch `.env` (e.g. `BOOKORBIT_PORT=13000`) before `up`; stack-test scratch runs should always pick a non-default host port
+- fix: none yet — workaround: override the port var in the scratch `.env` (e.g. `BOOKORBIT_PORT=13000`) before `up`; stack-test scratch runs should always pick a non-default host port (hit again 2026-11-06 at tts-kokoro extension stage: `omnibus` container holds 3000, scratch used 3100)
