@@ -615,7 +615,7 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - fix: add `--project-directory .` to the layered command (run from the build-env root) so `context: s3fs-fuse` resolves to `build/<env>/s3fs-fuse/`; stackbuilder already copies the entrypoint script into that subdir. Documented in the re-kord s3fs-fuse fragment comment
 
 ## P-062: minio `mc` silently treats an unknown alias as a LOCAL filesystem path
-- hits: 1
+- hits: 2
 - status: fixed
 - first: 2026-11-05
 - last: 2026-11-05
@@ -764,3 +764,31 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: `docker compose up -d` fails with "Bind for 0.0.0.0:3000 failed: port is already allocated" even though the compose project itself is fresh
 - cause: the host port is shared across all stacks/scratch runs; the default `BOOKORBIT_PORT=3000` collides with whatever already listens on 3000
 - fix: none yet — workaround: override the port var in the scratch `.env` (e.g. `BOOKORBIT_PORT=13000`) before `up`; stack-test scratch runs should always pick a non-default host port (hit again 2026-11-06 at tts-kokoro extension stage: `omnibus` container holds 3000, scratch used 3100)
+
+## P-077: 502 from the shared step-ca-proxy during a backend container's restart-uptime window is transient
+- hits: 1 | status: open | first: 2026-11-06 | last: 2026-11-06
+- where: booklore step-ca variant gate (any stack behind the live step-ca-proxy whose backend container restarts)
+- symptom: browser gets 502 when opening the stack URL right after `docker restart` / `up -d` while the backend is still `health: starting`
+- cause: step-ca-proxy routes to the backend origin before the container is listening; the route itself is fine
+- fix: none needed — wait for container `healthy` then reload the page; do not debug the proxy
+
+## P-078: containers behind step-ca-proxy can spontaneously bounce and lose the external step-ca-network attachment
+- hits: 1 | status: open | first: 2026-11-06 | last: 2026-11-06
+- where: booklore step-ca variant gate (any stack whose app joins an external network like step-ca-network)
+- symptom: mid-session, app + db + step-ca-proxy all restart (~12:04-12:06); app comes back attached ONLY to its own `<stack>-network` (external step-ca-network missing) → nginx "tlsv1 unrecognized name" for the vhost, curl exit 35/000, browser shows black/empty SPA pages with 504s on all API calls
+- cause: unknown trigger (possibly docker daemon / dockergen event storm); on restart the container's network set is rebuilt from the running project and the external network attachment is dropped
+- fix: re-run `docker compose -f build/<variant>/docker-compose.yml --env-file .env up -d` from the variant dir — compose re-attaches the external network without recreating volumes; then wait for `healthy` and re-verify cert + HTTP 200. Do NOT debug nginx or the app first — check `docker inspect <app> --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}'` for the missing external network
+
+## P-079: `docker compose -p <name> down` removes OTHER deployments sharing the same compose project label
+- hits: 1 | status: open | first: 2026-11-06 | last: 2026-11-06
+- where: booklore s3fs-fuse gate (any live gate deployment torn down while a second compose dir uses the identical `COMPOSE_PROJECT_NAME`/`-p`)
+- symptom: after running `down` from the OLD backup compose dir (same `-p booklore`), the currently-running gate variant's containers vanish entirely (`docker ps -a` shows no booklore containers at all, minutes after passing health checks) — appears as an unexplained disappearance
+- cause: compose project membership is the `com.docker.compose.project=<name>` label, NOT the compose file — `down` with a matching project name removes every container carrying that label, regardless of which compose file/dir invoked it
+- fix: before any `down`, confirm no live deployment shares the project: match on container names AND check `docker ps` for other projects; tear down with the exact dir/compose that started it. If containers vanish, simply re-`up -d` from the variant dir (volumes survive)
+
+## P-080: an s3fs write right after mount can fail transiently ("nonexistent directory")
+- hits: 1 | status: open | first: 2026-11-06 | last: 2026-11-06
+- where: booklore s3fs-fuse gate (any container exec'ing writes seconds after `docker compose up` brings the s3fs mount up)
+- symptom: first `echo > /bookdrop/<file>` in a just-started container errors with a "generic failure"/"nonexistent directory"-type error, then an identical write seconds later succeeds
+- cause: the s3fs FUSE mount is registered in /proc/mounts before the backend handshake/startup finishes; early writes race the mount becoming fully ready
+- fix: none needed — retry the write after a few seconds; never conclude the mount is broken from one post-start write failure
