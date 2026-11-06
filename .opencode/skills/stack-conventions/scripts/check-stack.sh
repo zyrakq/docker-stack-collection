@@ -9,12 +9,15 @@ v() { echo "VIOLATION: $*"; bad=1; }
 
 while IFS= read -r dir; do
   rel=${dir#"$d"/}; [[ $dir == "$d" ]] && rel=.
-  files=$(find "$dir" -maxdepth 1 -type f ! -name .gitkeep | head -1)
-  subs=$(find "$dir" -maxdepth 1 -mindepth 1 -type d ! -name .git -exec test ! -e {}/.git \; -print | head -1)
+  nfiles=$(find "$dir" -maxdepth 1 -type f ! -name .gitkeep | wc -l)
+  nsubs=$(find "$dir" -maxdepth 1 -mindepth 1 -type d ! -name .git -exec test ! -e {}/.git \; -print | wc -l)
+  need=0; [[ $nsubs -eq 1 && $nfiles -eq 0 ]] && need=1
   if [[ -f $dir/.gitkeep ]]; then
-    [[ -n $files ]] && v ".gitkeep in dir with files: $rel"
-  elif [[ -z $files && -n $subs && $rel != . ]]; then
-    v ".gitkeep missing (dir has only subdirs): $rel"
+    if [[ $nfiles -gt 0 ]]; then v ".gitkeep in dir with files: $rel"
+    elif [[ $need -eq 0 ]]; then v ".gitkeep in dir with $nsubs subdirs (not exactly one): $rel"
+    fi
+  elif [[ $need -eq 1 && $rel != . ]]; then
+    v ".gitkeep missing (exactly one subdir): $rel"
   fi
 done < <(find "$d" -mindepth 0 \( -name .git -o -name .stackbuilder -o -name build -o -name node_modules -o -name .vscode -o \( -type d -exec test -e {}/.git \; ! -path "$d" \) \) -prune -o -type d -print)
 
