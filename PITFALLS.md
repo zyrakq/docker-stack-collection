@@ -792,3 +792,10 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: first `echo > /bookdrop/<file>` in a just-started container errors with a "generic failure"/"nonexistent directory"-type error, then an identical write seconds later succeeds
 - cause: the s3fs FUSE mount is registered in /proc/mounts before the backend handshake/startup finishes; early writes race the mount becoming fully ready
 - fix: none needed — retry the write after a few seconds; never conclude the mount is broken from one post-start write failure
+
+## P-081: on this host, `127.0.0.1:9000` is a DIFFERENT HTTPS service — RustFS is only reachable via its container IP
+- hits: 1 | status: open | first: 2026-11-06 | last: 2026-11-06
+- where: booklore s3fs-fuse gate (any mc/rustfs verification from the host)
+- symptom: `mc alias set ... http://127.0.0.1:9000` or `http://localhost:9000` fails with "Client sent an HTTP request to an HTTPS server" (or an ISO-8859/decode error in some paths) even though RustFS itself is fine
+- cause: something else on the host already listens on 127.0.0.1:9000 with TLS; the live rustfs container publishes no host port and sits on the step-ca-network, so the only working endpoint from the host is its container IP
+- fix: use the container IP: `MC_HOST_<alias>="http://<user>:<secret>@172.20.0.3:9000"` (get the IP via `docker inspect rustfs --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'`); combine with P-062's rule — never trust a bare-word mc path
