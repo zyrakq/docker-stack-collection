@@ -122,3 +122,4 @@ Generated from [`stacks.csv`](stacks.csv) by `.githooks/gen-stacks-md.sh` — do
 | `stacks/self-hosting/media-streaming/book-management/omnibus` | - | unverified ❓ |
 | `stacks/self-hosting/media-streaming/book-management/bookorbit` | - | completed ✅ |
 | `stacks/self-hosting/media-streaming/book-management/booklore` | - | unverified ❓ |
+| `stacks/self-hosting/media-streaming/book-management/vaultisse` | - | unverified ❓ |
