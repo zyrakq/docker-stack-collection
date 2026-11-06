@@ -62,6 +62,18 @@ Features needing scripts/entrypoint hooks cannot be modeled as combinable
 extensions. Agents hacked them in as separate non-combinable extensions,
 producing combos like `forwarding-repo-sync-X`.
 
+### L15. Empty combos rejected — `proposal`
+
+hits: 1 · last: 2026-11-06 (booklore)
+status: open
+root-cause: `[build.combos]` with no entries (or every `[profiles.*_ONCE]`
+removed) is rejected while merging profiles; a warnings-only combo step
+(config.rs:486/531/596/683) still requires at least one combo name.
+workaround: `entire = ["core"]` — a placeholder combo name that sb warns is
+unknown but still renders base+environment-only output (booklore).
+fix idea: allow zero combos in the environments API — base+env-only builds
+should not need a placeholder.
+
 Resolved in opencode-stack: script-style features ship as a committed
 `app/plugins/` folder of ready-made install scripts; users opt in by
 copying them into a git-ignored `plugins/` folder next to the generated
