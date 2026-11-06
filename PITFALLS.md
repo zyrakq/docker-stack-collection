@@ -729,3 +729,17 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: (a) after running with `NANOMCP_STDIO_HELPER=1`, a later run with the flag empty still shows the stdio-helper entry and `tools: 2` — the servers.json seed lives in the `nanomcp-userdata` named volume, so flag removal alone is not inertness; (b) calling the helper tool as `stdio-helper__echo` returns "unknown tool" — the gateway namespaces tools under the server ALIAS with `-` sanitized to `_`, so the real name is `stdio_helper__echo`
 - cause: (a) seeding is create-or-upsert into persistent state, never a delete; (b) alias-to-tool-name sanitization in the gateway's tool naming
 - fix: (a) inertness re-tests need `docker compose down -v` (fresh volume) plus a compose override file setting the flag to `""` (P-071 pattern); (b) use the sanitized name `stdio_helper__echo` in tools/call — documented in DEPLOYMENT.md
+
+## P-074: optional string env vars passed as empty strings crash apps with zod validation
+- hits: 1 | status: fixed | first: 2026-11-06 | last: 2026-11-06
+- where: bookorbit Stage A gate (any app whose env schema uses `z.string().trim().min(N).optional()`)
+- symptom: app crash-loops on start; logs show zod validation error for an env var the operator never set
+- cause: compose renders `${VAR:-}` defaults for optional keys, so the container receives `VAR=""` — an empty string is NOT undefined for zod, `.trim().min(16)` fails on `""`
+- fix: drop the optional key from compose `environment:` entirely (bookorbit `PODCAST_ENCRYPTION_KEY`, commit 16cb9b7); rule: compose must not render empty defaults for optional env keys. Schema inspectable via `docker run --rm --entrypoint node <image> -e "..."` reading the app's env.validation module
+
+## P-075: upstream GHCR image tags may omit the `v` prefix even when repo tags have it
+- hits: 1 | status: open | first: 2026-11-06 | last: 2026-11-06
+- where: bookorbit image tag selection (any stack picking a `ghcr.io/<org>/<app>` tag from upstream release info)
+- symptom: compose pulls a non-existent `:v3.6.0` tag → ImagePullBackOff crash loop
+- cause: upstream release.yml publishes `${VERSION}` (repo tags are `v${VERSION}`), so GHCR tags have NO `v` prefix (`3.6.0`, `latest`, `main`, `sha-*`, `pr-*`); GHCR may also hold only old versions (1.0.0–1.3.0) while repo is at 3.6.0
+- fix: verify actual GHCR tag list before pinning (`docker manifest inspect` / GHCR page); record provenance in UPSTREAM.md; bookorbit fixed to `ghcr.io/bookorbit/bookorbit:3.6.0` (commit a514fd2)
