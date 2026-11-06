@@ -529,7 +529,7 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - where: tome stack `app/` `sb build` (all environments)
 - symptom: after `sb build`, each `build/<env>/<layer>/.env` is truncated to a 23-line skeleton (secrets like `TOME_OIDC_CLIENT_SECRET`, passphrases gone); output shows "⚠ Skipped .env file (content conflict)" x4, "Creating backup for 6 files that couldn't be restored", "Restoration completed: 0 restored successfully"
 - cause: sb regenerates build `.env` from component `.env` + fragment `.env.example` and refuses to auto-restore when content conflicts; its own backup lands in `app/.stackbuilder/backup/backup_<ts>/` as `<env>_<layer>_.env`
-- fix (workaround): restore from the timestamped `.stackbuilder/backup/` dir (or a pre-build copy) after every `sb build`; keep a pre-build copy in `/tmp/opencode` as second source. Unresolved upstream behavior — always verify line counts + secret keys before `docker compose up`. Note (hit#3): sb does auto-backup/auto-restore, but the tracked set covers only the 6 layer files present at backup time; newly added per-extension build dirs (koreader-tomesync, send-to-device-smtp, outbound-notify, auto-import) get fresh skeleton `.env` — that is expected, only the 6 tracked layer files need restoring.
+- fix (workaround): restore from the timestamped `.stackbuilder/backup/` dir (or a pre-build copy) after every `sb build`; keep a pre-build copy in `/tmp/opencode` as second source. Unresolved upstream behavior — always verify line counts + secret keys before `docker compose up`. Note (hit#3): sb does auto-backup/auto-restore, but the tracked set covers only the 6 layer files present at backup time; newly added per-extension build dirs (koreader-tomesync, send-to-device-smtp, outbound-notify, auto-import) get fresh skeleton `.env` — that is expected, only the 6 tracked layer files need restoring. Note (2026-11-06, vaultisse pgrust build): sb auto-restored all 3 variant `.env`s with secrets intact — no hit, restore path works when no content conflict.
 
 ## P-054: multi `-f` compose up loads only the first layer's `.env`
 - hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
@@ -625,10 +625,10 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - fix: always verify bucket backends with an explicit temp alias: `MC_CONFIG_DIR=/tmp/opencode/<dir> mc alias set tmp http://<container-ip>:9000 <ak> <sk>`, then `mc ls tmp/<bucket>/`. Rule: never use a bare word prefix in mc paths unless `mc alias list` shows it
 
 ## P-063: `sb build` requires mikefarah yq v4 on PATH — the system `/usr/bin/yq` is a jq-wrapper and breaks the build
-- hits: 2
+- hits: 3
 - status: fixed
 - first: 2026-11-05
-- last: 2026-11-05
+- last: 2026-11-06
 - where: navidrome stack builds (`sb build` in any stack's `app/`); every session running stackbuilder
 - symptom: `sb build` fails or misbehaves because it shells out to `yq` and picks up `/usr/bin/yq`, which is the jq-compatible wrapper (different CLI), not mikefarah yq v4
 - cause: stackbuilder expects the mikefarah yq v4 CLI (its filter syntax), but the distro `yq` on PATH is a different tool with the same name
@@ -813,3 +813,10 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: after re-generating the build and recreating the compose project, the app fails to reach its DB (auth/connection errors) though the DB container is healthy
 - cause: MariaDB credentials live inside the persisted volume's mysql.user table, not env; regenerating `.env` produced a new random `DATABASE_PASSWORD` that no longer matches the volume's stored grant
 - fix: before any booklore gate re-run, copy the PERSISTED credentials into the new build's `.env` (`DATABASE_PASSWORD=491960efc1be1ce179b9ac0cf5a2fbcd`, `MYSQL_ROOT_PASSWORD=8ef018a7975c59f2621d316b84b5bdfd`) — or `docker volume rm` the DB volume if stale data is disposable. General rule: on volume-backed DBs, `.env` DB passwords are sticky across gates
+
+## P-084: vaultisse browser-gate quirks (register link, library route, ISBN lookups)
+- hits: 1 | status: open | first: 2026-11-06 | last: 2026-11-06
+- where: vaultisse Stage A/A2 browser gates (agent-browser, any variant)
+- symptom: (a) clicking the "Register and start using the app" link on the login page does NOT navigate — only opening `/register` as a direct URL works; (b) direct URL `/app/library` renders the app's 404 page — the real route is `/app/library/search`; (c) Google Books API returns 429 from the shared host IP, and the Add-book UI modal (ISBN code + search + Add (0)) shows no visible reaction to clicks/Enter
+- cause: SPA client-side quirks (link handler + route naming) plus upstream rate limiting; server-side metadata lookup itself works — the app merges DNB/BNE/SBN regional + Open Library sources
+- fix: open `/register` directly by URL; use `/app/library/search`; create books via the authenticated API from the browser session — `POST /api/rest/book/isbn/<isbn>` with body `{"location":null}` (returns the book id) — then verify in the UI; Open Library fallback makes ISBN creation work without a Google key
