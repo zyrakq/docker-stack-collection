@@ -815,8 +815,43 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - fix: before any booklore gate re-run, copy the PERSISTED credentials into the new build's `.env` (`DATABASE_PASSWORD=491960efc1be1ce179b9ac0cf5a2fbcd`, `MYSQL_ROOT_PASSWORD=8ef018a7975c59f2621d316b84b5bdfd`) — or `docker volume rm` the DB volume if stale data is disposable. General rule: on volume-backed DBs, `.env` DB passwords are sticky across gates
 
 ## P-084: vaultisse browser-gate quirks (register link, library route, ISBN lookups)
+- hits: 2 | status: fixed | first: 2026-11-06 | last: 2026-11-06
+- where: vaultisse Stage A/A2 + Stage B browser gates (agent-browser, any variant)
+- symptom: (a) clicking the "Register and start using the app" link on the login page does NOT navigate — only opening `/register` as a direct URL works; (b) direct URL `/app/library` renders the app's 404 page — the real route is `/app/library/search` (nav link works fine; cosmetic); (c) Google Books API returns 429 from the shared host IP, and the Add-book-ISBN UI dialog shows no reaction to agent-browser fill/type/press/keyboard (Enter via those paths does nothing; "Add (n)" stays disabled)
+- cause: SPA client-side quirks (link handler + route naming) plus upstream rate limiting; the ISBN dialog's v-model + keydown-Enter validator is only triggered by NATIVE DOM events (synthetic framework events fail in headless automation)
+- fix: open `/register` directly by URL; use `/app/library/search`; headless ISBN-add recipe: `agent-browser eval` with `Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set` + `dispatchEvent(new Event('input',{bubbles:true}))` + `dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',code:'Enter',bubbles:true,cancelable:true}))` — "Add (1)" then enables and a real click adds the ISBN (server fetch works via Open Library fallback without a Google key); also close the stacked "Scan barcode" camera-error dialog with `agent-browser press Escape` before clicking "Add (n)" (its overlay intercepts the click), verify `scanDialogOpen=false` first
+
+## P-085: vaultisse OIDC behind kanidm fails on TLS unless the step-ca-trust extension is wired
+- hits: 1 | status: fixed | first: 2026-11-06 | last: 2026-11-06
+- where: vaultisse Stage B step-ca variant (any OIDC app deploying behind the live step-ca-proxy, where the IdP is reached over TLS signed by the step-ca root CA)
+- symptom: with the oidc extension alone, the app faults at OIDC discovery/token fetch — Node rejects the IdP's cert chain even though the browser side works (`STEP_CA_TRUST` env is NOT supported by the component stack)
+- cause: the app container has only its own network + baked-in CA bundle; the step-ca root CA never reaches it, so outbound HTTPS to `kanidm.af` fails cert verification
+- fix: use the `components/extensions/step-ca-trust/` fragment (in combo `entire-trust`): read-only subpath mount of the external `step-ca-data` volume's `certs/` dir + `NODE_EXTRA_CA_CERTS=/step-ca-root/root_ca.crt` (root CA lives at `certs/root_ca.crt` in the volume)
+
+## P-086: kanidm advertises ES256-only id_tokens, but openid-client defaults to verifying RS256
+- hits: 1 | status: fixed | first: 2026-11-06 | last: 2026-11-06
+- where: vaultisse Stage B (any app bundling openid-client v5 and pointing at the live kanidm)
+- symptom: authorization round-trip completes, but the callback fails with an invalid id_token error even though the token is correct — kanidm's discovery lists only ES256 for `id_token_signing_alg_values_supported` while upstream hardcodes `id_token_signed_response_alg: 'RS256'` with no env override (as of vaultisse 1.3.8)
+- cause: library default mismatch; default (no override) can be verified directly by decoding the app's OIDC config or hitting the IdP discovery endpoint
+- fix: derived image recipe `app/images/vaultisse-kanidm/Dockerfile` (FROM `ghcr.io/albertamat/vaultisse:1.3.8`, `sed` RS256→ES256 in `openid-client/lib/client.js` + grep assert), built once as `localhost/vaultisse-kanidm:1.3.8`, referenced via `.env` `IMAGE=`. Re-check the bug first if a newer image version ships an env knob
+
+## P-087: kanidm scope_map never grants the raw `groups` scope — requesting it breaks the OIDC callback with Access Denied
+- hits: 1 | status: fixed | first: 2026-11-06 | last: 2026-11-06
+- where: vaultisse Stage B (any OIDC app configured against a kanidm client with a scope_map; group claims must come via claim_map instead)
+- symptom: with `OIDC_SCOPES` containing `groups` (a storefront default), kanidm redirects back to the callback with Access Denied regardless of the user's membership
+- cause: kanidm scope_map only yields {openid, profile, email}; `groups` is not grantable through a scope_map — the app-side request must not ask for it (group membership arrives via the client's claim_map instead)
+- fix: override to the minimal grantable set: `OIDC_SCOPES=openid profile email`; group claims come from the kanidm claim_map (`groups` → `<app>-users`), keep that wiring on the IdP side, not in scopes
+
+## P-088: `COMPOSE_FILE` set in `.env` disables auto-pickup of `docker-compose.override.yml`
 - hits: 1 | status: open | first: 2026-11-06 | last: 2026-11-06
-- where: vaultisse Stage A/A2 browser gates (agent-browser, any variant)
-- symptom: (a) clicking the "Register and start using the app" link on the login page does NOT navigate — only opening `/register` as a direct URL works; (b) direct URL `/app/library` renders the app's 404 page — the real route is `/app/library/search`; (c) Google Books API returns 429 from the shared host IP, and the Add-book UI modal (ISBN code + search + Add (0)) shows no visible reaction to clicks/Enter
-- cause: SPA client-side quirks (link handler + route naming) plus upstream rate limiting; server-side metadata lookup itself works — the app merges DNB/BNE/SBN regional + Open Library sources
-- fix: open `/register` directly by URL; use `/app/library/search`; create books via the authenticated API from the browser session — `POST /api/rest/book/isbn/<isbn>` with body `{"location":null}` (returns the book id) — then verify in the UI; Open Library fallback makes ISBN creation work without a Google key
+- where: vaultisse Stage B (any sb/generated build dir where `.env` sets COMPOSE_FILE/COMPOSE_EXTENDS and you drop an ad-hoc override file for a smoke test)
+- symptom: a `docker-compose.override.yml` with e.g. a published port for smoke-testing is silently ignored — the containers run as if the override never existed
+- cause: override auto-loading only applies when compose discovers the file list itself; a COMPOSE_FILE/COMPOSE_EXTENDS in the environment wins outright
+- fix: append the override explicitly to COMPOSE_EXTENDS in `.env`, e.g. `COMPOSE_EXTENDS=...:docker-compose.override.yml` (in sb builds COMPOSE_FILE is assembled, so extra files get added at the EXTENDS tail); remember to REMOVE before teardown and restore `.env`
+
+## P-089: letsencrypt variant publishes no host port — smoke tests need a temporary port mapping
+- hits: 1 | status: open | first: 2026-11-06 | last: 2026-11-06
+- where: vaultisse Stage B letsencrypt variant (any TLS-stack variant whose compose only exposes the app via the upstream nginx-proxy network, not a host port)
+- symptom: `curl http://localhost:<port>` / browser to localhost goes nowhere; from the host there's no direct entrypoint even though containers are healthy
+- cause: no `ports:` — the variant is only reachable via `https://$VIRTUAL_HOST` once DNS + the CA trust the deployment; from the host there is nothing on localhost
+- fix: for smoke tests only, add a throwaway override with `ports: ["<port>:<port>"]` + `ALLOW_HTTP=true` and (if the TLS externals referenced are unreachable in a bare build) dummy substitutes for the external networks/volumes; remove the override and restore `.env` afterwards
