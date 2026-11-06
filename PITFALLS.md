@@ -497,11 +497,11 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - fix: OPDS: `-u 'Gate Librarian:GatePass123!'`; KOSync: headers `X-Auth-User`/`X-Auth-Key` with the plaintext key, routes under `/api/v1/`; progress PUT body `{"document","progress","percentage","device"}`; TomeSync: create key via `POST /api/plugin/api-keys` (JWT from `/api/auth/login`), send as `Authorization: Bearer tk_…`
 
 ## P-049: kanidm CLI 1.11.2 cookbook deviations — subcommand names differ from older docs
-- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
-- where: kanidm-admin subagent, OAuth2 client provisioning for the tome stack
+- hits: 2 | status: open | first: 2026-11-05 | last: 2026-11-06
+- where: kanidm-admin subagent, OAuth2 client provisioning for the tome stack; bookorbit Stage B provisioning
 - symptom: `system oauth2 add-redirect-urls` / `create-scope-map` / top-level `whoami` not found or not behaving as older kanidm cooking notes describe
 - cause: kanidm 1.11.2 renamed/singularized several oauth2 subcommands
-- fix: use `system oauth2 add-redirect-url` (singular); scope maps are managed with `system oauth2 update-scope-map` (alias of create-scope-map); identity check is `self whoami` (no top-level `whoami`). PKCE is enabled by default on new clients; `groups` claim emerges natively from the `groups` scope in 1.11 — no custom claim-map needed.
+- fix: use `system oauth2 add-redirect-url` (singular); scope maps are managed with `system oauth2 update-scope-map` (alias of create-scope-map); identity check is `self whoami` (no top-level `whoami`). PKCE is enabled by default on new clients; `groups` claim emerges natively from the `groups` scope in 1.11 — no custom claim-map needed. Further 1.11.2 quirks (bookorbit session): client secret retrieval is `system oauth2 show-basic-secret` (`get-basic-secret` does NOT exist); `$HOME/.config/kanidm` is a FILE (config path), not a directory — mounting an empty dir there breaks the CLI; `person update --password` is invalid — set passwords via `person credential <id> set-password` (interactive commit prompts `[y/n]`, drive with a pty script); `person credential status` on an account with NO credentials errors `EmptyResponse` (not a fault).
 
 ## P-050: `archive/tar: write too long` on compose config copy — empty `VIRTUAL_HOST` produces empty config target filename
 - hits: 2 | status: open | first: 2026-11-05 | last: 2026-11-05
@@ -638,11 +638,25 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - hits: 2
 - status: fixed
 - first: 2026-11-05
-- last: 2026-11-05
+- last: 2026-11-06
 - where: navidrome s3fs-fuse-music gate (appending secret creds from a scratch file onto the sb-generated `build/<env>/<combo>/.env`); any workflow that appends to a stackbuilder-generated `.env`
 - symptom: after `cat creds.env >> .env`, the first appended var became part of the last generated line (`RUSTFS_SECRET_KEY=RUSTFS_ACCESS_KEY=...`), so compose saw an empty `RUSTFS_ACCESS_KEY` and the entrypoint aborted with "RUSTFS_ACCESS_KEY is required" in a restart loop
 - cause: stackbuilder writes the concatenated `.env.example` content without a final newline; `>>` concatenation then glues the next file's first line onto it
 - fix: append a newline before the extra file: `cp fragment/.env.example .env && printf '\n' >> .env && cat creds.env >> .env`. Rule: never append to an sb-generated `.env` without ensuring a trailing newline first
+
+## P-077: apps calling OIDC discovery on a private-IP issuer throw `PrivateAddressException` unless local issuers allowed
+- hits: 1 | status: open | first: 2026-11-06 | last: 2026-11-06
+- where: bookorbit Stage B OIDC (any app with SSRF protection on issuer/token endpoints, e.g. openid-client `allowedDomain`-style guards)
+- symptom: SSO login button fails with "Failed to generate state"; app logs show `PrivateAddressException` when fetching `https://kanidm.af/oauth2/openid/<client>/.well-known/openid-configuration` (kanidm.af resolves to a private IP)
+- cause: the app's OIDC library blocks HTTP(S) calls to private/loopback addresses by default (SSRF guard); the collection's kanidm host is on a private network
+- fix: set `OIDC_ALLOW_LOCAL_ISSUERS=true` in the build `.env` (bookorbit oidc extension fragment defaults it to false); required for any collection OIDC provider on a private IP
+
+## P-078: bookorbit OIDC auto-provisioning is OFF by default — first SSO login fails with "Your account has not been set up"
+- hits: 1 | status: open | first: 2026-11-06 | last: 2026-11-06
+- where: bookorbit Stage B (any app where SSO users are provisioned JIT)
+- symptom: full OIDC round-trip succeeds (code callback reached) but the app rejects the login with "Your account has not been set up"
+- cause: provider edit form's "Auto-provision users" switch ("Create accounts on first OIDC login if user does not exist") defaults to unchecked
+- fix: enable the switch in the provider edit form (Settings → SERVER → Users & Access → OIDC / SSO → provider entry → AUTO-PROVISIONING section) and "Save Changes"; then SSO login auto-creates the account
 - last: 2026-11-05
 - where: navidrome extauth-proxy gate
 - symptom: `sb build` de-staged/wiped the run-dir `.env` (EXTAUTH_USER empty → proxy ran in plain-proxy mode, gate failed with no auth payload)
