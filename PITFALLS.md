@@ -855,3 +855,10 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: `curl http://localhost:<port>` / browser to localhost goes nowhere; from the host there's no direct entrypoint even though containers are healthy
 - cause: no `ports:` — the variant is only reachable via `https://$VIRTUAL_HOST` once DNS + the CA trust the deployment; from the host there is nothing on localhost
 - fix: for smoke tests only, add a throwaway override with `ports: ["<port>:<port>"]` + `ALLOW_HTTP=true` and (if the TLS externals referenced are unreachable in a bare build) dummy substitutes for the external networks/volumes; remove the override and restore `.env` afterwards
+
+## P-094: `ports:` in base compose always violates checker — not cosmetic-only fixable
+- hits: 1 | status: open | first: 2026-11-07 | last: 2026-11-07
+- where: navidrome stack-audit (`check-layout.sh` flags any `ports:` block in `app/components/base/docker-compose*.y*ml`)
+- symptom: checker exits 1 with `ports in base compose: app/components/base/docker-compose.yml`; removing the block would change the published-port behavior (localhost access to the app), which is a logic change
+- cause: `check-layout.sh` unconditionally treats any `ports:` line in a base compose as a violation; base entry on the host port is often desired for direct access without the reverse-proxy network
+- fix: requires a decision, not a cosmetic fix — either drop `ports:` from base compose (move access to the proxy path) or change the checker to allow it; without one of those the stack cannot reach checker exit 0
