@@ -4,7 +4,7 @@ description: >-
   Conventions for docker-stack-collection stacks: app/ layout, service and
   volume naming, sb/stackbuilder builds, environments and layering,
   extensions (oidc, s3-storage, database postgresql+pgrust), env wiring
-  (${VAR:-} everywhere), .env.example hygiene, no-bind-mount volume
+  (plain ${VAR}, defaults in .env.example), .env.example hygiene, no-bind-mount volume
   policy, staged integration protocol with test gates, deployment model
   and application parts (DEPLOYMENT.md), dockerfile_inline
   config patterns, source-built images (app/images/), OIDC/S3/step-ca
@@ -174,13 +174,18 @@ Inner structure of a project dir (e.g. `app/`):
 ## 5. Env wiring — everything overridable
 
 - EVERY env value in EVERY compose file (base, environments, extensions)
-  is `${VAR:-default}` or `${VAR:?}`. Bare literals are forbidden —
+  is `${VAR}` or `${VAR:?}`. Bare literals are forbidden —
   a value the user cannot override from `.env` without editing compose is
   a defect.
-- Covers app env, DB env, infra env. The main app image follows
-  `${IMAGE:-...}` (§19).
-- Inline defaults must be sane standalone values; the referenced var gets
-  a `.env.example` entry in the owning component (§6).
+- Covers app env, DB env, infra env. The main app image is `${IMAGE}` (§19).
+- NO inline defaults (`${VAR:-default}`) in compose — they hurt readability.
+  Defaults live in `.env.example` of the owning component (§6). Rare
+  exception: truly standard, almost never changed values (e.g. `TZ`) — and
+  even those belong in `.env.example` by preference.
+- NEVER hardcode real hosts/domains (`kanidm.af`, `app.example.com`) as
+  defaults anywhere. Extensions are shared by all environments and not every
+  environment has `${VIRTUAL_HOST}` — extensions must NOT rely on it or on
+  any env-specific var; they take full URLs from `.env`.
 
 ## 6. .env.example hygiene
 
@@ -192,6 +197,9 @@ Inner structure of a project dir (e.g. `app/`):
 - Optional/feature vars (oauth keys, s3, mail, provider keys, ...) live
   ONLY in the owning extension's `.env.example` fragment, and only when
   that extension is actually wired (staged protocol, §9).
+- Values that depend on the user's setup are angle-bracket placeholders:
+  `OIDC_ISSUER=https://<sso-host>/oauth2/openid/<client>`,
+  `OIDC_REDIRECT_URI=https://<host>/...`. Never real hosts.
 - Standard key order: `COMPOSE_PROJECT_NAME`, `IMAGE`, `LOG_*`,
   `VIRTUAL_*`/`LETSENCRYPT_*`, OIDC block, `STEP_CA_*`, CA-path vars,
   `TZ=UTC`.
@@ -210,11 +218,11 @@ Inner structure of a project dir (e.g. `app/`):
   depends on the deployment environment (public base URLs, domain-derived
   defaults, TLS settings) is declared ONLY in environment overlays — never
   in base compose and never in base `.env.example`.
-- `forwarding` owns the plain/local default (e.g.
-  `${<APP>_PUBLIC_BASE_URL:-http://localhost:<port>}`);
-  `letsencrypt`/`step-ca` own the TLS default (e.g.
-  `${<APP>_PUBLIC_BASE_URL:-https://${VIRTUAL_HOST}}`). Each overlay
-  re-declares the var with its own default.
+- `forwarding` owns the plain/local value (`.env.example`:
+  `<APP>_PUBLIC_BASE_URL=http://localhost:<port>`);
+  `letsencrypt`/`step-ca` own the TLS one (`https://<host>`). Each overlay
+  re-declares the var in its own `.env.example`; compose uses plain
+  `${<APP>_PUBLIC_BASE_URL}`. `${VIRTUAL_HOST}` only in environment overlays.
 
 ## 8. Database as extension (postgres ↔ pgrust)
 
@@ -452,7 +460,7 @@ When an app has no published Docker image and must be built from source:
 - **Wiring:** `images/` is a sibling of `components/` and is NOT part of
   the `sb` build. Build standalone:
   `docker build -t localhost/<image>:<tag> images/<image>`. Compose
-  references the prebuilt image — `image: ${IMAGE:-localhost/<image>:<tag>}`
+  references the prebuilt image — `image: ${IMAGE}` (`IMAGE=localhost/<image>:<tag>` in `.env.example`)
   — never a `build:` section.
 - Exemplars: `open-coreui` `images/{frontend,backend,complex}` (sparse git
   clone). `litellm-amd64` uses `COPY . .` — context-dependent, NOT the

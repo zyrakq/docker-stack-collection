@@ -114,8 +114,8 @@ Any work on a stack (create, modify, extend, modernize) MUST load the
   BANNED — never `<stack>-app`. `container_name` equals the service name; networks
   `<stack>-network`, volumes `<stack>-<purpose>`. No generic names, no
   unused `PROJECT_NAME`-style vars.
-- Env: every compose env value is overridable (`${VAR:-default}` /
-  `${VAR:?}`) — never hardcoded. `.env.example` holds only vars the
+- Env: every compose env value is overridable (`${VAR}` /
+  `${VAR:?}`), defaults only in `.env.example` — never hardcoded. `.env.example` holds only vars the
   compose files actually reference; optional vars live in extension
   fragments only.
 - Layering: environment-dependent vars (public URLs, TLS-derived

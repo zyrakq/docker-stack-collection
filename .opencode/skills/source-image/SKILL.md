@@ -57,7 +57,7 @@ skill implements.
    `docker build -t localhost/<image>:<tag> images/<image>` — verify it
    builds with no context files (run it from a clean checkout if unsure).
 5. **Wire into compose:** in `components/base/docker-compose.yml` set
-   `image: ${IMAGE:-localhost/<image>:<tag>}` on the service. Add
+   `image: ${IMAGE}` (`IMAGE=localhost/<image>:<tag>` in `.env.example`) on the service. Add
    `IMAGE=localhost/<image>:<tag>` to `.env.example` in the standard key
    order (§6). Never add a `build:` section.
 6. **Record provenance:** append the UPSTREAM.md row (§17) — upstream
