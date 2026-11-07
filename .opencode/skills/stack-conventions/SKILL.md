@@ -285,6 +285,12 @@ passes its gate.
   option). The
   per-app UI configuration steps are embedded in the `stack-test` skill
   (`references/browser-e2e.md`).
+- OIDC client incompatibilities (username format, PKCE, signing algorithm)
+  are solved ONLY with per-client Kanidm settings (`kanidm-oidc` skill,
+  "Client quirks"): `prefer-short-username`,
+  `warning-insecure-client-disable-pkce`, `warning-enable-legacy-crypto`.
+  NEVER change app code or build an image for this; `app/images/` (§19) is
+  for source-built apps only, never OIDC workarounds.
 - Staged testing is MANDATORY for every stack (§9): verify the base
   deployment in the browser first (Stage A), then add/configure oidc and
   re-verify (Stage B) — procedure in the `stack-test` skill

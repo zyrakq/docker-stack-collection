@@ -30,6 +30,12 @@ Full command cookbook: read `references/cli-cookbook.md`.
   `docker exec -it kanidmd kanidmd recover-account <admin|idm_admin>`
   (procedure in `references/cli-cookbook.md`).
 
+- Client quirks (username format, no PKCE, RS256/legacy signing) are fixed
+  ONLY via per-client Kanidm settings: `prefer-short-username`,
+  `warning-insecure-client-disable-pkce`, `warning-enable-legacy-crypto`
+  (see `references/cli-cookbook.md`). NEVER patch app code or build a
+  custom image to work around them.
+
 ## Guardrails
 
 - Destructive operations (password resets, client/group deletion, schema

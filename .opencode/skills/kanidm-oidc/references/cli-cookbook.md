@@ -34,6 +34,27 @@ docker exec -it kanidmd kanidm system oauth2 add-claim-map <client-name> <group-
 docker exec -it kanidmd kanidm system oauth2 warning-insecure-client-disable-pkce <client-name>
 ```
 
+## Client quirks — fix in Kanidm, NEVER in app code or images
+
+Per-client incompatibilities are solved only with per-client Kanidm settings.
+Never patch the app, never build a custom image for this.
+
+```bash
+# App wants short username (no @domain): 
+docker exec -it kanidmd kanidm system oauth2 prefer-short-username <client-name>
+#   revert: prefer-spn-username
+# App has no PKCE support (e.g. gitea):
+docker exec -it kanidmd kanidm system oauth2 warning-insecure-client-disable-pkce <client-name>
+#   revert: enable-pkce
+# App only supports RS256 / legacy signing (e.g. conduit, vaultisse):
+docker exec -it kanidmd kanidm system oauth2 warning-enable-legacy-crypto <client-name>
+#   revert: disable-legacy-crypto
+```
+
+Symptom → fix: wrong/`user@domain` username → `prefer-short-username`;
+login fails on missing/invalid `code_challenge` → disable PKCE; token
+signature/algorithm (ES256) rejected → legacy crypto (RS256).
+
 Issuer URL to put in the app's env (`SSO_AUTHORITY` or app-specific):
 `https://<kanidm-domain>/oauth2/openid/<client-name>`
 

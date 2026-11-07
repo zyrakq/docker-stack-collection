@@ -862,3 +862,10 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: checker exits 1 with `ports in base compose: app/components/base/docker-compose.yml`; removing the block would change the published-port behavior (localhost access to the app), which is a logic change
 - cause: `check-layout.sh` unconditionally treats any `ports:` line in a base compose as a violation; base entry on the host port is often desired for direct access without the reverse-proxy network
 - fix: requires a decision, not a cosmetic fix — either drop `ports:` from base compose (move access to the proxy path) or change the checker to allow it; without one of those the stack cannot reach checker exit 0
+
+## P-095: OIDC client quirk "fixed" by custom image instead of Kanidm client setting
+- hits: 1 | status: fixed | first: 2026-11-07 | last: 2026-11-07
+- where: vaultisse Stage B (`app/images/vaultisse-kanidm` workaround image)
+- symptom: app rejects Kanidm tokens/login (algorithm, PKCE, username format); agent patched the app via a custom image
+- cause: skills/agents did not document per-client Kanidm quirk settings
+- fix: use Kanidm per-client settings only: `prefer-short-username`, `warning-insecure-client-disable-pkce`, `warning-enable-legacy-crypto` (vaultisse needed legacy crypto/RS256). Documented in kanidm-oidc, stack-conventions §10, kanidm-admin. Existing vaultisse image still needs removal (stack repo, user decision)
