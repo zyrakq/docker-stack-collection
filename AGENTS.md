@@ -10,9 +10,6 @@ to reconfigure. The complete allowlist of host-level actions:
 - read-only inspection: logs, `free -h`, `df -h`, `docker ps/logs/stats`
 - `docker` / `docker compose` commands as permitted by stack-conventions
 - commands from the `kanidm-oidc` and `rustfs-s3` skills
-- the ONE package exception: installing `go-yq` (Go `yq`, required by `sb`)
-  when `yq` is missing or is the Python one — only if non-interactive
-  sudo works; otherwise ask the user and STOP
 
 Everything else on the host is FORBIDDEN, no exceptions, no improvisation:
 

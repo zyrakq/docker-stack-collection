@@ -195,7 +195,7 @@ services:
       SSO_SIGNUPS_MATCH_EMAIL: ${SSO_SIGNUPS_MATCH_EMAIL:-true}
       SSO_ALLOW_UNKNOWN_EMAIL_VERIFICATION: ${SSO_ALLOW_UNKNOWN_EMAIL_VERIFICATION:-false}
       SSO_AUTH_ONLY_NOT_SESSION: ${SSO_AUTH_ONLY_NOT_SESSION:-false}
-      SSO_SCOPES": ${SSO_SCOPES:-"openid profile email"}
+      SSO_SCOPES: ${SSO_SCOPES:-"openid profile email"}
       SSO_PKCE: ${SSO_PKCE:-true}
       SSO_AUTHORITY: ${SSO_AUTHORITY}
       SSO_CLIENT_ID: ${SSO_CLIENT_ID}
@@ -203,28 +203,21 @@ services:
       SSO_CLIENT_CACHE_EXPIRATION: ${SSO_CLIENT_CACHE_EXPIRATION:-0}
       SSO_DEBUG_TOKENS: ${SSO_DEBUG_TOKENS:-false}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-      # SSO_AUTHORIZE_EXTRA_PARAMS: ${SSO_AUTHORIZE_EXTRA_PARAMS}
-      # SSO_AUDIENCE_TRUSTED: ${SSO_AUDIENCE_TRUSTED}
-      # SSO_MASTER_PASSWORD_POLICY: ${SSO_MASTER_PASSWORD_POLICY}
 ```
 
 Source: vaultwarden stack (embedded verbatim)
 
 ```env
-# OIDC
-## https://github.com/dani-garcia/vaultwarden/wiki/Enabling-SSO-support-using-OpenId-Connect
-## Redirect URL: https://idm.example.com/identity/connect/oidc-signin
-
 SSO_ENABLED=true
 SSO_ONLY=true
 SSO_SIGNUPS_MATCH_EMAIL=true
 SSO_ALLOW_UNKNOWN_EMAIL_VERIFICATION=false
 SSO_AUTH_ONLY_NOT_SESSION=false
 
-# Kanidm
 SSO_SCOPES="openid profile email"
 SSO_PKCE=true
 SSO_CLIENT_ID=vaultwarden
+# openssl rand -base64 24
 SSO_CLIENT_SECRET=6ul1oomy2jiFFSroWanEJYbVxuP3jGz8
 SSO_AUTHORITY=https://idm.example.com/oauth2/openid/vaultwarden
 
@@ -232,12 +225,6 @@ SSO_CLIENT_CACHE_EXPIRATION=0
 
 SSO_DEBUG_TOKENS=false
 LOG_LEVEL=info
-# SSO_DEBUG_TOKENS=true
-# LOG_LEVEL=info,vaultwarden::sso=debug
-
-# SSO_AUTHORIZE_EXTRA_PARAMS=
-# SSO_AUDIENCE_TRUSTED=
-# SSO_MASTER_PASSWORD_POLICY=
 ```
 
 ## 7. step-ca-trust extension fragment (vaultwarden)
@@ -255,7 +242,6 @@ services:
 Source: vaultwarden stack (embedded verbatim)
 
 ```env
-#Step CA Trust
 STEP_CA_TRUST=true
 STEP_CA_TRUST_RESTART=true
 ```
@@ -281,7 +267,6 @@ services:
 ```
 
 ```env
-# S3 Storage
 <APP>__storage__STORAGE_TYPE=minio
 <APP>__storage__MINIO_ENDPOINT=minio:9000
 <APP>__storage__MINIO_ACCESS_KEY_ID=
@@ -311,7 +296,6 @@ services:
 ```
 
 ```env
-# S3 Storage
 SPACES_ENDPOINT=http://minio:9000
 SPACES_KEY=
 SPACES_SECRET=
@@ -455,7 +439,6 @@ volumes:
 `.env.example`:
 
 ```env
-# Database (postgresql variant)
 COMPOSE_EXTENDS=:docker-compose.db.yml
 COMPOSE_FILE=docker-compose.yml${COMPOSE_EXTENDS:-}
 POSTGRES_DB=<stack>

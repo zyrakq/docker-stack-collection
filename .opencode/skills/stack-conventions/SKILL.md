@@ -63,8 +63,9 @@ build on these rules.
 - **`yaml_merger`** is NEVER set in `stackbuilder.toml` — use sb's default.
   The host needs the Go `yq` (mikefarah), not the Python one: check
   `yq --version` contains "mikefarah". If `yq` is missing or is the Python
-  one, install `go-yq` (Arch) — the single permitted host package install;
-  if non-interactive sudo is unavailable, ask the user to run it and STOP.
+  one, install `go-yq` via the platform package manager (Arch: `go-yq`);
+  if that is impossible (no non-interactive sudo), ask the user to install
+  it and STOP.
 - **No published `ports:` in `components/base`** — ports belong only to the
   forwarding environment overlay.
 - **No `.env` anywhere under `components/`**, and never run/test from
@@ -80,8 +81,9 @@ build on these rules.
   value; the line above is a comment with a command generating a similar
   value (e.g. `# openssl rand -base64 32`).
 - **`.stackbuilder/`** (sb `.env` backups) is never committed; delete it
-  after builds/tests. Never leave `.env` files or running containers: after
-  tests run `docker compose down -v --remove-orphans` in the build dir.
+  after builds/tests. A `.env` is legitimate only in `build/<env>/<combo>/`
+  (never delete it there); it must not appear in `components/` or app dirs.
+  After tests run `docker compose down -v --remove-orphans` in the build dir.
 - **Uncovered case** (e.g. an sb limitation): do NOT improvise. First look
   for precedent in other stacks of the collection and in the sb limitations
   ledger (`STASKBUILDER.md` at the collection root, if present). If none,

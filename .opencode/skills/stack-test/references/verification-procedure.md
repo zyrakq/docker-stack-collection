@@ -59,7 +59,7 @@ Staged per `browser-e2e.md`. Stage A MUST pass before any extension work.
 ## 6. Teardown and audit
 
 - [ ] `docker compose down -v --remove-orphans` in each built dir used;
-      built `.env` removed; `.stackbuilder/` deleted; `docker ps -a` clean.
+      `.env` only in build dirs; `.stackbuilder/` deleted; `docker ps -a` clean.
 - [ ] Conventions audit by `stack-auditor` (cosmetic fixes; no re-test
       unless logic was reworked).
 

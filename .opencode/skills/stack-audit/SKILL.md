@@ -25,7 +25,7 @@ teardown.
    - no comments in compose/toml; `.env.example` comments only as
      generator commands above secrets; every secret has an example value
    - naming, env wiring, `.env.example` hygiene (§3, §5, §6, §7)
-3. Delete `.stackbuilder/` and any `.env` files; confirm no containers or
+3. Delete `.stackbuilder/`; ensure no `.env` outside `build/<env>/<combo>/` (remove strays in `components/`/app dirs); confirm no containers or
    volumes from testing remain (`docker ps -a`, `docker volume ls`).
 4. If any component file changed: `cd app/ && sb build` and check that
    `build/` is regenerated; `docker compose config` must validate in each

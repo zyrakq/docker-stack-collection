@@ -31,28 +31,13 @@ while IFS= read -r t; do
   rel=${t#"$d"/}
   awk '/^\[/{s=($0=="[build.combos]")} s&&/^[A-Za-z0-9_"-]+[ ]*=/{gsub(/[ "=].*/,"",$1);print $1}' "$t" |
     while read -r c; do [[ $c == entire || $c == entire-trust ]] || echo "VIOLATION: combo '$c' in $rel"; done
-  grep -Eq '^[[:space:]]*yaml_merger[[:space:]]*=' "$t" && v "yaml_merger set in $rel"
-  grep -Eq '^[[:space:]]*#' "$t" && v "comments in $rel"
+  grep -Eq '^[[:space:]]*yaml_merger[[:space:]]*=[[:space:]]*"rust"' "$t" && v "yaml_merger rust in $rel"
 done < <(find "$d" \( -name .git -o -name build -o -name node_modules -o \( -type d -exec test -e {}/.git \; ! -path "$d" \) \) -prune -o -name stackbuilder.toml -print)
 
-while IFS= read -r c; do
-  rel=${c#"$d"/}
-  grep -Eq '^[[:space:]]*#' "$c" && v "comments in $rel"
-  [[ $rel == */components/base/* ]] && grep -Eq '^[[:space:]]*ports:' "$c" && v "ports in base: $rel"
-done < <(find "$d" \( -name .git -o -name build -o -name node_modules -o \( -type d -exec test -e {}/.git \; ! -path "$d" \) \) -prune -o -type f \( -name 'docker-compose*.yml' -o -name 'docker-compose*.yaml' \) -path '*/components/*' -print)
-
-while IFS= read -r e; do
-  v ".env under components: ${e#"$d"/}"
-done < <(find "$d" \( -name .git -o -name build -o -name node_modules \) -prune -o -type f -name '.env' -path '*/components/*' -print)
-
-while IFS= read -r e; do
-  [[ -f $e/.env.example ]] || v ".env.example missing: ${e#"$d"/}"
-done < <(find "$d" \( -name .git -o -name build -o -name node_modules \) -prune -o -type d -print | grep -E '/components/environments/[^/]+$')
-
-while IFS= read -r s; do
-  v ".stackbuilder present (delete): ${s#"$d"/}"
-done < <(find "$d" -name .git -prune -o -name node_modules -prune -o -type d -name .stackbuilder -print)
-
 [[ -f $d/.gitignore ]] && grep -Eq '^/?(app/)?build/?[[:space:]]*$' "$d/.gitignore" && v "build ignored in .gitignore"
+here=$(dirname "$0")
+for sub in check-layout.sh check-style.sh; do
+  bash "$here/$sub" "$d" || bad=1
+done
 [[ $bad == 1 ]] && exit 1
 exit 0

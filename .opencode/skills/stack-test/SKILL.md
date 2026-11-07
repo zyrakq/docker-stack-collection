@@ -125,7 +125,7 @@ Follow `references/verification-procedure.md` in order. Summary:
     (`references/browser-e2e.md` §2).
 12. S3 round-trip when the `s3-storage` extension is present — always LAST.
 13. **Teardown:** in every built dir used, `docker compose down -v
-    --remove-orphans`; remove the built `.env`; delete `.stackbuilder/`
+    --remove-orphans`; keep the built `.env`; delete `.stackbuilder/`
     (sb `.env` backups — never committed). No containers/volumes of the
     test may remain (`docker ps -a` check).
 14. **Conventions audit:** hand off to the `stack-auditor` agent (skill
