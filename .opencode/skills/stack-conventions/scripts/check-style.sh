@@ -16,4 +16,31 @@ while IFS= read -r c; do
   grep -Eq '^[[:space:]]*#' "$c" && v "comments in ${c#"$d"/}"
 done < <(find "$d" "${prune[@]}" -type f \( -name 'docker-compose*.yml' -o -name 'docker-compose*.yaml' \) -path '*/components/*' -print)
 
+while IFS= read -r c; do
+  grep -Eq '\$\{[A-Za-z_][A-Za-z0-9_]*:\?[^}]' "$c" && v "text after :? in ${c#"$d"/}"
+done < <(find "$d" "${prune[@]}" -type f \( -name 'docker-compose*.yml' -o -name 'docker-compose*.yaml' \) -path '*/components/*' -print)
+
+while IFS= read -r e; do
+  rel=${e#"$d"/}
+  prev=""
+  n=0
+  while IFS= read -r line || [[ -n $line ]]; do
+    n=$((n+1))
+    if [[ $line =~ ^[[:space:]]*# ]]; then
+      :
+    elif [[ $line =~ ^([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]]; then
+      k=${BASH_REMATCH[1]}; val=${BASH_REMATCH[2]}
+      if [[ $k =~ (PASSWORD|SECRET|TOKEN|KEY|SALT) ]]; then
+        [[ -z $val ]] && v "empty secret $k in $rel:$n"
+        [[ -n $val && ! $prev =~ ^[[:space:]]*#[[:space:]]*[a-z] ]] && v "secret $k lacks generator comment above in $rel:$n"
+      fi
+    fi
+    if [[ $line =~ ^[[:space:]]*# ]]; then
+      cmd=${line#\#}; cmd=${cmd# }
+      [[ $cmd =~ ^(openssl|head|tr|pwgen|uuidgen|python3?|base64|dd|date|cat|node|xxd|gen) ]] || v "non-generator comment in $rel:$n"
+    fi
+    prev=$line
+  done < "$e"
+done < <(find "$d" "${prune[@]}" -type f -name .env.example -path '*/components/*' -print)
+
 exit $bad

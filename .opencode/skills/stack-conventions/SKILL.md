@@ -76,10 +76,16 @@ build on these rules.
   environment, then extensions in order — so each var is declared once, in the
   layer that owns it.
 - **No comments** in `docker-compose.yml` and `stackbuilder.toml`.
-  `.env.example`: minimal — only generator-command comments for secrets.
-- **Secrets in `.env.example`** (keys, passwords, tokens) carry an example
-  value; the line above is a comment with a command generating a similar
-  value (e.g. `# openssl rand -base64 32`).
+  `.env.example`: NO section headers, NO descriptions of vars — the only
+  allowed comment is a one-line generator command directly above a secret.
+- **Secrets in `.env.example`** (keys, passwords, tokens, salts) are NEVER
+  empty: each carries an example value; the line above is a comment with a
+  command generating a similar value (e.g. `# openssl rand -base64 32`).
+  Applies to every layer (base, environments, extensions).
+- **`${VAR:?}`** has NO message text after `?` (never `${VAR:?set in .env}`).
+- **Extension names** are the short generic capability: one word, at most
+  two (`smtp`, `oidc`, `s3-storage`, `metrics`, `api-keys`; only `step-ca-trust` is fixed) — never a
+  feature-mechanism compound (`send-to-device-smtp`).
 - **`.stackbuilder/`** (sb `.env` backups) is never committed; delete it
   after builds/tests. A `.env` is legitimate only in `build/<env>/<combo>/`
   (never delete it there); it must not appear in `components/` or app dirs.
@@ -161,7 +167,7 @@ Inner structure of a project dir (e.g. `app/`):
 ## 5. Env wiring — everything overridable
 
 - EVERY env value in EVERY compose file (base, environments, extensions)
-  is `${VAR:-default}` or `${VAR:?required}`. Bare literals are forbidden —
+  is `${VAR:-default}` or `${VAR:?}`. Bare literals are forbidden —
   a value the user cannot override from `.env` without editing compose is
   a defect.
 - Covers app env, DB env, infra env. The main app image follows

@@ -27,4 +27,9 @@ while IFS= read -r s; do
   v ".stackbuilder present (must not be left or committed): ${s#"$d"/}"
 done < <(find "$d" \( -name .git -o -name node_modules \) -prune -o -type d -name .stackbuilder -print)
 
+while IFS= read -r x; do
+  b=${x##*/}
+  [[ $b == step-ca-trust || $b =~ ^[^-]+(-[^-]+)?$ ]] || v "extension name too long (max 2 words): ${x#"$d"/}"
+done < <(find "$d" "${prune[@]}" -type d -path '*/components/extensions/*' -print | grep -E '/components/extensions/[^/]+$')
+
 exit $bad

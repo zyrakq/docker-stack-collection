@@ -17,14 +17,21 @@ teardown.
 
 1. Run `bash <skills-dir>/stack-conventions/scripts/check-stack.sh <stack-dir>`
    and `check-gitkeep.sh <stack-dir>`; fix every violation.
-2. Manual review against stack-conventions Hard rules:
-   - no `yaml_merger` in `stackbuilder.toml`
-   - no `ports:` in base; no `.env` under `components/`
-   - every environment dir has `.env.example`; no var declared in two
-     layers (sb merges base + environment + extensions)
-   - no comments in compose/toml; `.env.example` comments only as
-     generator commands above secrets; every secret has an example value
-   - naming, env wiring, `.env.example` hygiene (§3, §5, §6, §7)
+2. FULL manual review — the scripts catch only part of the rules. Read
+   every file of the stack (every compose, every `.env.example`, toml,
+   .gitignore, README) and check EACH item; fix all findings:
+   - folder name, `.gitkeep`, `.vscode/settings.json`, `.gitignore` content
+   - `stackbuilder.toml`: no `yaml_merger`, combos only `entire`/`entire-trust`, no comments
+   - no `ports:` in base; no `.env` outside `build/<env>/<combo>/`
+   - every environment dir has `.env.example`; no var declared in two layers
+   - no comments in compose/toml
+   - every `.env.example`: no headers, no descriptions, comments only as a
+     generator command directly above a secret; NO empty secrets — each has
+     an example value; no dead vars; standard key order (§6)
+   - no `${VAR:?text}` — only `${VAR:?}`
+   - extension names short and generic (max two words, e.g. `smtp`)
+   - naming (§3), env wiring with no bare literals (§5), volumes (§4),
+     DB rules, images (§19), UPSTREAM.md/DEPLOYMENT.md/README present
 3. Delete `.stackbuilder/`; ensure no `.env` outside `build/<env>/<combo>/` (remove strays in `components/`/app dirs); confirm no containers or
    volumes from testing remain (`docker ps -a`, `docker volume ls`).
 4. If any component file changed: `cd app/ && sb build` and check that

@@ -420,7 +420,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-<stack>}
       POSTGRES_USER: ${POSTGRES_USER:-<stack>}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
       POSTGRES_INITDB_ARGS: --encoding=UTF8 --lc-ctype=C --lc-collate=C
       TZ: ${TZ:-UTC}
     volumes:
@@ -489,7 +489,7 @@ RUST_LOG=info
 SERVER_LISTEN_ADDR=0.0.0.0:8080
 ```
 
-Required values use `${VAR:?required}` instead of a default. A var that
+Required values use `${VAR:?}` instead of a default. A var that
 appears in `.env.example` but is referenced by no compose file is a dead
 var — remove it (§6).
 
