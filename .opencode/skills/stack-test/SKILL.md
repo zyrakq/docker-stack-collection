@@ -100,6 +100,8 @@ Follow `references/verification-procedure.md` in order. Summary:
    — must print nothing (`--fix` applies).
 1. `cd app/ && sb build` — check the `build/<env>/<combo>/` output structure.
 2. `cd build/<env>/<combo>/ && cp .env.example .env` and edit values.
+   Deploy ONLY from `build/`; never create `.env` or run compose in
+   `components/` dirs.
 3. `docker compose config` — must validate.
 4. `docker compose up --build -d`.
 5. Health checks pass.
@@ -122,3 +124,10 @@ Follow `references/verification-procedure.md` in order. Summary:
     then browser login via kanidm + email-matching account linking
     (`references/browser-e2e.md` §2).
 12. S3 round-trip when the `s3-storage` extension is present — always LAST.
+13. **Teardown:** in every built dir used, `docker compose down -v
+    --remove-orphans`; remove the built `.env`; delete `.stackbuilder/`
+    (sb `.env` backups — never committed). No containers/volumes of the
+    test may remain (`docker ps -a` check).
+14. **Conventions audit:** hand off to the `stack-auditor` agent (skill
+    `stack-audit`). It makes cosmetic fixes only and does NOT trigger a
+    re-test unless it reworked logic.

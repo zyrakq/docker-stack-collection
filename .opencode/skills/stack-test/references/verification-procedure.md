@@ -56,7 +56,14 @@ Staged per `browser-e2e.md`. Stage A MUST pass before any extension work.
 - [ ] S3 (when present): round-trip — create bucket, put object, get object,
       delete (see `rustfs-s3` skill cookbook).
 
-## 6. Failure handling
+## 6. Teardown and audit
+
+- [ ] `docker compose down -v --remove-orphans` in each built dir used;
+      built `.env` removed; `.stackbuilder/` deleted; `docker ps -a` clean.
+- [ ] Conventions audit by `stack-auditor` (cosmetic fixes; no re-test
+      unless logic was reworked).
+
+## 7. Failure handling
 
 - [ ] Any failure caused by the live manager setup → switch to forwarding
       variant; record the finding; NEVER touch the manager stack.

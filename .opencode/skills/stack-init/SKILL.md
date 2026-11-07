@@ -95,11 +95,16 @@ with the reason recorded in DEPLOYMENT.md, never silently skipped.
      self-contained (fetches the source itself). NEVER vendor upstream
      source into the stack repo (no submodules, no source trees) —
      stack-conventions §19.
+   - Prerequisite: Go `yq` on the host (stack-conventions Hard rules); `yaml_merger`
+     is never set. No `ports:` in base (forwarding overlay only); no
+     comments in compose/toml; no `.env` under `components/`.
    - `app/components/base/` — `docker-compose.yml` (every env value
      `${VAR:-}`/`${VAR:?}` per §5, named volumes per §4), `.env.example`
      (§6 hygiene), config examples.
    - `app/components/environments/{forwarding,letsencrypt,step-ca}/` as
-     applicable (step-ca needs the certs volume + network fragment);
+     applicable, EACH with its own `.env.example` (merged by sb with base
+     and extension ones; secrets get example value + generator-command
+     comment above) (step-ca needs the certs volume + network fragment);
      environment-dependent vars live ONLY in overlays (§7).
    - `app/stackbuilder.toml` — new `[build.environments]` API; use
      `env_file_patterns` to preserve app-native config files (numa idiom).
@@ -168,6 +173,12 @@ in per its DEPLOYMENT.md catalog entry — one compose service per part
 (`<stack>-<role>`, §3), image per §19 when upstream publishes none, its
 own stage + gate; its status becomes `implemented` in DEPLOYMENT.md when
 it lands.
+
+### Final phase — conventions audit
+
+After all gates pass and the test teardown is done, delegate to the
+`stack-auditor` agent. Cosmetic fixes only; no re-test unless logic was
+reworked. Then finish.
 
 ## Canonical patterns
 

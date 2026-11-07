@@ -55,6 +55,11 @@ from the collection root — do not invent license/gitignore text.
 - [ ] `components/environments/step-ca/` — external `step-ca-network` +
       `step-ca-certs` + `step-ca-vhost` volumes + VIRTUAL_HOST/
       LETSENCRYPT_* env + app TLS env (cert paths `/certs/<VIRTUAL_HOST>/...`).
+- [ ] Every environment dir has its own `.env.example` (env-specific vars;
+      sb merges base + environment + extension files).
+- [ ] NO `ports:` in base compose; NO `.env` under `components/`; NO
+      comments in compose/toml; `.env.example` comments only as
+      generator commands above secrets (secrets carry example values).
 - [ ] NO env-dependent var (public base URLs, TLS-derived defaults) in
       base compose or base `.env.example` — overlays only (§7).
 - [ ] `components/extensions/database/postgresql/` — the database stage

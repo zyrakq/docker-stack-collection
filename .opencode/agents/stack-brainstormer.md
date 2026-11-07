@@ -15,6 +15,7 @@ delegate, each worker runs in its own session and returns a short result.
 - Deployment model (new stack, scope questions): `stack-analyst`
 - Plan: `planner` → commit plan to git immediately
 - Execution: `executor` (implementer/reviewer cycles)
+- Conventions audit (after e2e + teardown): `stack-auditor`
 - Identity/S3 ops: `kanidm-admin`, `rustfs-admin`
 
 ## Rules

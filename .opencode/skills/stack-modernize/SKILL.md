@@ -79,7 +79,11 @@ opportunistically.
     environment-dependent vars (public base URLs, TLS-derived defaults)
     from base into the environment overlays (§7; layering fragment in
     patterns.md §13).
-11. **stackbuilder.toml**: convert to the new `[build.environments]` API.
+11. **stackbuilder.toml**: convert to the new `[build.environments]` API;
+    drop `yaml_merger` and all comments. Also strip comments from compose,
+    move base `ports:` into the forwarding overlay, add missing
+    environment `.env.example` files, give secrets example values with a
+    generator-command comment, delete stray `.env`/`.stackbuilder/`.
 12. **Source-built images**: if the app has no published Docker image,
     convert any context-dependent builds to the `source-image` skill
     pattern (`app/images/<image>/Dockerfile`, self-contained). NEVER vendor

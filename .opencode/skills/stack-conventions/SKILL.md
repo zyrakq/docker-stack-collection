@@ -60,8 +60,28 @@ build on these rules.
   `entire-trust`. No other combo names (no `<env>-<feature>` combos).
 - **`app/build/`** is generated but COMMITTED — never in `.gitignore`
   (still never hand-edited). `.gitignore` holds only `.env` and `.stackbuilder/`.
-- **`yaml_merger = "rust"`** is FORBIDDEN without explicit user permission.
-  If `yq` is missing, ask the user to install it and STOP.
+- **`yaml_merger`** is NEVER set in `stackbuilder.toml` — use sb's default.
+  The host needs the Go `yq` (mikefarah), not the Python one: check
+  `yq --version` contains "mikefarah". If `yq` is missing or is the Python
+  one, install `go-yq` (Arch) — the single permitted host package install;
+  if non-interactive sudo is unavailable, ask the user to run it and STOP.
+- **No published `ports:` in `components/base`** — ports belong only to the
+  forwarding environment overlay.
+- **No `.env` anywhere under `components/`**, and never run/test from
+  component dirs. Order: write base + env/extension components → `sb build`
+  → deploy ONLY from `build/<env>/<combo>/` (`cp .env.example .env` there).
+- **Every `components/environments/<env>/` has a `.env.example`** (env-specific
+  vars, templated per environment). sb MERGES `.env.example` files: base, then
+  environment, then extensions in order — so each var is declared once, in the
+  layer that owns it.
+- **No comments** in `docker-compose.yml` and `stackbuilder.toml`.
+  `.env.example`: minimal — only generator-command comments for secrets.
+- **Secrets in `.env.example`** (keys, passwords, tokens) carry an example
+  value; the line above is a comment with a command generating a similar
+  value (e.g. `# openssl rand -base64 32`).
+- **`.stackbuilder/`** (sb `.env` backups) is never committed; delete it
+  after builds/tests. Never leave `.env` files or running containers: after
+  tests run `docker compose down -v --remove-orphans` in the build dir.
 - **Uncovered case** (e.g. an sb limitation): do NOT improvise. First look
   for precedent in other stacks of the collection and in the sb limitations
   ledger (`STASKBUILDER.md` at the collection root, if present). If none,
