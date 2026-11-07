@@ -252,18 +252,18 @@ STEP_CA_TRUST_RESTART=true
 services:
   <app>:
     environment:
-      <APP>__storage__STORAGE_TYPE: ${<APP>__storage__STORAGE_TYPE:-minio}
-      <APP>__storage__MINIO_ENDPOINT: ${<APP>__storage__MINIO_ENDPOINT:-minio:9000}
+      <APP>__storage__STORAGE_TYPE: ${<APP>__storage__STORAGE_TYPE}
+      <APP>__storage__MINIO_ENDPOINT: ${<APP>__storage__MINIO_ENDPOINT}
       <APP>__storage__MINIO_ACCESS_KEY_ID: ${<APP>__storage__MINIO_ACCESS_KEY_ID}
       <APP>__storage__MINIO_SECRET_ACCESS_KEY: ${<APP>__storage__MINIO_SECRET_ACCESS_KEY}
-      <APP>__storage__MINIO_IAM_ENDPOINT: ${<APP>__storage__MINIO_IAM_ENDPOINT:-}
-      <APP>__storage__MINIO_BUCKET: ${<APP>__storage__MINIO_BUCKET:-<app>}
-      <APP>__storage__MINIO_BASE_PATH: ${<APP>__storage__MINIO_BASE_PATH:-}
-      <APP>__storage__MINIO_LOCATION: ${<APP>__storage__MINIO_LOCATION:-us-east-1}
-      <APP>__storage__MINIO_USE_SSL: ${<APP>__storage__MINIO_USE_SSL:-false}
-      <APP>__storage__MINIO_INSECURE_SKIP_VERIFY: ${<APP>__storage__MINIO_INSECURE_SKIP_VERIFY:-false}
-      <APP>__storage__SERVE_DIRECT: ${<APP>__storage__SERVE_DIRECT:-true}
-      <APP>__storage__MINIO_BUCKET_LOOKUP_TYPE: ${<APP>__storage__MINIO_BUCKET_LOOKUP_TYPE:-auto}
+      <APP>__storage__MINIO_IAM_ENDPOINT: ${<APP>__storage__MINIO_IAM_ENDPOINT}
+      <APP>__storage__MINIO_BUCKET: ${<APP>__storage__MINIO_BUCKET}
+      <APP>__storage__MINIO_BASE_PATH: ${<APP>__storage__MINIO_BASE_PATH}
+      <APP>__storage__MINIO_LOCATION: ${<APP>__storage__MINIO_LOCATION}
+      <APP>__storage__MINIO_USE_SSL: ${<APP>__storage__MINIO_USE_SSL}
+      <APP>__storage__MINIO_INSECURE_SKIP_VERIFY: ${<APP>__storage__MINIO_INSECURE_SKIP_VERIFY}
+      <APP>__storage__SERVE_DIRECT: ${<APP>__storage__SERVE_DIRECT}
+      <APP>__storage__MINIO_BUCKET_LOOKUP_TYPE: ${<APP>__storage__MINIO_BUCKET_LOOKUP_TYPE}
 ```
 
 ```env
@@ -504,10 +504,10 @@ different defaults in overlays):
 ```yaml
 # components/base/docker-compose.yml
 environment:
-  <APP>_PUBLIC_BASE_URL: ${<APP>_PUBLIC_BASE_URL:-http://localhost:8080}
+  <APP>_PUBLIC_BASE_URL: ${<APP>_PUBLIC_BASE_URL}
 # components/environments/{letsencrypt,step-ca}/docker-compose.yml
 environment:
-  <APP>_PUBLIC_BASE_URL: ${<APP>_PUBLIC_BASE_URL:-https://${VIRTUAL_HOST}}
+  <APP>_PUBLIC_BASE_URL: ${<APP>_PUBLIC_BASE_URL}
 ```
 
 AFTER (base declares nothing; each overlay owns its default):
@@ -516,13 +516,13 @@ AFTER (base declares nothing; each overlay owns its default):
 # components/base/docker-compose.yml — NOTHING (base is environment-agnostic)
 # components/environments/forwarding/docker-compose.yml
 environment:
-  <APP>_PUBLIC_BASE_URL: ${<APP>_PUBLIC_BASE_URL:-http://localhost:<port>}
+  <APP>_PUBLIC_BASE_URL: ${<APP>_PUBLIC_BASE_URL}
 # components/environments/letsencrypt/docker-compose.yml
 environment:
-  <APP>_PUBLIC_BASE_URL: ${<APP>_PUBLIC_BASE_URL:-https://${VIRTUAL_HOST}}
+  <APP>_PUBLIC_BASE_URL: ${<APP>_PUBLIC_BASE_URL}
 # components/environments/step-ca/docker-compose.yml
 environment:
-  <APP>_PUBLIC_BASE_URL: ${<APP>_PUBLIC_BASE_URL:-https://${VIRTUAL_HOST}}
+  <APP>_PUBLIC_BASE_URL: ${<APP>_PUBLIC_BASE_URL}
 ```
 
 The var never appears in base `.env.example`; each overlay documents its
