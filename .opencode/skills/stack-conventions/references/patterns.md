@@ -16,7 +16,7 @@ services:
     build:
       context: .
       dockerfile_inline: |
-        FROM ${IMAGE:-ghcr.io/project-zot/zot:latest}
+        FROM ${IMAGE}
         COPY *.json /etc/zot/
 ```
 
@@ -97,7 +97,7 @@ services:
                 cp /context/override.css /out/override.css; \
             fi
 
-        FROM ${IMAGE:-kanidm/server:latest}
+        FROM ${IMAGE}
         COPY --from=sleep-stage /src/cmd/sleep /bin/sleep
         COPY --from=override-stage /out/ /hpkg/
 
@@ -119,7 +119,7 @@ services:
       LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
     configs:
       - source: vhost
-        target: ${VHOST_PATH:-/vhost.d/${VIRTUAL_HOST}}
+        target: ${VHOST_PATH}}
     volumes:
       - step-ca-vhost:/vhost.d
     networks:
@@ -148,8 +148,8 @@ Source: rustfs stack (embedded verbatim)
 services:
   rustfs:
     environment:
-      RUSTFS_CORS_ALLOWED_ORIGINS: ${RUSTFS_CORS_ALLOWED_ORIGINS:-*}
-      RUSTFS_CONSOLE_CORS_ALLOWED_ORIGINS: ${RUSTFS_CONSOLE_CORS_ALLOWED_ORIGINS:-*}
+      RUSTFS_CORS_ALLOWED_ORIGINS: ${RUSTFS_CORS_ALLOWED_ORIGINS}
+      RUSTFS_CONSOLE_CORS_ALLOWED_ORIGINS: ${RUSTFS_CONSOLE_CORS_ALLOWED_ORIGINS}
       VIRTUAL_HOST_MULTIPORTS: |-
         ${UI_VIRTUAL_HOST}:
           "/":
@@ -161,7 +161,7 @@ services:
       LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
     configs:
       - source: vhost
-        target: ${VHOST_PATH:-/vhost.d/${S3_VIRTUAL_HOST}}
+        target: ${VHOST_PATH}}
     volumes:
       - step-ca-vhost:/vhost.d
     networks:
@@ -190,19 +190,19 @@ Source: vaultwarden stack (embedded verbatim)
 services:
   vaultwarden:
     environment:
-      SSO_ENABLED: ${SSO_ENABLED:-true}
-      SSO_ONLY: ${SSO_ONLY:-true}
-      SSO_SIGNUPS_MATCH_EMAIL: ${SSO_SIGNUPS_MATCH_EMAIL:-true}
-      SSO_ALLOW_UNKNOWN_EMAIL_VERIFICATION: ${SSO_ALLOW_UNKNOWN_EMAIL_VERIFICATION:-false}
-      SSO_AUTH_ONLY_NOT_SESSION: ${SSO_AUTH_ONLY_NOT_SESSION:-false}
-      SSO_SCOPES: ${SSO_SCOPES:-"openid profile email"}
-      SSO_PKCE: ${SSO_PKCE:-true}
+      SSO_ENABLED: ${SSO_ENABLED}
+      SSO_ONLY: ${SSO_ONLY}
+      SSO_SIGNUPS_MATCH_EMAIL: ${SSO_SIGNUPS_MATCH_EMAIL}
+      SSO_ALLOW_UNKNOWN_EMAIL_VERIFICATION: ${SSO_ALLOW_UNKNOWN_EMAIL_VERIFICATION}
+      SSO_AUTH_ONLY_NOT_SESSION: ${SSO_AUTH_ONLY_NOT_SESSION}
+      SSO_SCOPES: ${SSO_SCOPES}
+      SSO_PKCE: ${SSO_PKCE}
       SSO_AUTHORITY: ${SSO_AUTHORITY}
       SSO_CLIENT_ID: ${SSO_CLIENT_ID}
       SSO_CLIENT_SECRET: ${SSO_CLIENT_SECRET}
-      SSO_CLIENT_CACHE_EXPIRATION: ${SSO_CLIENT_CACHE_EXPIRATION:-0}
-      SSO_DEBUG_TOKENS: ${SSO_DEBUG_TOKENS:-false}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
+      SSO_CLIENT_CACHE_EXPIRATION: ${SSO_CLIENT_CACHE_EXPIRATION}
+      SSO_DEBUG_TOKENS: ${SSO_DEBUG_TOKENS}
+      LOG_LEVEL: ${LOG_LEVEL}
 ```
 
 Source: vaultwarden stack (embedded verbatim)
@@ -235,8 +235,8 @@ Source: vaultwarden stack (embedded verbatim)
 services:
   vaultwarden:
     environment:
-      STEP_CA_TRUST: ${STEP_CA_TRUST:-true}
-      STEP_CA_TRUST_RESTART: ${STEP_CA_TRUST_RESTART:-true}
+      STEP_CA_TRUST: ${STEP_CA_TRUST}
+      STEP_CA_TRUST_RESTART: ${STEP_CA_TRUST_RESTART}
 ```
 
 Source: vaultwarden stack (embedded verbatim)
@@ -291,8 +291,8 @@ services:
       SPACES_KEY: ${SPACES_KEY}
       SPACES_SECRET: ${SPACES_SECRET}
       SPACES_BUCKET_NAME: ${SPACES_BUCKET_NAME}
-      SPACES_REGION: ${SPACES_REGION:-us-east-1}
-      SPACES_FORCE_PATH_STYLE: ${SPACES_FORCE_PATH_STYLE:-true}
+      SPACES_REGION: ${SPACES_REGION}
+      SPACES_FORCE_PATH_STYLE: ${SPACES_FORCE_PATH_STYLE}
 ```
 
 ```env
@@ -346,9 +346,9 @@ Source: rustfs stack (embedded verbatim)
 x-logging: &default-logging
   driver: json-file
   options:
-    max-size: ${LOG_MAX_SIZE:-10m}
-    max-file: ${LOG_MAX_FILE:-3}
-    compress: ${LOG_COMPRESS:-true}
+    max-size: ${LOG_MAX_SIZE}
+    max-file: ${LOG_MAX_FILE}
+    compress: ${LOG_COMPRESS}
 
 x-healthcheck: &default-healthcheck
   test:
@@ -365,7 +365,7 @@ x-healthcheck: &default-healthcheck
 services:
   rustfs:
     container_name: rustfs
-    image: ${IMAGE:-rustfs/rustfs:latest}
+    image: ${IMAGE}
     restart: unless-stopped
     logging: *default-logging
     healthcheck: *default-healthcheck
@@ -374,8 +374,8 @@ services:
     environment:
       RUSTFS_ADDRESS: ${RUSTFS_ADDRESS}
       RUSTFS_CONSOLE_ADDRESS: ${RUSTFS_CONSOLE_ADDRESS}
-      RUSTFS_CONSOLE_ENABLE: ${RUSTFS_CONSOLE_ENABLE:-true}
-      RUSTFS_VOLUMES: ${RUSTFS_VOLUMES:-/data/rustfs{0..3}}
+      RUSTFS_CONSOLE_ENABLE: ${RUSTFS_CONSOLE_ENABLE}
+      RUSTFS_VOLUMES: ${RUSTFS_VOLUMES}}
       RUSTFS_RPC_SECRET: ${RUSTFS_RPC_SECRET}
       RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY}
       RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY}
@@ -403,7 +403,7 @@ sibling directory is identical except the image default.
 services:
   <stack>:
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@<stack>-db:5432/${POSTGRES_DB}}
+      DATABASE_URL: ${DATABASE_URL}:${POSTGRES_PASSWORD}@<stack>-db:5432/${POSTGRES_DB}}
     depends_on:
       <stack>-db:
         condition: service_healthy
@@ -414,15 +414,15 @@ services:
 ```yaml
 services:
   <stack>-db:
-    image: ${DB_IMAGE:-postgres:alpine}
+    image: ${DB_IMAGE}
     container_name: <stack>-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-<stack>}
-      POSTGRES_USER: ${POSTGRES_USER:-<stack>}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
       POSTGRES_INITDB_ARGS: --encoding=UTF8 --lc-ctype=C --lc-collate=C
-      TZ: ${TZ:-UTC}
+      TZ: ${TZ}
     volumes:
       - <stack>-db:/var/lib/postgresql
     healthcheck:
@@ -440,7 +440,7 @@ volumes:
 
 ```env
 COMPOSE_EXTENDS=:docker-compose.db.yml
-COMPOSE_FILE=docker-compose.yml${COMPOSE_EXTENDS:-}
+COMPOSE_FILE=docker-compose.yml${COMPOSE_EXTENDS}
 POSTGRES_DB=<stack>
 POSTGRES_USER=<stack>
 POSTGRES_PASSWORD=
@@ -449,7 +449,7 @@ POSTGRES_PASSWORD=
 Notes:
 
 - pgrust variant: identical service/env/mounts/healthcheck; only `image:`
-  differs — `${DB_IMAGE:-malisper/pgrust:v0.2}`.
+  differs — `${DB_IMAGE}`.
 - Mount the named volume at `/var/lib/postgresql` (NOT the legacy narrow
   `/var/lib/postgresql/data`).
 - The leading colon in `COMPOSE_EXTENDS=:docker-compose.db.yml` lets
@@ -478,8 +478,8 @@ AFTER (every value overridable from `.env`):
 services:
   <stack>:
     environment:
-      RUST_LOG: ${RUST_LOG:-info}
-      SERVER_LISTEN_ADDR: ${SERVER_LISTEN_ADDR:-0.0.0.0:8080}
+      RUST_LOG: ${RUST_LOG}
+      SERVER_LISTEN_ADDR: ${SERVER_LISTEN_ADDR}
 ```
 
 plus the matching entries in the owning component's `.env.example`:
