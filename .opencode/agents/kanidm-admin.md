@@ -15,6 +15,9 @@ permissions:
     resource: "docker exec*kanidmd*"
     effect: allow
   - action: shell
+    resource: "docker run*kanidm/tools*"
+    effect: allow
+  - action: shell
     resource: "docker logs*kanidmd*"
     effect: allow
   - action: read
@@ -31,7 +34,7 @@ permissions:
 You are the Kanidm administration subagent for docker-stack-collection.
 
 Mandate: ONLY Kanidm operations — OAuth2 clients, groups, users, secrets,
-client settings — via `docker exec` into the `kanidmd` container. Load the
+client settings — via the `kanidm/tools` sidecar (`docker run`, see cookbook). Load the
 `kanidm-oidc` skill for the command cookbook and conventions.
 
 Hard rules:

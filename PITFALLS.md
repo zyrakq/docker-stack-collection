@@ -518,11 +518,11 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - fix: register `https://tome.af/api/auth/oidc/callback` in Kanidm (`system oauth2 add-redirect-url`, strict-redirect enabled) and default `TOME_OIDC_REDIRECT_URL` to it in the extension fragment; removed the wrong `/auth/callback` entry
 
 ## P-052: kanidmd container has no shell and no kanidm CLI — run `kanidm/tools` sidecar instead of `docker exec`
-- hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
+- hits: 2 | status: fixed | first: 2026-11-05 | last: 2026-11-07
 - where: any Kanidm admin operation on the live step-ca-manager instance
 - symptom: `docker exec kanidmd sh` / `kanidm` / `ls` all fail (`exec: "sh": executable file not found`); kanidm CLI absent from the server image
 - cause: kanidmd image is a minimal single-binary container (entrypoint `/sbin/kanidmd server`)
-- fix: `docker run --rm --network host --user 0:0 -e HOME=/tmp/kanidmcfg -v <scratch>:/tmp/kanidmcfg -v <scratch>/root_ca.crt:/etc/ssl/certs/ca-certificates.crt:ro kanidm/tools:1.11.2 kanidm ...` — token cache persists in the scratch mount; root CA bind-mount is required (kanidm.af uses step-ca internal TLS, else `InvalidCertificate(UnknownIssuer)`)
+- fix: `docker run --rm --network host --user 0:0 -e HOME=/tmp/kanidmcfg -v <scratch>:/tmp/kanidmcfg -v <scratch>/root_ca.crt:/etc/ssl/certs/ca-certificates.crt:ro kanidm/tools:1.11.2 kanidm ...` — token cache persists in the scratch mount; root CA bind-mount is required (kanidm.af uses step-ca internal TLS, else `InvalidCertificate(UnknownIssuer)`). Non-interactive login: `-e KANIDM_PASSWORD=<pw>` (no TTY). Cookbook now documents this (`kc` function)
 
 ## P-053: `sb build` wipes build-layer `.env` files on every run
 - hits: 6 | status: open | first: 2026-11-05 | last: 2026-11-05
