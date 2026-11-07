@@ -53,6 +53,8 @@ opportunistically.
 5. **Modules**: move `src/ssl-automation/` → `modules/ssl-automation/` and
    declare it in the stack-root `.gitmodules` (submodule URLs:
    `https://github.com/zyrakq/{step-ca,letsencrypt}-manager-stack.git`).
+   Stacks that have `letsencrypt`/`step-ca` environments but no submodules:
+   add both with `git submodule add` + `git submodule update --init`.
 6. **Environments**: add missing ones (forwarding / letsencrypt / step-ca;
    `internal` only when genuinely needed).
 7. **Extensions**: complete the mandatory infra stages — `pgrust`

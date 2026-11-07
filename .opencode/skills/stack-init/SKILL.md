@@ -110,8 +110,8 @@ with the reason recorded in DEPLOYMENT.md, never silently skipped.
      `env_file_patterns` to preserve app-native config files (numa idiom).
    - `app/README.md` — delegate to the `readme-gen` skill rules.
    - Stack root: hub `README.md`, `.gitignore`, `.gitmessage`,
-     `LICENSE-APACHE`, `LICENSE-MIT`; `.gitmodules` + `modules/ssl-automation`
-     submodules ONLY if SSL integration is needed.
+     `LICENSE-APACHE`, `LICENSE-MIT`; `.gitmodules` + `modules/ssl-automation/{letsencrypt-manager,step-ca-manager}`
+     submodules — required whenever a `letsencrypt`/`step-ca` environment exists.
    - NO catalog extensions yet — anything outside the functional base is
      offered at the Phase 5 menu (staged protocol, §9).
 8. **Database stage (mandatory infra, always attempted):** prepare the

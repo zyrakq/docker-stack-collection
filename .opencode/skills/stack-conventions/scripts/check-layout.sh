@@ -32,4 +32,13 @@ while IFS= read -r x; do
   [[ $b == step-ca-trust || $b =~ ^[^-]+(-[^-]+)?$ ]] || v "extension name too long (max 2 words): ${x#"$d"/}"
 done < <(find "$d" "${prune[@]}" -type d -path '*/components/extensions/*' -print | grep -E '/components/extensions/[^/]+$')
 
+if find "$d" "${prune[@]}" -type d \( -path '*/components/environments/letsencrypt' -o -path '*/components/environments/step-ca' \) -print | grep -q .; then
+  for m in letsencrypt-manager step-ca-manager; do
+    git -C "$d" config -f .gitmodules --get "submodule.modules/ssl-automation/$m.path" >/dev/null 2>&1 \
+      || v "SSL environment present but submodule not in .gitmodules: modules/ssl-automation/$m"
+    [[ -e $d/modules/ssl-automation/$m/.git ]] \
+      || v "SSL submodule not initialized/present: modules/ssl-automation/$m"
+  done
+fi
+
 exit $bad

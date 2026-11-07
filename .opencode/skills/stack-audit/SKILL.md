@@ -20,6 +20,12 @@ teardown.
 2. FULL manual review — the scripts catch only part of the rules. Read
    every file of the stack (every compose, every `.env.example`, toml,
    .gitignore, README) and check EACH item; fix all findings:
+   - SSL submodules: if `app/components/environments/` (any project dir)
+     has `letsencrypt` or `step-ca`, `.gitmodules` declares both
+     `modules/ssl-automation/{letsencrypt-manager,step-ca-manager}` and the
+     dirs exist and are initialized (`git submodule status`); add missing
+     ones with `git submodule add` + `git submodule update --init`; no
+     `.gitkeep` or files inside them
    - folder name, `.gitkeep`, `.vscode/settings.json`, `.gitignore` content
    - `stackbuilder.toml`: no `yaml_merger`, combos only `entire`/`entire-trust`, no comments
    - no `ports:` in base; no `.env` outside `build/<env>/<combo>/`

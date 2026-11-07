@@ -105,7 +105,14 @@ A stack repo contains:
   dirs (e.g. `loki-for-grafana/`) when the stack ships more than one project.
 - `modules/` — git submodules, currently only
   `modules/ssl-automation/{letsencrypt-manager,step-ca-manager}`, declared in
-  the stack-root `.gitmodules`.
+  the stack-root `.gitmodules`. MANDATORY whenever the stack has a
+  `letsencrypt` or `step-ca` environment under `app/components/environments/`
+  (any project dir): BOTH submodules must be declared in `.gitmodules`
+  (URLs `https://github.com/zyrakq/step-ca-manager-stack.git`,
+  `https://github.com/zyrakq/letsencrypt-manager-stack.git`) and present
+  under `modules/ssl-automation/` (`git submodule add`, then
+  `git submodule update --init`). An SSL environment without the submodules
+  is a violation (`check-layout.sh` flags it).
 - Stack-root files: `README.md` (hub style), `.gitignore`, `.gitmessage`,
   `LICENSE-APACHE`, `LICENSE-MIT`, `.gitmodules`, `.vscode/settings.json`.
 - `src/<name>/` exists in older stacks but is NOT the target format (see the

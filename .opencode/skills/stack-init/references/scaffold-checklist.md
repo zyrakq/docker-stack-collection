@@ -24,7 +24,8 @@ from the collection root — do not invent license/gitignore text.
 - [ ] `bash <skills-dir>/stack-conventions/scripts/check-gitkeep.sh <stack-dir>`
       prints nothing (`--fix` applies) — run after every directory change.
 - [ ] `.gitmodules` + `modules/ssl-automation/{letsencrypt-manager,step-ca-manager}`
-      submodules — ONLY if the stack joins an SSL stack. URLs:
+      submodules — REQUIRED as soon as a `letsencrypt` or `step-ca` environment
+      exists (always, for the standard environment set). URLs:
       `https://github.com/zyrakq/step-ca-manager-stack.git`,
       `https://github.com/zyrakq/letsencrypt-manager-stack.git`.
 - [ ] No `.kilocode/`, no `.clinerules/` — delete if scaffolding tools created them.
