@@ -878,9 +878,17 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - fix: omnibus replaced it with the `s3-volumes` extension using the rclone Docker volume plugin (no caps, no sidecar)
 
 ## P-097: rclone Docker volume plugin quirks
-- hits: 2 | status: open | first: 2026-11-08 | last: 2026-11-08
+- hits: 3 | status: fixed | first: 2026-11-08 | last: 2026-11-08
 - where: omnibus `s3-volumes` extension (driver: rclone)
 - symptom: volume creation/mount fails or ignores settings
 - cause: endpoint must be reachable from the host (plugin runs on host side, not compose network); unsupported driver_opts fail; booleans (e.g. allow_other) must be quoted strings; secrets are visible in `docker volume inspect`; opts are immutable; plugin install is user-only (agents must not install it)
 - fix: use host-reachable endpoint, quote booleans, `docker volume rm` to change opts; user installs plugin. Backend params need the `s3-` prefix (`s3-provider`, `s3-endpoint`, `s3-access-key-id`, `s3-secret-access-key`). Functional e2e still pending
 - 2026-11-08 (hits 2): `docker plugin install rclone/docker-volume-rclone:amd64 --alias rclone` fails: `failed to fulfil mount request: open /var/lib/docker-plugins/rclone/config: no such file or directory`. The plugin mounts host dirs `/var/lib/docker-plugins/rclone/config` and `/var/lib/docker-plugins/rclone/cache`; they must be created on the host by the user (root, `mkdir -p`) BEFORE install. Agents cannot (host-safety rule). A disabled `rclone:latest` plugin is left behind after the failed install: user runs `docker plugin rm rclone` after creating the dirs, then reinstalls
+- 2026-11-08 (hits 3, e2e PASSED on step-ca variant + RustFS): verified end to end. Upload in /books appeared in the bucket; omnibus created its own library dirs as objects. Host-reachable endpoint = rustfs container IP on step-ca-network (`http://172.20.0.3:9000`, `docker inspect rustfs`); the host can reach bridge IPs, the name `rustfs` does not resolve. driver_opts keys `type`, `path` (=bucket), `s3-provider/endpoint/access-key-id/secret-access-key`, `allow_other`, `vfs_cache_mode` all work (`vfs-cache-mode` is equivalent; a bogus value is rejected with a clear error, so keys are validated). mount shows `fuse.rclone ... allow_other`. omnibus-init `chown` exits 0 but is a no-op on the S3 mount (files stay 0:0, writes still work for the app user via allow_other) - harmless, not a failure
+
+## P-098: extension fragment with only top-level `volumes:` is silently skipped by sb
+- hits: 1 | status: fixed | first: 2026-11-08 | last: 2026-11-08
+- where: omnibus `s3-volumes` extension; `sb build`
+- symptom: build output lacks the extension's volume overrides although the combo lists it; only a "Warning: Skipping invalid file ... Missing required 'services' section" line (easy to miss)
+- cause: sb requires every compose fragment to have a `services:` section. Also `[build.combos]` / env `combos` were missing from stackbuilder.toml (extensions were never combined)
+- fix: add a `services:` stub to the fragment (omnibus: re-declare the `volumes:` mounts of the `omnibus` service), restore `[build.combos] entire` and per-env `combos = ["entire"]`; grep `driver:` in the build output to confirm. Always read sb warnings
