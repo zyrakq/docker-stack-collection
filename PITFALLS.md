@@ -878,8 +878,9 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - fix: omnibus replaced it with the `s3-volumes` extension using the rclone Docker volume plugin (no caps, no sidecar)
 
 ## P-097: rclone Docker volume plugin quirks
-- hits: 1 | status: open | first: 2026-11-08 | last: 2026-11-08
+- hits: 2 | status: open | first: 2026-11-08 | last: 2026-11-08
 - where: omnibus `s3-volumes` extension (driver: rclone)
 - symptom: volume creation/mount fails or ignores settings
 - cause: endpoint must be reachable from the host (plugin runs on host side, not compose network); unsupported driver_opts fail; booleans (e.g. allow_other) must be quoted strings; secrets are visible in `docker volume inspect`; opts are immutable; plugin install is user-only (agents must not install it)
 - fix: use host-reachable endpoint, quote booleans, `docker volume rm` to change opts; user installs plugin. Backend params need the `s3-` prefix (`s3-provider`, `s3-endpoint`, `s3-access-key-id`, `s3-secret-access-key`). Functional e2e still pending
+- 2026-11-08 (hits 2): `docker plugin install rclone/docker-volume-rclone:amd64 --alias rclone` fails: `failed to fulfil mount request: open /var/lib/docker-plugins/rclone/config: no such file or directory`. The plugin mounts host dirs `/var/lib/docker-plugins/rclone/config` and `/var/lib/docker-plugins/rclone/cache`; they must be created on the host by the user (root, `mkdir -p`) BEFORE install. Agents cannot (host-safety rule). A disabled `rclone:latest` plugin is left behind after the failed install: user runs `docker plugin rm rclone` after creating the dirs, then reinstalls
