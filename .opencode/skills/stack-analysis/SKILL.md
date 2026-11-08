@@ -96,7 +96,7 @@ model this skill produces.
 7. **Assemble the extension catalog** — ONE catalog for everything
    outside the functional base, every entry recorded `available`, with
    type, status, dependencies. Ordering constraints preserved: db
-   first, s3 last, s3fs-fuse never on DB volumes (§9, §11).
+   first, s3 last, rclone s3-volumes never on DB volumes (§9, §11).
 8. **Write `DEPLOYMENT.md`** at the stack root (next to `UPSTREAM.md`)
    with the six sections per §20. Commit it in the stack repo.
 9. **No approval gate.** The base scope and base stage plan are

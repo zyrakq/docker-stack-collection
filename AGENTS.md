@@ -125,7 +125,7 @@ Any work on a stack (create, modify, extend, modernize) MUST load the
   upstream-pinned version); volume mounted at `/var/lib/postgresql`.
 - Staged protocol: base implementation first → test gate → extensions
   one at a time (pgrust after base passes — becomes default if clean;
-  oidc/s3 only after base passes; s3fs-fuse never on DB volumes). Never
+  oidc/s3 only after base passes; rclone s3-volumes never on DB volumes). Never
   wire s3/oidc before the base is implemented and tested.
 - Skills and agent definitions are self-contained: no path references
   into `stacks/` — patterns are embedded; stacks move and change.

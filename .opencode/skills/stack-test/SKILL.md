@@ -79,7 +79,9 @@ run the `stack-analysis` skill gap mode first.
   extension) or UI-based (provider configured in the app's own web UI),
   then re-verify in the browser.
 - **S3 round-trip — always last:** only when the `s3-storage` extension is
-  present, after Stage B.
+  present, after Stage B. For the `s3-volumes` extension verify per the
+  `s3-volumes` skill (write file in mount → object in bucket, `fuse.rclone`
+  mount); the host plugin is installed by the user, never by agents.
 
 Before ANY browser step: load the `agent-browser` skill, then load its
 runtime content — never work from memory:

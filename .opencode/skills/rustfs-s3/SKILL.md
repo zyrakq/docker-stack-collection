@@ -18,6 +18,10 @@ Full command cookbook: read `references/cookbook.md`.
 - Wire apps via the `s3-storage` extension env fragments
   (app-specific `<APP>__storage__*` / `SPACES_*` var shapes).
 
+- Apps without native S3 support mount a bucket as a volume via the
+  `s3-volumes` skill (rclone docker volume plugin) — create the bucket and
+  user here first.
+
 ## Instance facts
 
 - API on port 9000, console on 9001 (step-ca variant: `S3_VIRTUAL_HOST` /
