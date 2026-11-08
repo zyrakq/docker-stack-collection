@@ -68,7 +68,7 @@ opportunistically.
    stack-conventions §8 (verbatim fragments in its
    `references/patterns.md` §11): `postgres:alpine` floating default
    unless a documented app incompatibility requires older, volume mounted
-   at `/var/lib/postgresql`, DB env `${POSTGRES_*:-}` with
+   at `/var/lib/postgresql`, DB env `${POSTGRES_*:-default}` with
    `POSTGRES_PASSWORD:?`, healthcheck `pg_isready` + app
    `depends_on: service_healthy`.
 9. **Naming conformance**: rename services to `<stack>-<role>`, align
@@ -76,7 +76,7 @@ opportunistically.
    `<stack>-network`, volumes to `<stack>-<purpose>` with explicit `name:`
    (stack-conventions §3).
 10. **Env conformance**: purge unused vars from `.env.example` (§6), convert
-    hardcoded compose env literals to `${VAR:-}`/`${VAR:?}` (§5;
+    hardcoded compose env literals to `${VAR:-default}` (standard, incl. IMAGE/TZ) or `${VAR:?}` (user-specific) (§5;
     before/after fragment in patterns.md §12), and move
     environment-dependent vars (public base URLs, TLS-derived defaults)
     from base into the environment overlays (§7; layering fragment in

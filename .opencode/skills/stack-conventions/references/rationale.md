@@ -52,9 +52,12 @@ Reasons behind each convention in `SKILL.md`. When an assumption breaks
     своим именем контейнера». Generic names (`app`, `db`, `server`)
     collide across stacks, break external references, and hide the stack
     identity in `docker ps`.
-16. **Env overridability (`${VAR:-}` everywhere).** Compose files are
+16. **Env overridability (`${VAR:-default}` for standard values, `${VAR:?}` for user-specific).** Compose files are
     generated/managed artifacts; `.env` is the user surface. A value the
     user cannot override from `.env` without editing compose is a defect.
+    Standard values (IMAGE, TZ=Etc/UTC, log level, ...) keep inline
+    defaults so the compose runs and reads sensibly on its own; stripping
+    them to bare `${VAR}` is also a defect.
 17. **No dead vars in `.env.example`.** A declared-but-unreferenced var
     (the `PROJECT_NAME` failure) misleads every reader and agent into
     using it. `.env.example` documents exactly what compose consumes.

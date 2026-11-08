@@ -38,7 +38,7 @@ from the collection root — do not invent license/gitignore text.
       Logging anchor (`x-logging` with LOG_MAX_SIZE/LOG_MAX_FILE/
       LOG_COMPRESS); named volumes with explicit `name:` (§4); no bind
       mounts; healthcheck where applicable; EVERY env value
-      `${VAR:-}`/`${VAR:?}` (§5; before/after fragment in
+      `${VAR:-default}` (standard, incl. IMAGE/TZ) or `${VAR:?}` (user-specific) (§5; before/after fragment in
       `stack-conventions` `references/patterns.md` §12).
 - [ ] ONE image per product part: the published upstream image, or
       source-built `app/images/<image>/Dockerfile` via the

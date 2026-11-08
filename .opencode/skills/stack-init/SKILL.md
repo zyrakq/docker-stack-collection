@@ -99,7 +99,7 @@ with the reason recorded in DEPLOYMENT.md, never silently skipped.
      is never set. No `ports:` in base (forwarding overlay only); no
      comments in compose/toml; no `.env` under `components/`.
    - `app/components/base/` — `docker-compose.yml` (every env value
-     `${VAR:-}`/`${VAR:?}` per §5, named volumes per §4), `.env.example`
+     `${VAR:-default}` (standard, incl. IMAGE/TZ) or `${VAR:?}` (user-specific) per §5, named volumes per §4), `.env.example`
      (§6 hygiene), config examples.
    - `app/components/environments/{forwarding,letsencrypt,step-ca}/` as
      applicable, EACH with its own `.env.example` (merged by sb with base

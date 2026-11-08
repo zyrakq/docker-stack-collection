@@ -16,7 +16,7 @@ services:
     build:
       context: .
       dockerfile_inline: |
-        FROM ${IMAGE}
+        FROM ${IMAGE:-<image>:<tag>}
         COPY *.json /etc/zot/
 ```
 
@@ -97,7 +97,7 @@ services:
                 cp /context/override.css /out/override.css; \
             fi
 
-        FROM ${IMAGE}
+        FROM ${IMAGE:-<image>:<tag>}
         COPY --from=sleep-stage /src/cmd/sleep /bin/sleep
         COPY --from=override-stage /out/ /hpkg/
 
@@ -365,7 +365,7 @@ x-healthcheck: &default-healthcheck
 services:
   rustfs:
     container_name: rustfs
-    image: ${IMAGE}
+    image: ${IMAGE:-localhost/<image>:<tag>}
     restart: unless-stopped
     logging: *default-logging
     healthcheck: *default-healthcheck
@@ -478,8 +478,9 @@ AFTER (every value overridable from `.env`):
 services:
   <stack>:
     environment:
-      RUST_LOG: ${RUST_LOG}
-      SERVER_LISTEN_ADDR: ${SERVER_LISTEN_ADDR}
+      RUST_LOG: ${RUST_LOG:-info}
+      SERVER_LISTEN_ADDR: ${SERVER_LISTEN_ADDR:-0.0.0.0:8080}
+      TZ: ${TZ:-Etc/UTC}
 ```
 
 plus the matching entries in the owning component's `.env.example`:
@@ -489,7 +490,7 @@ RUST_LOG=info
 SERVER_LISTEN_ADDR=0.0.0.0:8080
 ```
 
-Required values use `${VAR:?}` instead of a default. A var that
+User-specific values (hosts, URLs, secrets) use `${VAR:?}` instead of a default; standard values and `IMAGE` always carry `:-default`. A var that
 appears in `.env.example` but is referenced by no compose file is a dead
 var — remove it (§6).
 

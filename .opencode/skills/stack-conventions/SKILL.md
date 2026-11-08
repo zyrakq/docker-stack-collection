@@ -4,7 +4,7 @@ description: >-
   Conventions for docker-stack-collection stacks: app/ layout, service and
   volume naming, sb/stackbuilder builds, environments and layering,
   extensions (oidc, s3-storage, database postgresql+pgrust), env wiring
-  (plain ${VAR}, defaults in .env.example), .env.example hygiene, no-bind-mount volume
+  (`${VAR:-default}` for standard values, `${VAR:?}` for user-specific; mirrored in .env.example), .env.example hygiene, no-bind-mount volume
   policy, staged integration protocol with test gates, deployment model
   and application parts (DEPLOYMENT.md), dockerfile_inline
   config patterns, source-built images (app/images/), OIDC/S3/step-ca
@@ -171,17 +171,27 @@ Inner structure of a project dir (e.g. `app/`):
 - External volumes/networks to join the SSL stack: `step-ca-certs`,
   `step-ca-vhost`, `step-ca-network` (or `letsencrypt-*` equivalents).
 
-## 5. Env wiring — everything overridable
+## 5. Env wiring — everything overridable, sane defaults inline
 
 - EVERY env value in EVERY compose file (base, environments, extensions)
-  is `${VAR}` or `${VAR:?}`. Bare literals are forbidden —
-  a value the user cannot override from `.env` without editing compose is
-  a defect.
-- Covers app env, DB env, infra env. The main app image is `${IMAGE}` (§19).
-- NO inline defaults (`${VAR:-default}`) in compose — they hurt readability.
-  Defaults live in `.env.example` of the owning component (§6). Rare
-  exception: truly standard, almost never changed values (e.g. `TZ`) — and
-  even those belong in `.env.example` by preference.
+  is a `${VAR...}` reference. Bare literals are forbidden — a value the
+  user cannot override from `.env` without editing compose is a defect.
+- Covers app env, DB env, infra env.
+- Two forms, chosen by the nature of the value:
+  - **Standard / neutral value** (works as-is for everyone): inline default
+    `${VAR:-default}` in compose, mirrored in `.env.example`. Includes
+    ALWAYS: `IMAGE` → `${IMAGE:-<registry>/<image>:<tag>}` (main app image
+    and every other part's image, §19), `TZ` → `${TZ:-Etc/UTC}`
+    (never bare `UTC`), log levels, internal listen addrs/ports, fixed
+    feature flags, DB name/user, `START_DELAY`, other values that are the
+    same for most deployments.
+  - **User-specific / secret / host-dependent value** (domains, URLs,
+    passwords, keys, OIDC/S3 credentials): required `${VAR:?}` (only
+    `${VAR:?}`, never `:?text`), no default; `.env.example` carries an
+    angle-bracket placeholder or generated example.
+- NEVER strip standard defaults out of compose "for readability" — a
+  stack whose compose has only bare `${VAR}`/`${VAR:?}` (IMAGE, TZ
+  included) is a defect (vaultisse incident).
 - NEVER hardcode real hosts/domains (`kanidm.af`, `app.example.com`) as
   defaults anywhere. Extensions are shared by all environments and not every
   environment has `${VIRTUAL_HOST}` — extensions must NOT rely on it or on
@@ -202,7 +212,7 @@ Inner structure of a project dir (e.g. `app/`):
   `OIDC_REDIRECT_URI=https://<host>/...`. Never real hosts.
 - Standard key order: `COMPOSE_PROJECT_NAME`, `IMAGE`, `LOG_*`,
   `VIRTUAL_*`/`LETSENCRYPT_*`, OIDC block, `STEP_CA_*`, CA-path vars,
-  `TZ=UTC`.
+  `TZ=Etc/UTC`.
 
 ## 7. Environments & layering
 
@@ -462,7 +472,7 @@ When an app has no published Docker image and must be built from source:
 - **Wiring:** `images/` is a sibling of `components/` and is NOT part of
   the `sb` build. Build standalone:
   `docker build -t localhost/<image>:<tag> images/<image>`. Compose
-  references the prebuilt image — `image: ${IMAGE}` (`IMAGE=localhost/<image>:<tag>` in `.env.example`)
+  references the prebuilt image — `image: ${IMAGE:-localhost/<image>:<tag>}` (same value in `.env.example`)
   — never a `build:` section.
 - Exemplars: `open-coreui` `images/{frontend,backend,complex}` (sparse git
   clone). `litellm-amd64` uses `COPY . .` — context-dependent, NOT the

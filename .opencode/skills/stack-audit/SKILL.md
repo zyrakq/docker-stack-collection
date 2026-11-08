@@ -35,6 +35,7 @@ teardown.
      generator command directly above a secret; NO empty secrets — each has
      an example value; no dead vars; standard key order (§6)
    - no `${VAR:?text}` — only `${VAR:?}`
+   - standard values keep inline defaults (§5): `IMAGE` always `${IMAGE:-...}`, `TZ` `${TZ:-Etc/UTC}`; only user-specific values are `${VAR:?}`
    - extension names short and generic (max two words, e.g. `smtp`)
    - naming (§3), env wiring with no bare literals (§5), volumes (§4),
      DB rules, images (§19), UPSTREAM.md/DEPLOYMENT.md/README present
