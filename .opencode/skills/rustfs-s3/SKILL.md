@@ -19,7 +19,7 @@ Full command cookbook: read `references/cookbook.md`.
   (app-specific `<APP>__storage__*` / `SPACES_*` var shapes).
 
 - Apps without native S3 support mount a bucket as a volume via the
-  `s3-volumes` skill (rclone docker volume plugin) — create the bucket and
+  `s3-rclone` skill (rclone docker volume plugin) — create the bucket and
   user here first.
 
 ## Instance facts

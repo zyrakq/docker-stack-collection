@@ -1,17 +1,17 @@
-# Omnibus s3-volumes (rclone Docker volume plugin) Implementation Plan
+# Omnibus s3-rclone (rclone Docker volume plugin) Implementation Plan
 
-**Goal:** Replace the `s3fs-fuse` extension of omnibus (inline-built image, s3fs entrypoint, SYS_ADMIN, /dev/fuse, apparmor unconfined) with an `s3-volumes` extension that backs `/books` and `/audiobooks` with S3 named volumes via the `rclone/docker-volume-rclone` Docker volume plugin.
+**Goal:** Replace the `s3fs-fuse` extension of omnibus (inline-built image, s3fs entrypoint, SYS_ADMIN, /dev/fuse, apparmor unconfined) with an `s3-rclone` extension that backs `/books` and `/audiobooks` with S3 named volumes via the `rclone/docker-volume-rclone` Docker volume plugin.
 
 **Architecture:** The extension only overrides the two existing top-level volumes (`omnibus-books`, `omnibus-audiobooks`, explicit `name:` kept) by adding `driver: rclone` + `driver_opts` fed from `${VAR}`. The omnibus/omnibus-init services stay untouched (stock image, no caps, no devices). The plugin mounts FUSE on the HOST side, so the endpoint must be reachable from the host.
 
 **Design:** none (decision made in session ses_e45a). Conventions: stack-conventions §4, §5, §6, §9, §11, §20.
 
 STACK = `stacks/self-hosting/media-streaming/book-management/omnibus`
-EXT   = `STACK/app/components/extensions/s3-volumes`
+EXT   = `STACK/app/components/extensions/s3-rclone`
 
 ## Decisions (gap-filling)
 
-- Extension name `s3-volumes` (generic capability, two words). Old `s3fs-fuse` dir is deleted entirely.
+- Extension name `s3-rclone` (generic capability, two words). Old `s3fs-fuse` dir is deleted entirely.
 - Override mechanism: same top-level volume keys as base; sb merges yaml so base `name:` is kept and `driver`/`driver_opts` are added. Task 4.1 must verify via `docker compose config` that merged volumes keep `name: omnibus-books` and carry the driver.
 - No `${VAR:-}` / `${VAR:?msg}`; plain `${VAR}`. Bucket names, endpoint, keys are all env.
 - Agents NEVER install the plugin (host-safety). The USER runs once:
@@ -90,7 +90,7 @@ volumes:
 No `services:`, no `networks:` (the old step-ca-network join only served container-side access to `rustfs`).
 
 **Verify:** `yq '.' <file>` parses.
-**Commit:** `feat(omnibus): add s3-volumes extension compose`
+**Commit:** `feat(omnibus): add s3-rclone extension compose`
 
 ### Task 2.2: Extension .env.example
 **File:** `EXT/.env.example`
@@ -114,7 +114,7 @@ S3_VOLUMES_VFS_CACHE_MODE=full
 Adjust key names/values per 1.1.
 
 **Verify:** `.opencode/skills/stack-conventions/scripts/check-style.sh STACK` has no violations for this file.
-**Commit:** `feat(omnibus): add s3-volumes env example`
+**Commit:** `feat(omnibus): add s3-rclone env example`
 
 ---
 
@@ -133,31 +133,31 @@ Adjust key names/values per 1.1.
 **Test:** `sb build` (4.1)
 **Depends:** 2.1, 2.2
 
-Line 6 becomes `extensions = ["s3-volumes", "smtp", "prowlarr", "metrics", "api-keys"]`. Nothing else changes.
-**Commit:** `refactor(omnibus): wire s3-volumes extension`
+Line 6 becomes `extensions = ["s3-rclone", "smtp", "prowlarr", "metrics", "api-keys"]`. Nothing else changes.
+**Commit:** `refactor(omnibus): wire s3-rclone extension`
 
 ### Task 3.3: DEPLOYMENT.md
 **File:** `STACK/DEPLOYMENT.md`
 **Test:** `grep -i s3fs` empty
 **Depends:** 1.1
 
-- ~line 45: replace the s3fs-fuse sentence: no native S3 backend; S3 provided by the `rclone` Docker volume plugin (extension `s3-volumes`), never on `/config`.
-- ~line 63 row: `| s3-volumes on `/books` + `/audiobooks` | infra | implemented | requires the `rclone` volume plugin installed on the host by the user; RustFS/S3 bucket; never on `/config` |`
-**Commit:** `docs(omnibus): deployment model uses s3-volumes`
+- ~line 45: replace the s3fs-fuse sentence: no native S3 backend; S3 provided by the `rclone` Docker volume plugin (extension `s3-rclone`), never on `/config`.
+- ~line 63 row: `| s3-rclone on `/books` + `/audiobooks` | infra | implemented | requires the `rclone` volume plugin installed on the host by the user; RustFS/S3 bucket; never on `/config` |`
+**Commit:** `docs(omnibus): deployment model uses s3-rclone`
 
 ### Task 3.4: app/README.md
 **File:** `STACK/app/README.md`
 **Test:** `grep -i s3fs` empty
 **Depends:** 1.1, 2.2
 
-- Lines ~72-74: replace the s3fs-fuse text with **s3-volumes** (`implemented`): backs `omnibus-books`/`omnibus-audiobooks` with S3 buckets via the `rclone` Docker volume plugin (no sidecar, no extra capabilities; never on `/config`); vars `S3_VOLUMES_*`.
+- Lines ~72-74: replace the s3fs-fuse text with **s3-rclone** (`implemented`): backs `omnibus-books`/`omnibus-audiobooks` with S3 buckets via the `rclone` Docker volume plugin (no sidecar, no extra capabilities; never on `/config`); vars `S3_VOLUMES_*`.
 - Add `### S3 volumes prerequisites` under Extensions: the USER installs the plugin once on the host (agents never run it):
   ```bash
   docker plugin install rclone/docker-volume-rclone:amd64 args="-v" --alias rclone --grant-all-permissions
   ```
   Requires FUSE on the host; `S3_VOLUMES_ENDPOINT` must be reachable from the HOST (compose name `rustfs` does not resolve there); driver_opts incl. the secret key are visible in `docker volume inspect`; to change opts: `docker compose down`, `docker volume rm omnibus-books omnibus-audiobooks` (bucket data stays).
 - Env vars section: list `S3_VOLUMES_*`.
-**Commit:** `docs(omnibus): document s3-volumes extension`
+**Commit:** `docs(omnibus): document s3-rclone extension`
 
 (Stack root `README.md` has no s3fs mention — untouched.)
 
@@ -171,7 +171,7 @@ Line 6 becomes `extensions = ["s3-volumes", "smtp", "prowlarr", "metrics", "api-
 
 From `STACK/app`: confirm `yq --version` is mikefarah; `sb build`. For each `build/<env>/entire*/`: `docker compose --env-file .env.example config` ONLY — no `up`, no volume creation (the plugin is not installed by agents, so config of unknown driver is just rendered). Confirm volumes have `name`, `driver: rclone`, `driver_opts`; `grep -ri -e s3fs -e SYS_ADMIN -e /dev/fuse -e apparmor build/` empty. Run `check-stack.sh STACK`. Delete `.stackbuilder/`.
 Functional e2e (upload into /books, object visible in bucket, `omnibus-init` chown behavior) is PENDING until the user installs the plugin; report it.
-**Commit:** `build(omnibus): regenerate with s3-volumes`
+**Commit:** `build(omnibus): regenerate with s3-rclone`
 
 ---
 
@@ -193,9 +193,9 @@ Grep first; increment `hits`/`last` on matches, else append (`hits: 1`, header f
 
 Show diffs and wait for explicit approval before touching:
 
-1. `.opencode/skills/rustfs-s3/SKILL.md` + `references/cookbook.md` — rework or add a new skill (e.g. `s3-volumes`): bucket/user via rustfs, `S3_VOLUMES_*` fragment, host-reachable endpoint, user-installed plugin prerequisite, base-volume override pattern.
+1. `.opencode/skills/rustfs-s3/SKILL.md` + `references/cookbook.md` — rework or add a new skill (e.g. `s3-rclone`): bucket/user via rustfs, `S3_VOLUMES_*` fragment, host-reachable endpoint, user-installed plugin prerequisite, base-volume override pattern.
 2. `.opencode/agents/rustfs-admin.md` — point at the new/reworked skill.
-3. `.opencode/skills/stack-conventions/SKILL.md` — §9 (~276-277), §11 (~314-315), §20 (~492): replace s3fs-fuse fallback with s3-volumes (rclone volume plugin), still never on DB volumes; plugins are installed by the user only. Also `references/patterns.md` if it embeds an s3fs fragment.
+3. `.opencode/skills/stack-conventions/SKILL.md` — §9 (~276-277), §11 (~314-315), §20 (~492): replace s3fs-fuse fallback with s3-rclone (rclone volume plugin), still never on DB volumes; plugins are installed by the user only. Also `references/patterns.md` if it embeds an s3fs fragment.
 4. `.opencode/skills/stack-init/SKILL.md` (~153, 171), `references/scaffold-checklist.md` (~105).
 5. `.opencode/skills/stack-analysis/SKILL.md` (~99).
 6. `.opencode/skills/stack-test/SKILL.md` (~81, 126): s3 stage precondition = plugin installed by user.

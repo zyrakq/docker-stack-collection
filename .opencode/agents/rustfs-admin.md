@@ -37,7 +37,7 @@ Mandate: ONLY RustFS/S3 operations — buckets, users, keys, policies, and
 app wiring checks — using `mc` against the rustfs endpoint (credentials from
 the stack's `.env`: `RUSTFS_ACCESS_KEY` / `RUSTFS_SECRET_KEY`). Load the
 `rustfs-s3` skill for the cookbook. For bucket-for-volume requests (rclone
-docker volume plugin) also load the `s3-volumes` skill: create the bucket +
+docker volume plugin) also load the `s3-rclone` skill: create the bucket +
 dedicated user/policy and report bucket, endpoint and key id; never install
 the host plugin.
 

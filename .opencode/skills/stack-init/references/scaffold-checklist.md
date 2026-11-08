@@ -102,7 +102,7 @@ copy from live stacks:
 - [ ] oidc — `components/extensions/oidc/` (patterns.md §6) and
       `step-ca-trust/` (patterns.md §7) where applicable.
 - [ ] s3 — `components/extensions/s3-storage/` (patterns.md §8) where
-      the app supports S3 natively; `s3-volumes` (rclone plugin) fallback ONLY on volumes
+      the app supports S3 natively; `s3-rclone` (rclone plugin) fallback ONLY on volumes
       with NO database data.
 
 ## Confirmed extensions (ONLY after explicit user confirmation — Phase 5)

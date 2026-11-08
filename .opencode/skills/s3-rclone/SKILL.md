@@ -2,7 +2,7 @@
 name: S3 Volumes
 description: >-
   Mount an S3 bucket as a docker named volume via the rclone docker volume
-  plugin (`s3-volumes` extension, `driver: rclone` overrides). Use when an
+  plugin (`s3-rclone` extension, `driver: rclone` overrides). Use when an
   app without native S3 support needs a bucket as a filesystem. Never for
   database volumes.
 ---
@@ -32,7 +32,7 @@ Check (read-only): `docker plugin ls` shows `rclone:latest` enabled;
 
 ## Extension layout
 
-`components/extensions/s3-volumes/docker-compose.yml` overrides the base
+`components/extensions/s3-rclone/docker-compose.yml` overrides the base
 named volumes with the rclone driver, plus a `services:` stub:
 
 ```yaml

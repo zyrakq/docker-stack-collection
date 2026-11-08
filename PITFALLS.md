@@ -875,11 +875,11 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - where: omnibus s3fs-fuse extension (any stack using the s3fs sidecar)
 - symptom: privileged-ish container capabilities required; mount invisible to app container without bind propagation
 - cause: FUSE mount inside a container must be propagated to the host and other containers
-- fix: omnibus replaced it with the `s3-volumes` extension using the rclone Docker volume plugin (no caps, no sidecar)
+- fix: omnibus replaced it with the `s3-rclone` extension using the rclone Docker volume plugin (no caps, no sidecar)
 
 ## P-097: rclone Docker volume plugin quirks
 - hits: 3 | status: fixed | first: 2026-11-08 | last: 2026-11-08
-- where: omnibus `s3-volumes` extension (driver: rclone)
+- where: omnibus `s3-rclone` extension (driver: rclone)
 - symptom: volume creation/mount fails or ignores settings
 - cause: endpoint must be reachable from the host (plugin runs on host side, not compose network); unsupported driver_opts fail; booleans (e.g. allow_other) must be quoted strings; secrets are visible in `docker volume inspect`; opts are immutable; plugin install is user-only (agents must not install it)
 - fix: use host-reachable endpoint, quote booleans, `docker volume rm` to change opts; user installs plugin. Backend params need the `s3-` prefix (`s3-provider`, `s3-endpoint`, `s3-access-key-id`, `s3-secret-access-key`). Functional e2e still pending
@@ -888,7 +888,7 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 
 ## P-098: extension fragment with only top-level `volumes:` is silently skipped by sb
 - hits: 1 | status: fixed | first: 2026-11-08 | last: 2026-11-08
-- where: omnibus `s3-volumes` extension; `sb build`
+- where: omnibus `s3-rclone` extension; `sb build`
 - symptom: build output lacks the extension's volume overrides although the combo lists it; only a "Warning: Skipping invalid file ... Missing required 'services' section" line (easy to miss)
 - cause: sb requires every compose fragment to have a `services:` section. Also `[build.combos]` / env `combos` were missing from stackbuilder.toml (extensions were never combined)
 - fix: add a `services:` stub to the fragment (omnibus: re-declare the `volumes:` mounts of the `omnibus` service), restore `[build.combos] entire` and per-env `combos = ["entire"]`; grep `driver:` in the build output to confirm. Always read sb warnings

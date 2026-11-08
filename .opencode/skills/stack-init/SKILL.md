@@ -150,7 +150,7 @@ with the reason recorded in DEPLOYMENT.md, never silently skipped.
 
 14. The base already uses simple named volumes. Add the `s3-storage`
     extension if the app supports S3 natively (env-only fragment) and
-    run the S3 round-trip test; otherwise `s3-volumes` (rclone plugin) — ONLY on volumes
+    run the S3 round-trip test; otherwise `s3-rclone` (rclone plugin) — ONLY on volumes
     with NO database data (stack-conventions §11). Unresolvable blocker
     → REFUSE the stage with the reason recorded in DEPLOYMENT.md (§20).
 
@@ -168,7 +168,7 @@ with the reason recorded in DEPLOYMENT.md, never silently skipped.
 
 Implement the confirmed extensions one per phase, each followed by its
 test gate (stack-conventions §9). Ordering constraints always hold: db
-first, s3 last, rclone s3-volumes never on DB volumes. A product extension goes
+first, s3 last, rclone s3-rclone never on DB volumes. A product extension goes
 in per its DEPLOYMENT.md catalog entry — one compose service per part
 (`<stack>-<role>`, §3), image per §19 when upstream publishes none, its
 own stage + gate; its status becomes `implemented` in DEPLOYMENT.md when

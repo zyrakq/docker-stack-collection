@@ -273,7 +273,7 @@ Order for bringing up a new stack or adding components:
    the tested no-oidc variant as proof of the pre-OIDC step.
 6. s3: the base uses simple volume mounts. Only after base works: add the
    `s3-storage` extension if the app supports S3 natively; otherwise
-   the `s3-volumes` extension (rclone docker volume plugin, `s3-volumes`
+   the `s3-rclone` extension (rclone docker volume plugin, `s3-rclone`
    skill) — ONLY on volumes with NO database data (never a DB dir).
 
 One extension at a time; each addition is followed by its test. NEVER
@@ -311,8 +311,8 @@ passes its gate.
 - Prefer native S3 support: extension `s3-storage`, env-only fragment
   (`<APP>__storage__*`, `SPACES_*` var shapes — embedded
   fragments in `references/patterns.md` §8).
-- Otherwise the fallback is the `s3-volumes` extension (rclone docker
-  volume plugin, `driver: rclone` volume overrides; see the `s3-volumes`
+- Otherwise the fallback is the `s3-rclone` extension (rclone docker
+  volume plugin, `driver: rclone` volume overrides; see the `s3-rclone`
   skill) — ONLY on volumes with NO database data; NEVER on a DB dir. No
   s3fs in images, no sidecars, no bind mounts.
 
@@ -491,7 +491,7 @@ Definitions:
   S3 (s3-storage, §11) — or other infra the product mandates — is
   ALWAYS part of the functional base, never an optional extension.
   Always attempted as base stages in the staged order: db first, s3
-  last, rclone s3-volumes never on DB volumes (§9, §11).
+  last, rclone s3-rclone never on DB volumes (§9, §11).
 - **Tier** — `core` = self-sufficient unit doing the main work (with its
   primary UI); `ring-N` = only adds sharing, multi-tenancy, remote
   access, sync or relay. Implementation goes core outward.

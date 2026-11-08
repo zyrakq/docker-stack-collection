@@ -54,9 +54,9 @@ Minimal read-write bucket policy JSON:
 3. Fill the app's `.env` with endpoint, key id, secret, bucket.
 4. Verify with a round-trip per the `stack-test` skill (put/get/delete).
 
-## Bucket for an S3 volume (s3-volumes)
+## Bucket for an S3 volume (s3-rclone)
 
-For apps without native S3 (rclone docker volume plugin, `s3-volumes`
+For apps without native S3 (rclone docker volume plugin, `s3-rclone`
 skill): create one bucket per volume plus a dedicated user/policy, then put
 bucket, endpoint (reachable from the HOST), key id and secret into the
 extension's `.env`. Verify with `mc ls rustfs/<bucket>` after writing a

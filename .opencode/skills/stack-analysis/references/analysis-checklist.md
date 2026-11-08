@@ -70,7 +70,7 @@ stack-conventions §20 (deployment model), §17 (clone-in-tmp).
 - [ ] One table: extension | type (product/infra) | status
       (available/implemented/refused) | dependencies.
 - [ ] Ordering constraints preserved: db first, s3 last, rclone
-      s3-volumes never on DB volumes (§9, §11).
+      s3-rclone never on DB volumes (§9, §11).
 
 ## 6. DEPLOYMENT.md output
 
