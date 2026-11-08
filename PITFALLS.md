@@ -869,3 +869,17 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: app rejects Kanidm tokens/login (algorithm, PKCE, username format); agent patched the app via a custom image
 - cause: skills/agents did not document per-client Kanidm quirk settings
 - fix: use Kanidm per-client settings only: `prefer-short-username`, `warning-insecure-client-disable-pkce`, `warning-enable-legacy-crypto` (vaultisse needed legacy crypto/RS256). Documented in kanidm-oidc, stack-conventions §10, kanidm-admin. Existing vaultisse image still needs removal (stack repo, user decision)
+
+## P-096: s3fs-fuse sidecar needs SYS_ADMIN, /dev/fuse, apparmor:unconfined and rshared propagation
+- hits: 1 | status: mitigated | first: 2026-11-08 | last: 2026-11-08
+- where: omnibus s3fs-fuse extension (any stack using the s3fs sidecar)
+- symptom: privileged-ish container capabilities required; mount invisible to app container without bind propagation
+- cause: FUSE mount inside a container must be propagated to the host and other containers
+- fix: omnibus replaced it with the `s3-volumes` extension using the rclone Docker volume plugin (no caps, no sidecar)
+
+## P-097: rclone Docker volume plugin quirks
+- hits: 1 | status: open | first: 2026-11-08 | last: 2026-11-08
+- where: omnibus `s3-volumes` extension (driver: rclone)
+- symptom: volume creation/mount fails or ignores settings
+- cause: endpoint must be reachable from the host (plugin runs on host side, not compose network); unsupported driver_opts fail; booleans (e.g. allow_other) must be quoted strings; secrets are visible in `docker volume inspect`; opts are immutable; plugin install is user-only (agents must not install it)
+- fix: use host-reachable endpoint, quote booleans, `docker volume rm` to change opts; user installs plugin. Backend params need the `s3-` prefix (`s3-provider`, `s3-endpoint`, `s3-access-key-id`, `s3-secret-access-key`). Functional e2e still pending
