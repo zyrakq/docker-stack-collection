@@ -122,3 +122,6 @@ stacks/self-hosting/media-streaming/youtube/metube/
 
 thoughts/ledgers/CONTINUITY_*.md
 .opencode/scratch/
+
+# fnox: plaintext env files never committed (secrets/fnox.toml is encrypted)
+.env
