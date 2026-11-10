@@ -26,7 +26,6 @@ else
 [providers.age]
 type = "age"
 recipients = ["$PUB"]
-key_file = "$AGE_KEY"
 TOML
   echo "wrote $CFG"
 fi
