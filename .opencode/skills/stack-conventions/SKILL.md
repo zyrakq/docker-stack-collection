@@ -103,7 +103,7 @@ A stack repo contains:
 - `app/` — the main service (target format).
 - Optional sibling project dirs: `ui/`, `server/`, `ch-ui/`, or per-module
   dirs (e.g. `loki-for-grafana/`) when the stack ships more than one project.
-- `modules/` — git submodules, currently only
+- `modules/` — git submodules (the certificate-manager role's concrete project: see AGENTS.md role table), currently only
   `modules/ssl-automation/{letsencrypt-manager,step-ca-manager}`, declared in
   the stack-root `.gitmodules`. MANDATORY whenever the stack has a
   `letsencrypt` or `step-ca` environment under `app/components/environments/`

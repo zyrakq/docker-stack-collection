@@ -5,7 +5,7 @@ description: >-
   gates (Stage A = product parts + database running the DEPLOYMENT.md
   functional gate scenario, then the mandatory infra base stages pgrust,
   oidc, s3 in order, then confirmed extensions one at a time), step-ca
-  variant first, never touching the live step-ca-manager setup; sb build
+  variant first, never touching the live certificate-manager setup; sb build
   checks, compose config validation, health, cert-wait, OIDC and S3
   verification. Use after any stack change.
 ---
@@ -17,8 +17,8 @@ test for every stack change.
 
 ## Hard rules
 
-- ALWAYS test the step-ca-manager variant first.
-- The live step-ca-manager + companion + nginx-proxy + kanidm setup is
+- ALWAYS test the step-ca variant first (concrete certificate-manager project: see AGENTS.md role table).
+- The live certificate manager + companion + proxy + SSO setup (concrete projects: see AGENTS.md role table) is
   RUNNING. NEVER modify it. If a problem is caused by it, switch to the
   forwarding variant — never touch the manager stack.
 - The letsencrypt variant is NOT tested; assume analogous to step-ca minus

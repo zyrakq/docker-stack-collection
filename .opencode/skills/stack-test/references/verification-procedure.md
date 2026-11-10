@@ -7,7 +7,7 @@ service name.
 ## 0. Preconditions
 
 - [ ] Confirm which variant is under test; step-ca FIRST.
-- [ ] Confirm you are NOT operating on the live step-ca-manager stack
+- [ ] Confirm you are NOT operating on the live certificate-manager stack (see AGENTS.md role table)
       (read-only at most). If a failure is caused by the manager setup,
       switch to the forwarding variant and note it — never modify the manager.
 

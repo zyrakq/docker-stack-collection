@@ -27,7 +27,7 @@ Reasons behind each convention in `SKILL.md`. When an assumption breaks
 7. **OIDC in the default build + no-oidc variant kept.** OIDC is the tested
    end state for apps that support it; the no-oidc variant proves the
    pre-OIDC step still builds and runs.
-8. **step-ca tested first.** The live step-ca-manager setup exists and is
+8. **step-ca tested first.** The live certificate-manager setup (concrete project: see AGENTS.md role table) exists and is
    running; the letsencrypt variant is untested and assumed analogous minus
    `STEP_CA_TRUST`.
 9. **`STEP_CA_TRUST_RESTART=true`.** Trust is often not picked up on first

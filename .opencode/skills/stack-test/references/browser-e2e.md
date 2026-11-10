@@ -94,4 +94,4 @@ login check as 2a, plus the email-linking assertion.
 | Redirect loop / invalid callback | Wrong callback URL in the kanidm client (or app) | Match the redirect exactly to the app's documented callback URL |
 | kanidm login fails / access denied | Test user not in the required group; scope map wrong | `kanidm-oidc` skill cookbook |
 | UI save fails / discovery error | App cannot TLS-verify kanidm | `STEP_CA_TRUST` + `STEP_CA_TRUST_RESTART` both set; app-specific CA envs (`REQUESTS_CA_BUNDLE`, `SSL_CERT_FILE`) |
-| Failure caused by the live manager setup | step-ca-manager stack | Switch to the forwarding variant; NEVER touch the manager stack |
+| Failure caused by the live manager setup | certificate-manager stack (see AGENTS.md) | Switch to the forwarding variant; NEVER touch the manager stack |
