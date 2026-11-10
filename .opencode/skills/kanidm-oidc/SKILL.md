@@ -43,3 +43,9 @@ Full command cookbook: read `references/cli-cookbook.md`.
 - The live kanidm instance is part of the running step-ca-manager setup —
   never modify the manager stack itself.
 - For hands-off delegation use the `kanidm-admin` subagent.
+
+## Credentials
+
+Read the admin password via the `fnox-secrets` skill before any login. After
+a confirmed recovery, store the new password there immediately — never reset
+a password just because it is not at hand.

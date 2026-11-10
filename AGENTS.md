@@ -144,3 +144,22 @@ source, agents MUST follow the `source-image` skill and stack-conventions
   pinned tag/commit itself; builds with an empty build context.
 - Compose references the prebuilt image via
   `image: ${IMAGE:-localhost/<image>:<tag>}` — never a `build:` section.
+
+## Secrets and infra values (fnox)
+
+Secrets and per-stack `.env` values live in the encrypted `secrets/fnox.toml`
+(fnox + age), one profile per stack. Load the `fnox-secrets` skill BEFORE
+asking the user for any credential/infra value or opening a stack's `.env`
+to find one, and save every secret you create/reset/rotate right away.
+
+Infra role → project (profile = stack name):
+
+| Role | Project | Keys (profile) |
+|---|---|---|
+| Certificate manager | `step-ca-manager` | `TOP_LEVEL_DOMAIN` — the top-level domain used for all stacks (profile `step-ca-manager`) |
+| SSO / OIDC provider | `kanidm` | `KANIDM_DOMAIN`, `IDM_ADMIN_PASSWORD` (profile `kanidm`) |
+| S3 provider | `rustfs` | `RUSTFS_ACCESS_KEY`, `RUSTFS_SECRET_KEY`, endpoint/domain (profile `rustfs`) |
+
+If a key is missing, ask the user once, then store it with `scripts/secret-set.sh`.
+Key names above are the intended convention; if the stack's `.env` uses
+different names, they are imported as-is by `scripts/env-push.sh`.
