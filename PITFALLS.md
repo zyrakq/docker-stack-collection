@@ -899,3 +899,10 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: first pull clones everything, later pulls with new `stacks.csv` rows clone nothing (post-merge never ran)
 - cause: sync rewrote tracked `.gitignore`/`stacks.md` on every run; `sort -u` is locale-dependent, so the block differed from the committed one -> dirty tree -> next pull aborted ("local changes would be overwritten")
 - fix: sync no longer touches tracked files (managed block lives in `.git/info/exclude`, `LC_ALL=C sort`), `stacks.md` is regenerated only by pre-commit; block removed from tracked `.gitignore`. Existing dirty clones: one-time `git checkout .gitignore stacks.md`
+
+## P-100: extension-less environment emits no build dir unless per-env skip_base_generation = false
+- hits: 1 | status: fixed | first: 2026-11-12 | last: 2026-11-12
+- where: stackbuilder (`sb build`) — environments without extensions (opencode-manager: forwarding/letsencrypt/step-ca)
+- symptom: `sb build` reports success but produces no `build/<env>/` for environments whose combos list no extensions; only the env that has extensions gets a directory
+- cause: inverse of P-010. sb pushes a base+env variant only when `env_total_variants == 0 && !env_skip_base`; with a global `skip_base_generation = true` (set to avoid P-010) an env with zero extension variants gets nothing at all
+- fix: keep global `skip_base_generation = true` (or omit it) and set per-env `skip_base_generation = false` in `[build.environments.<env>]` for every extension-less env; sb then emits the flat `build/<env>/` base variant. Validated on opencode-manager: 3 dirs, all pass `docker compose config --quiet`
