@@ -24,9 +24,12 @@ One stack per row, semicolon-separated: `path;url;status`.
 - `status` — `unverified` (likely finished, not confirmed) / `incomplete` / `completed`
 - `merge=union` in `.gitattributes` merges row additions without conflicts —
   remove rows manually
-- generated files (do not edit by hand): the `# BEGIN stack-sync` block in
-  `.gitignore` and [`stacks.md`](stacks.md) — both regenerate from the CSV on
-  sync runs and via the `pre-commit` hook
+- [`stacks.md`](stacks.md) is generated (do not edit by hand) — regenerated
+  from the CSV by the `pre-commit` hook only
+- sync never modifies tracked files: stack paths are ignored via the managed
+  block in `.git/info/exclude`, so `git pull` never hits a dirty tree. If a
+  pull fails with "local changes … `.gitignore`/`stacks.md`", run once:
+  `git checkout .gitignore stacks.md`
 
 ## 🔧 Working on a stack
 

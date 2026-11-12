@@ -892,3 +892,10 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: build output lacks the extension's volume overrides although the combo lists it; only a "Warning: Skipping invalid file ... Missing required 'services' section" line (easy to miss)
 - cause: sb requires every compose fragment to have a `services:` section. Also `[build.combos]` / env `combos` were missing from stackbuilder.toml (extensions were never combined)
 - fix: add a `services:` stub to the fragment (omnibus: re-declare the `volumes:` mounts of the `omnibus` service), restore `[build.combos] entire` and per-env `combos = ["entire"]`; grep `driver:` in the build output to confirm. Always read sb warnings
+
+## P-099: second `git pull` does not clone newly added stacks (dirty tracked .gitignore/stacks.md)
+- hits: 1 | status: fixed | first: 2026-11-12 | last: 2026-11-12
+- where: `.githooks/stack-sync.sh` (post-merge/post-checkout)
+- symptom: first pull clones everything, later pulls with new `stacks.csv` rows clone nothing (post-merge never ran)
+- cause: sync rewrote tracked `.gitignore`/`stacks.md` on every run; `sort -u` is locale-dependent, so the block differed from the committed one -> dirty tree -> next pull aborted ("local changes would be overwritten")
+- fix: sync no longer touches tracked files (managed block lives in `.git/info/exclude`, `LC_ALL=C sort`), `stacks.md` is regenerated only by pre-commit; block removed from tracked `.gitignore`. Existing dirty clones: one-time `git checkout .gitignore stacks.md`
