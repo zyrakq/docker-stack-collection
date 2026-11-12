@@ -4,6 +4,11 @@ Verbatim snippets, embedded in full — this library is self-contained
 (stacks move and change; skills never point into them by path).
 `Source:` lines are attribution by stack name only.
 
+Note: `step-ca-*` / `letsencrypt-*` volume, network and environment names
+in the snippets below belong to the certificate-manager convention
+(`references/certificate-manager.md`); with another certificate-manager
+project, substitute that project's names.
+
 ## 1. Config-into-image (zot)
 
 Source: zot stack (embedded verbatim)
@@ -227,24 +232,10 @@ SSO_DEBUG_TOKENS=false
 LOG_LEVEL=info
 ```
 
-## 7. step-ca-trust extension fragment (vaultwarden)
+## 7. (moved)
 
-Source: vaultwarden stack (embedded verbatim)
-
-```yaml
-services:
-  vaultwarden:
-    environment:
-      STEP_CA_TRUST: ${STEP_CA_TRUST}
-      STEP_CA_TRUST_RESTART: ${STEP_CA_TRUST_RESTART}
-```
-
-Source: vaultwarden stack (embedded verbatim)
-
-```env
-STEP_CA_TRUST=true
-STEP_CA_TRUST_RESTART=true
-```
+The trust extension fragment is part of the certificate-manager
+convention (`references/certificate-manager.md` §7).
 
 ## 8. s3-storage extension fragment (`<app>`)
 

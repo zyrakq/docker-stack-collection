@@ -27,11 +27,14 @@ Reasons behind each convention in `SKILL.md`. When an assumption breaks
 7. **OIDC in the default build + no-oidc variant kept.** OIDC is the tested
    end state for apps that support it; the no-oidc variant proves the
    pre-OIDC step still builds and runs.
-8. **step-ca tested first.** The live certificate-manager setup (concrete project: see AGENTS.md role table) exists and is
-   running; the letsencrypt variant is untested and assumed analogous minus
-   `STEP_CA_TRUST`.
-9. **`STEP_CA_TRUST_RESTART=true`.** Trust is often not picked up on first
-   boot; the restart after bundle install makes it deterministic.
+8. **Certificate manager is a pluggable role.** Project-specific
+   decisions (which SSL environment is tested first, trust-restart
+   behaviour) live in the certificate-manager convention file
+   (`references/certificate-manager.md` for the project named in the
+   AGENTS.md role table), not here.
+9. **Trust extension is mandatory for cross-host calls.** A group that
+   calls another group by public https domain must trust the manager's CA;
+   details in the certificate-manager convention.
 10. **gosu cert-wait.** TLS-terminating non-root services cannot read
     root-owned certs. Root is used only to wait + chmod, then the process
     drops to the upstream user via `exec gosu` (no lingering root process).
