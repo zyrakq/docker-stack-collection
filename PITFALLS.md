@@ -906,3 +906,24 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: `sb build` reports success but produces no `build/<env>/` for environments whose combos list no extensions; only the env that has extensions gets a directory
 - cause: inverse of P-010. sb pushes a base+env variant only when `env_total_variants == 0 && !env_skip_base`; with a global `skip_base_generation = true` (set to avoid P-010) an env with zero extension variants gets nothing at all
 - fix: keep global `skip_base_generation = true` (or omit it) and set per-env `skip_base_generation = false` in `[build.environments.<env>]` for every extension-less env; sb then emits the flat `build/<env>/` base variant. Validated on opencode-manager: 3 dirs, all pass `docker compose config --quiet`
+
+## P-101: RustFS admin API — hand-rolled SigV4 fails and `set-user-policy` is 501
+- hits: 3 | status: fixed | first: 2026-11-12 | last: 2026-11-12
+- where: RustFS admin REST API `/rustfs/admin/v3/*` (no `mc` available in this setup)
+- symptom: hand-rolled SigV4 signer gets 403 SignatureDoesNotMatch on every admin and S3 call while aws-cli works; `PUT /rustfs/admin/v3/set-user-policy?accessKey=&policy=` returns 501 NotImplemented even though add-user/add-canned-policy succeed
+- cause: subtle difference between the hand-rolled SigV4 construction and the reference implementation (never isolated precisely); `set-user-policy` is not implemented in RustFS — the current binding endpoint is `set-user-or-group-policy`
+- fix: sign admin and S3 calls with botocore's `S3SigV4Auth` (`Credentials(ak, sk), service 's3', region 'us-east-1'`) on an `AWSRequest(method, url, data=...)` — note `data=`, not `body=` — then send the prepared headers verbatim via urllib (skip host/content-length). Attach policies with `PUT /rustfs/admin/v3/set-user-or-group-policy?policyName=<p>&userOrGroup=<user>&isGroup=false` (empty body). botocore installed via `pip install --target /tmp/opencode/pylibs botocore`, run in `python:3-alpine` with `PYTHONPATH=/wo/pylibs` (the aws-cli image's python entrypoint is broken). Verified end-to-end on opencode-manager (bucket/user/policy create 200, list/put/delete with new creds 200/200/204)
+
+## P-102: SQLite database on an S3 fuse mount fails with disk I/O error
+- hits: 1 | status: fixed | first: 2026-11-13 | last: 2026-11-13
+- where: opencode-manager s3-rclone extension (any app whose SQLite/state dir lives under an S3-backed volume)
+- symptom: container unhealthy; app logs `SQLiteError: disk I/O error` for the DB under the rclone-mounted volume; `/api/info` returns 500
+- cause: SQLite needs POSIX locking/mmap semantics the rclone VFS fuse mount does not provide; the app hardcodes its state home under the workspace mount
+- fix: overlay a plain local named volume on the state subpath in the extension fragment (`<vol>:/workspace/.opencode/state` shadows the S3 mount there); only real workspace files stay on S3. Verified: container healthy, S3 round-trip intact
+
+## P-103: rclone VFS reports all files root-owned — git rejects repos as dubious ownership
+- hits: 1 | status: fixed | first: 2026-11-13 | last: 2026-11-13
+- where: opencode-manager s3-rclone extension (any non-root container user running git on an rclone-mounted volume)
+- symptom: app's git calls fail with `fatal: detected dubious ownership in repository at ...` even though the repo was created by the same app; identical spawn works when exec'd as root
+- cause: rclone VFS reports every file as uid 0 and `chown` is a no-op on the fuse mount, so a non-root app user (uid 1000) always sees foreign ownership and git's safe.directory check rejects every repo
+- fix: pass git config via env on the app service: `GIT_CONFIG_COUNT=1`, `GIT_CONFIG_KEY_0=safe.directory`, `GIT_CONFIG_VALUE_0=*` (git honors GIT_CONFIG_* env vars; no host or image changes). Verified: repo registration and agent session writes succeed as the app user
