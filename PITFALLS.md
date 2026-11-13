@@ -927,3 +927,10 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: app's git calls fail with `fatal: detected dubious ownership in repository at ...` even though the repo was created by the same app; identical spawn works when exec'd as root
 - cause: rclone VFS reports every file as uid 0 and `chown` is a no-op on the fuse mount, so a non-root app user (uid 1000) always sees foreign ownership and git's safe.directory check rejects every repo
 - fix: pass git config via env on the app service: `GIT_CONFIG_COUNT=1`, `GIT_CONFIG_KEY_0=safe.directory`, `GIT_CONFIG_VALUE_0=*` (git honors GIT_CONFIG_* env vars; no host or image changes). Verified: repo registration and agent session writes succeed as the app user
+
+## P-104: fnox CLI missing on host — scripts/secret-get.sh fails for all profiles
+- hits: 1 | status: open | first: 2026-11-13 | last: 2026-11-13
+- where: docker-stack-collection `scripts/secret-get.sh` / `secret-set.sh` (fnox + age secrets store)
+- symptom: `scripts/secret-get.sh <profile> <KEY>` prints `missing: fnox (install it yourself, e.g. 'mise use -g fnox')` and exits 1; no profile can be read or written
+- cause: fnox binary not installed on the host; agents are forbidden from installing host packages (pacman/mise), so the encrypted `secrets/fnox.toml` store is unusable from agent sessions
+- fix: (open) per fnox-secrets skill, report and stop rather than install; workarounds used so far keep stack secrets in `/tmp/opencode/*.env` (chmod 600) — session-scoped, lost on reboot; user should install fnox + age key so `secret-get.sh`/`env-push.sh` work
