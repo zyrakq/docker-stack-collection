@@ -1,1 +1,1 @@
-{ "plugins": ["./kits/graver"] }
+{ "plugins": ["./plugins/graver"] }

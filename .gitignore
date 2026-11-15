@@ -4,6 +4,6 @@ thoughts/ledgers/CONTINUITY_*.md
 # fnox: plaintext env files never committed (secrets/fnox.toml is encrypted)
 .env
 
-# kits are independent repos (see kits.csv)
-kits/*/
-!kits/.gitkeep
+# plugins are independent repos (see plugins.csv)
+plugins/*/
+!plugins/.gitkeep
