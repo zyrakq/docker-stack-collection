@@ -7,3 +7,6 @@ thoughts/ledgers/CONTINUITY_*.md
 # plugins are independent repos (see plugins.csv)
 .opencode/plugins/*/
 !.opencode/plugins/.gitkeep
+
+# symlink to ~/.config/opencode/plugins (global plugins; created by plugin-sync.sh)
+.opencode/global-plugins
