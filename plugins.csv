@@ -1,2 +1,3 @@
 path;url
 .opencode/plugins/graver;git@github.com:zyrakq/graver.git
+.opencode/plugins/scion;git@github.com:zyrakq/scion.git
