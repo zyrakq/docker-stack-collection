@@ -5,5 +5,5 @@ thoughts/ledgers/CONTINUITY_*.md
 .env
 
 # plugins are independent repos (see plugins.csv)
-plugins/*/
-!plugins/.gitkeep
+.opencode/plugins/*/
+!.opencode/plugins/.gitkeep
