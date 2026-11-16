@@ -70,6 +70,6 @@ upstream repo → `/tmp/opencode/upstreams/<stack>-<project>` (clone, deleted af
 None — resolved by the user on 2026-11-02:
 
 - Base scope covers ALL parts of the upstream product — however many it has; upstream features that are not product parts are recorded in the extension catalog as available.
-- DEPLOYMENT.md: a separate file at each stack repo root («Мы делаем через файл DEPLOYMENT.md!»), next to UPSTREAM.md.
-- Infra — database, S3, OIDC, or other product-mandated infra — is always part of the mandatory base («делаем всегда субд, s3 и oidc или другие обязательные»); unresolvable blockers → recorded refusal («Если не получается из за каких то проблем, которые не обойти, то отказываемся»), never a silent drop or shrink.
-- Extensions beyond the base are only recorded as available and never touched without explicit confirmation («Остальные варианты расширения ты просто фиксируешь как доступные и не лезешь без подтверждения»).
+- DEPLOYMENT.md: a separate file at each stack repo root ("We do it via the DEPLOYMENT.md file!"), next to UPSTREAM.md.
+- Infra — database, S3, OIDC, or other product-mandated infra — is always part of the mandatory base ("always do DB, S3 and OIDC or other mandatory infra"); unresolvable blockers → recorded refusal ("If it doesn't work out due to problems that can't be worked around, we decline"), never a silent drop or shrink.
+- Extensions beyond the base are only recorded as available and never touched without explicit confirmation ("you simply record the other extension options as available and don't touch them without confirmation").

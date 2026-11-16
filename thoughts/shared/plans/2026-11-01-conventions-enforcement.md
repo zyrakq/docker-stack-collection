@@ -713,9 +713,9 @@ Append after entry 14 (verbatim):
 
 ```markdown
 15. **Naming `<stack>-<role>`.** A DB of this class is assumed to be
-    per-project with its own container name — user: «для таких решений
-    как бд обычно предполагается, что она под каждый проект своя и со
-    своим именем контейнера». Generic names (`app`, `db`, `server`)
+    per-project with its own container name — user: "for solutions like this,
+    a database is usually assumed to be per project, with its own
+    container name". Generic names (`app`, `db`, `server`)
     collide across stacks, break external references, and hide the stack
     identity in `docker ps`.
 16. **Env overridability (`${VAR:-}` everywhere).** Compose files are
@@ -749,7 +749,7 @@ Append after entry 14 (verbatim):
 **Verify:**
 ```bash
 grep -c "^[0-9]*\." .opencode/skills/stack-conventions/references/rationale.md  # 22 numbered entries
-grep -n "для таких решений" .opencode/skills/stack-conventions/references/rationale.md  # verbatim user quote present
+grep -n "a database is usually assumed" .opencode/skills/stack-conventions/references/rationale.md  # verbatim user quote present
 ```
 
 **Commit:**
@@ -1739,9 +1739,9 @@ EOF
 **Test:** none (docs — Verify greps below)
 **Depends:** 1.1
 
-THREE edits (Russian text per the file's format; the entry records the
+THREE edits (English text per the collection's language rule; the entry records the
 vibe-kanban violation classes — historical mentions of the DELETED old
-rules are explicitly marked «старый §N» so they cannot be mistaken for
+rules are explicitly marked "old §N" so they cannot be mistaken for
 live refs):
 
 **Edit 1 — P-001 fix line:** `stack-conventions §12` → `stack-conventions
@@ -1755,36 +1755,36 @@ live refs):
 ```markdown
 ## P-008: mass convention violations on stack creation (naming/env/db/staged)
 - hits: 1 | status: fixed | first: 2026-11-01 | last: 2026-11-01
-- where: создание стеков / правила коллекции (vibe-kanban)
-- symptom: при создании vibe-kanban нарушены 8 классов правил разом:
-  объявлен ни разу не используемый `PROJECT_NAME`; postgres как обычный
-  сервис в base-compose (без extensions/, без pgrust-альтернативы, версия
-  `postgres:16-alpine` скопирована из upstream, узкий маунт
-  `/var/lib/postgresql/data`); имена сервисов не совпадают с
-  container_name и не несут префикса проекта (`remote-server`,
-  `vk-remote-server`, `electric`); захардкоженные env-литералы в compose
+- where: stack creation / collection rules (vibe-kanban)
+- symptom: when creating vibe-kanban, 8 classes of rules were violated at once:
+  a `PROJECT_NAME` declared but never used; postgres as a regular
+  service in base-compose (no extensions/, no pgrust alternative, version
+  `postgres:16-alpine` copied from upstream, narrow mount
+  `/var/lib/postgresql/data`); service names mismatching
+  container_name and lacking the project prefix (`remote-server`,
+  `vk-remote-server`, `electric`); hardcoded env literals in compose
   (`RUST_LOG`, `SERVER_LISTEN_ADDR`, `ELECTRIC_URL`, `POSTGRES_DB/USER`);
-  мёртвые переменные в `.env.example`; всё навернуто сразу без
-  тест-гейтов (19 коммитов, ни одного тестового); `SERVER_PUBLIC_BASE_URL`
-  объявлен в base и переопределён с другими дефолтами в letsencrypt/
-  step-ca оверлеях; 24+ ссылок на пути `stacks/` в скиллах
-- cause: правила пользователя не были кодифицированы в stack-conventions
-  (DB-as-extension с pgrust, `${VAR:-}` везде, префиксные имена,
-  поэтапный протокол с гейтами, layering); два старых правила были прямо
-  вредны (старый §3 предпочитал `${PROJECT_NAME:-<svc>}`-нейминг, старый
-  §9 требовал ключ `PROJECT_NAME` в `.env.example`)
+  dead variables in `.env.example`; everything done at once without
+  test gates (19 commits, none a test); `SERVER_PUBLIC_BASE_URL`
+  declared in base and overridden with different defaults in the letsencrypt/
+  step-ca overlays; 24+ `stacks/` path references in skills
+- cause: the user's rules were not codified in stack-conventions
+  (DB-as-extension with pgrust, `${VAR:-}` everywhere, prefixed names,
+  staged protocol with gates, layering); two old rules were outright
+  harmful (old §3 preferred `${PROJECT_NAME:-<svc>}` naming, old
+  §9 required a `PROJECT_NAME` key in `.env.example`)
 - workaround: —
-- fix: stack-conventions переструктурирован в §1–§19 (naming, env wiring,
-  DB-as-extension, staged protocol, layering); iron rules добавлены в
-  AGENTS.md; скиллы self-contained (паттерны встроены, атрибуция только
-  по имени стека); поэтапный протокол с тест-гейтами вписан в
+- fix: stack-conventions restructured into §1–§19 (naming, env wiring,
+  DB-as-extension, staged protocol, layering); iron rules added to
+  AGENTS.md; skills made self-contained (patterns embedded, attribution only
+  by stack name); the staged protocol with test gates written into
   stack-init/stack-test
 ```
 
 **Verify:**
 ```bash
 grep -n "P-008" PITFALLS.md           # entry present, status: fixed
-grep -n "§" PITFALLS.md               # §16 (P-001), §19 (P-004); P-008: «старый §3», «старый §9», §1–§19
+grep -n "§" PITFALLS.md               # §16 (P-001), §19 (P-004); P-008: "old §3", "old §9", §1–§19
 tail -5 PITFALLS.md                   # P-008 fix block is the last entry
 ```
 
@@ -1857,7 +1857,7 @@ EXPECTED: refs into stack-conventions use the new numbers — §17
 OF SCOPE (unchanged by design): `browser-e2e.md` §0–§3 and
 `verification-procedure.md` §1/§2 — those number stack-test's OWN
 reference docs, whose section numbering this plan deliberately preserves.
-`PITFALLS.md` P-008 «старый §3»/«старый §9» are marked historical records
+`PITFALLS.md` P-008 "old §3"/"old §9" are marked historical records
 of the deleted wrong rules. `STASKBUILDER.md`: zero § refs (verified
 pre-plan).
 

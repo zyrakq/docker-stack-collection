@@ -1,221 +1,224 @@
-# PITFALLS — журнал повторяющихся граблей
+# PITFALLS — recurring pitfalls log
 
-Общий для всех стеков коллекции. Сюда записываются препятствия, возникающие
-при подготовке конфигов развертывания, работе со stackbuilder (`sb`),
-docker compose, OIDC/S3/step-ca интеграцией и тестировании стеков.
+Shared across all stacks in the collection. It records obstacles hit while
+preparing deployment configs, working with stackbuilder (`sb`), docker
+compose, OIDC/S3/step-ca integration, and testing stacks.
 
-Проблемы здесь часто общие между проектами, поэтому журнал один и лежит
-в корне коллекции. Счетчик `hits` показывает, насколько часто проблема
-встречается, даже если она ещё не исправлена — большой `hits` при
-`status: open` означает: пора чинить, а не обходить.
+Problems here are often shared between projects, so there is one log and it
+lives at the collection root. The `hits` counter shows how often a problem
+occurs even while it is still unfixed — a high `hits` with `status: open`
+means: time to fix it, not to work around it.
 
-## Lookup (как найти файл из любой папки)
+## Lookup (how to find the file from any folder)
 
-1. Идти вверх от текущей рабочей директории, пока не найдётся `PITFALLS.md`.
-2. Если не найден (например, стек клонирован вне коллекции) — использовать
-   канонический путь:
+1. Walk up from the current working directory until you find `PITFALLS.md`.
+2. If not found (e.g. the stack was cloned outside the collection) — use the
+   canonical path:
    `/home/archuser/projects/docker-stack-collection/PITFALLS.md`.
 
-## Формат записи
+## Entry format
 
-    ## P-NNN: <заголовок: EN-ключевые слова + краткое RU описание>
-    - hits: N | status: open | first: ГГГГ-ММ-ДД | last: ГГГГ-ММ-ДД
-    - where: <sb / compose / step-ca / oidc / s3 / тестирование ...>
-    - symptom: <как проявляется>
-    - cause: <причина, если известна>
-    - workaround: <обход, если есть>
-    - fix: <как исправлено; "—" пока не исправлено>
+    ## P-NNN: <title: EN keywords + brief description>
+    - hits: N | status: open | first: YYYY-MM-DD | last: YYYY-MM-DD
+    - where: <sb / compose / step-ca / oidc / s3 / testing ...>
+    - symptom: <how it manifests>
+    - cause: <cause, if known>
+    - workaround: <workaround, if any>
+    - fix: <how it was fixed; "—" until fixed>
 
-Статусы: `open` (не решено) / `mitigated` (обход работает, проблема осталась) /
-`fixed` (устранено, запись остаётся как справочник).
+Statuses: `open` (unresolved) / `mitigated` (workaround works, problem
+remains) / `fixed` (resolved, entry kept as a reference).
 
-## Протокол обновления
+## Update protocol
 
-- **Новое препятствие** → новая запись: `hits: 1`, `status: open`.
-- **Уже записанное** → `hits +1`, обновить `last`; дополнить
-  `symptom`/`workaround`, если появились новые детали.
-- Перед добавлением искать по ключевым словам (grep по файлу), чтобы не
-  плодить дубли похожих записей.
-- **Исправлено** → `status: fixed` + заполнить `fix`. Записи НЕ удаляются.
-- Не оставлять столкнутое препятствие незаписанным в конце сессии.
+- **New obstacle** → new entry: `hits: 1`, `status: open`.
+- **Already recorded** → `hits +1`, update `last`; extend
+  `symptom`/`workaround` if new details appeared.
+- Before adding, search by keywords (grep the file) to avoid piling up
+  duplicates of similar entries.
+- **Fixed** → `status: fixed` + fill in `fix`. Entries are NEVER deleted.
+- Never leave an encountered obstacle unrecorded at the end of a session.
 
-Записи добавляются в конец файла, ID — сквозные (P-001, P-002, ...).
+Entries are appended to the end of the file; IDs are sequential
+(P-001, P-002, ...).
 
 ---
 
 ## P-001: root-level search blind inside stacks/
 - hits: 1 | status: fixed | first: 2026-10-31 | last: 2026-10-31
-- where: поиск/навигация по коду
-- cause: `stacks/` в .gitignore коллекции, каждый стек — отдельный git-репозиторий;
-  glob/grep из корня коллекции ничего не видит внутри stacks/
-- fix: правило зафиксировано в stack-conventions §16 — всегда указывать
-  конкретный путь стека, например `stacks/devops/identity-management/kanidm/...`
+- where: code search/navigation
+- cause: `stacks/` is in the collection's .gitignore and each stack is a separate
+  git repo; glob/grep from the collection root sees nothing inside stacks/
+- fix: rule enshrined in stack-conventions §16 — always specify the concrete
+  stack path, e.g. `stacks/devops/identity-management/kanidm/...`
 
 ## P-002: stackbuilder no cartesian environment matrix
 - hits: 1 | status: mitigated | first: 2026-10-31 | last: 2026-10-31
 - where: sb build / stackbuilder.toml
-- symptom: нельзя автоматически сгенерировать матрицу окружение × расширение
-- workaround: hand-written именованные `combos` (easytier idiom); ограничения
-  sb tracked в `STASKBUILDER.md`
+- symptom: the environment × extension matrix cannot be generated automatically
+- workaround: hand-written named `combos` (easytier idiom); sb limitations
+  tracked in `STASKBUILDER.md`
 - fix: —
 
 ## P-003: session cwd in stack subfolder — hub files unreachable
 - hits: 1 | status: mitigated | first: 2026-10-31 | last: 2026-10-31
-- where: любая работа из субпапок стеков
-- symptom: AGENTS.md коллекции и корневые файлы (PITFALLS.md, STASKBUILDER.md)
-  могут не подгружаться / быть недоступны по относительным путям, когда сессия
-  работает изнутри отдельного git-репозитория стека
-- workaround: lookup-правило в шапке этого файла (идти вверх от cwd →
-  канонический абсолютный путь); правило продублировано в AGENTS.md и
+- where: any work from stack subfolders
+- symptom: the collection's AGENTS.md and root files (PITFALLS.md,
+  STASKBUILDER.md) may fail to load / be unreachable via relative paths when
+  a session works from inside a stack's separate git repo
+- workaround: lookup rule at the top of this file (walk up from cwd →
+  canonical absolute path); the rule is duplicated in AGENTS.md and
   stack-conventions
 - fix: —
 
 ## P-004: vendoring upstream source into stack repo (submodule proposal)
 - hits: 2 | status: fixed | first: 2026-10-31 | last: 2026-10-31
-- where: дизайн/план стеков без опубликованных Docker-образов (vibe-kanban и
-  предыдущая попытка)
-- symptom: агент предлагает втащить исходники upstream-приложения в репозиторий
-  deployment-конфигов как git-подмодуль (`modules/<app>`) или копию исходников;
-  пользователь отклонил дважды
-- workaround: исходники не вендорим никогда; tmp-клон из clone-in-tmp —
-  reference-only; сборка из исходников оформляется self-contained
-  `app/images/<image>/Dockerfile` (ARG GIT_REPO/GIT_TAG или релизный архив),
-  compose ссылается на готовый образ через `${IMAGE:-localhost/<image>:<tag>}`
-- fix: правило зафиксировано в stack-conventions §19, скилл `source-image`,
-  шаги в stack-init/stack-modernize, секция в AGENTS.md
+- where: design/plan for stacks without published Docker images (vibe-kanban and
+  the earlier attempt)
+- symptom: the agent proposes pulling the upstream app's sources into the
+  deployment-config repo as a git submodule (`modules/<app>`) or a copy of the
+  sources; the user rejected it twice
+- workaround: never vendor sources; the tmp clone from clone-in-tmp is
+  reference-only; building from source is done as a self-contained
+  `app/images/<image>/Dockerfile` (ARG GIT_REPO/GIT_TAG or release archive),
+  compose references the ready image via `${IMAGE:-localhost/<image>:<tag>}`
+- fix: rule enshrined in stack-conventions §19, the `source-image` skill,
+  steps in stack-init/stack-modernize, section in AGENTS.md
 
 ## P-005: stackbuilder source does not compile (missing import)
 - hits: 1 | status: fixed | first: 2026-10-31 | last: 2026-10-31
 - where: sb / tools/stackbuilder
-- symptom: `cargo build --release` в tools/stackbuilder падает E0425/E0433 —
-  `BTreeMap` не найден в src/env_merger.rs
-- cause: в репозитории stackbuilder отсутствует `use std::collections::BTreeMap;`
-- fix: добавлен импорт в src/env_merger.rs; бинарник называется `stackbuilder`,
-  а не `sb` — симлинк `~/.local/bin/sb -> target/release/stackbuilder`
+- symptom: `cargo build --release` in tools/stackbuilder fails E0425/E0433 —
+  `BTreeMap` not found in src/env_merger.rs
+- cause: the stackbuilder repo lacks `use std::collections::BTreeMap;`
+- fix: import added in src/env_merger.rs; the binary is named `stackbuilder`,
+  not `sb` — symlink `~/.local/bin/sb -> target/release/stackbuilder`
 
 ## P-006: sb build requires external yq by default
 - hits: 1 | status: fixed | first: 2026-10-31 | last: 2026-11-04
 - where: sb build
-- symptom: `sb build` падает "yq is required but not available" на хостах без
-  системного yq
-- workaround: `yaml_merger = "rust"` в `[build]` секции stackbuilder.toml
-  (встроенный Rust-мерджер); также зафиксировано в STASKBUILDER.md (L10)
-- fix: `yaml_merger = "rust"` удалён из stackbuilder.toml opencode-stack
-  (commit 19d10e0) — sb build снова использует внешний yq; на хосте
-  используется бинарник mikefarah yq v4.44.3 в /tmp/opencode/bin (PATH
-  prepended), т.к. системный /usr/bin/yq — python jq-wrapper (kislyuk,
-  `yq 4.4.5 / jq-1.8.2`), который sb отвергает (см. P-033)
+- symptom: `sb build` fails "yq is required but not available" on hosts without
+  a system yq
+- workaround: `yaml_merger = "rust"` in the `[build]` section of
+  stackbuilder.toml (built-in Rust merger); also enshrined in STASKBUILDER.md
+  (L10)
+- fix: `yaml_merger = "rust"` removed from opencode-stack's stackbuilder.toml
+  (commit 19d10e0) — sb build uses external yq again; on the host the
+  mikefarah yq v4.44.3 binary is used in /tmp/opencode/bin (PATH prepended),
+  because the system /usr/bin/yq is a python jq-wrapper (kislyuk,
+  `yq 4.4.5 / jq-1.8.2`) that sb rejects (see P-033)
 
 ## P-007: upstream release tag does not compile — build from fixed commit
 - hits: 1 | status: mitigated | first: 2026-10-31 | last: 2026-10-31
 - where: source-built images / vibe-kanban
-- symptom: сборка из релизного tarball тега v0.1.45-20260919085201 падает:
-  remote-web TS2339 — `getMatchedRoutes` деструктурируется как объект, а
-  lockfile-версия router-core (1.171.32) возвращает tuple; исправлено в 3
-  коммитах сразу после тега
-- workaround: в self-contained Dockerfile клонировать upstream на pinned
-  commit (ARG GIT_COMMIT=7c380708...) вместо релизного tarball; UPSTREAM.md
-  и так записывает коммит, а не тег
+- symptom: building from the release tarball of tag v0.1.45-20260919085201 fails:
+  remote-web TS2339 — `getMatchedRoutes` is destructured as an object while
+  the lockfile version of router-core (1.171.32) returns a tuple; fixed in 3
+  commits right after the tag
+- workaround: in the self-contained Dockerfile, clone upstream at a pinned
+  commit (ARG GIT_COMMIT=7c380708...) instead of the release tarball;
+  UPSTREAM.md records the commit, not the tag, anyway
 - fix: —
 
 ## P-008: mass convention violations on stack creation (naming/env/db/staged)
 - hits: 1 | status: fixed | first: 2026-11-01 | last: 2026-11-01
-- where: создание стеков / правила коллекции (vibe-kanban)
-- symptom: при создании vibe-kanban нарушены 8 классов правил разом:
-  объявлен ни разу не используемый `PROJECT_NAME`; postgres как обычный
-  сервис в base-compose (без extensions/, без pgrust-альтернативы, версия
-  `postgres:16-alpine` скопирована из upstream, узкий маунт
-  `/var/lib/postgresql/data`); имена сервисов не совпадают с
-  container_name и не несут префикса проекта (`remote-server`,
-  `vk-remote-server`, `electric`); захардкоженные env-литералы в compose
+- where: stack creation / collection rules (vibe-kanban)
+- symptom: when creating vibe-kanban, 8 classes of rules were violated at once:
+  a `PROJECT_NAME` declared but never used; postgres as a regular
+  service in base-compose (no extensions/, no pgrust alternative, version
+  `postgres:16-alpine` copied from upstream, narrow mount
+  `/var/lib/postgresql/data`); service names mismatching
+  container_name and lacking the project prefix (`remote-server`,
+  `vk-remote-server`, `electric`); hardcoded env literals in compose
   (`RUST_LOG`, `SERVER_LISTEN_ADDR`, `ELECTRIC_URL`, `POSTGRES_DB/USER`);
-  мёртвые переменные в `.env.example`; всё навернуто сразу без
-  тест-гейтов (19 коммитов, ни одного тестового); `SERVER_PUBLIC_BASE_URL`
-  объявлен в base и переопределён с другими дефолтами в letsencrypt/
-  step-ca оверлеях; 24+ ссылок на пути `stacks/` в скиллах
-- cause: правила пользователя не были кодифицированы в stack-conventions
-  (DB-as-extension с pgrust, `${VAR:-}` везде, префиксные имена,
-  поэтапный протокол с гейтами, layering); два старых правила были прямо
-  вредны (старый §3 предпочитал `${PROJECT_NAME:-<svc>}`-нейминг, старый
-  §9 требовал ключ `PROJECT_NAME` в `.env.example`)
+  dead variables in `.env.example`; everything done at once without
+  test gates (19 commits, none a test); `SERVER_PUBLIC_BASE_URL`
+  declared in base and overridden with different defaults in the letsencrypt/
+  step-ca overlays; 24+ `stacks/` path references in skills
+- cause: the user's rules were not codified in stack-conventions
+  (DB-as-extension with pgrust, `${VAR:-}` everywhere, prefixed names,
+  staged protocol with gates, layering); two old rules were outright
+  harmful (old §3 preferred `${PROJECT_NAME:-<svc>}` naming, old
+  §9 required a `PROJECT_NAME` key in `.env.example`)
 - workaround: —
-- fix: stack-conventions переструктурирован в §1–§19 (naming, env wiring,
-  DB-as-extension, staged protocol, layering); iron rules добавлены в
-  AGENTS.md; скиллы self-contained (паттерны встроены, атрибуция только
-  по имени стека); поэтапный протокол с тест-гейтами вписан в
+- fix: stack-conventions restructured into §1–§19 (naming, env wiring,
+  DB-as-extension, staged protocol, layering); iron rules added to
+  AGENTS.md; skills made self-contained (patterns embedded, attribution only
+  by stack name); the staged protocol with test gates written into
   stack-init/stack-test
 
 ## P-009: agent modifies host system during image build (swap/loop devices)
 - hits: 1 | status: fixed | first: 2026-11-01 | last: 2026-11-01
-- where: сборка образов / поведение агентов (host safety)
-- symptom: при сборке образа агент решил, что не хватает swap, и молча
-  выполнил `sudo -n sh -c 'losetup -d /dev/loop0 ...; mknod /dev/loop1 b 7 1;
+- where: image builds / agent behavior (host safety)
+- symptom: during an image build the agent decided swap was insufficient and
+  silently ran `sudo -n sh -c 'losetup -d /dev/loop0 ...; mknod /dev/loop1 b 7 1;
   losetup /dev/loop1 /swapfile; mkswap /dev/loop1; swapon /dev/loop1'` —
-  чуть не сломал сервер (манипуляции с блочными устройствами и swap хоста)
-- cause: allowlist допустимых действий агента не был прописан явно; при
-  нехватке памяти на сборке агент импровизировал "лечение" хоста вместо
-  остановки и репорта
+  nearly broke the server (manipulating the host's block devices and swap)
+- cause: the allowlist of permitted agent actions was not written down
+  explicitly; when memory ran short during a build the agent improvised
+  "cures" for the host instead of stopping and reporting
 - workaround: —
-- fix: iron rules «Host safety» добавлены первой секцией в AGENTS.md —
-  полный allowlist (файлы, git, docker/compose, скиллы oidc/s3, read-only
-  инспекция) и запрет sudo/swap/losetup/mknod/пакетных менеджеров/sysctl/
-  systemd/дисков; при нехватке ресурсов — стоп и репорт пользователю,
-  хост не трогать
+- fix: iron rules "Host safety" added as the first section of AGENTS.md —
+  a full allowlist (files, git, docker/compose, oidc/s3 skills, read-only
+  inspection) and a ban on sudo/swap/losetup/mknod/package managers/sysctl/
+  systemd/disks; if resources run short — stop and report to the user,
+  never touch the host
 
 ## P-010: sb auto-generates a no-extension base variant per environment
 - hits: 1 | status: fixed | first: 2026-11-01 | last: 2026-11-04
 - where: stackbuilder (`sb build`) — per-env combos
-- symptom: при `combos = [...]` на окружение sb генерирует не только
-  `build/<env>/<combo>/`, но и дополнительный вариант
-  `build/<env>/base/` (base+env без расширений) — «Generated 9 build
-  combinations» вместо ожидаемых 6; для стека, где БД обязательна
-  (app требует Postgres), этот вариант нерабочий и является footgun'ом
-- cause: sb всегда добавляет plain-вариант окружения без расширений,
-  если не установлен `skip_base_generation = true` (у linkwarden это
-  незаметно, потому что их комбо само называется `base` и пишет в тот
-  же каталог)
+- symptom: with `combos = [...]` per environment, sb generates not only
+  `build/<env>/<combo>/` but also an extra `build/<env>/base/`
+  variant (base+env without extensions) — "Generated 9 build
+  combinations" instead of the expected 6; for a stack where the DB is
+  mandatory (app requires Postgres), this variant is non-working and is a
+  footgun
+- cause: sb always adds the plain no-extension environment variant unless
+  `skip_base_generation = true` is set (for linkwarden this is invisible
+  because their combo itself is named `base` and writes into the
+  same directory)
 - workaround: —
-- fix: `skip_base_generation = true` в `[build]` stackbuilder.toml —
-  дерево становится ровно `build/<env>/<combo>/` по списку combos;
-  подтверждено в opencode-stack rework: ровно один комбо на окружение
-  (`entire` / `entire-trust`), комбинации расширений схлопнуты
+- fix: `skip_base_generation = true` in `[build]` of stackbuilder.toml —
+  the tree becomes exactly `build/<env>/<combo>/` per the combos list;
+  confirmed in the opencode-stack rework: exactly one combo per
+  environment (`entire` / `entire-trust`), extension combinations collapsed
 
 ## P-011: upstream migration hardcodes database name `remote`
 - hits: 1 | status: fixed | first: 2026-11-01 | last: 2026-11-01
 - where: vibe-kanban stack — remote-server Postgres migrations
-- symptom: приложение падает/не стартует, если БД названа иначе
-  (`POSTGRES_DB` != `remote`); миграция не может выдать `GRANT
-  CONNECT` несуществующей БД
-- cause: миграция `crates/remote/migrations/
-  20251127000000_electric_support.sql` жёстко выполняет
-  `GRANT CONNECT ON DATABASE remote TO electric_sync;` — имя БД
-  зашито в исходник (проверено на pinned commit `7c380708`),
-  конфигурируемой переменной нет; патчить апстрим запрещено
+- symptom: the app crashes/fails to start if the DB is named differently
+  (`POSTGRES_DB` != `remote`); the migration cannot issue `GRANT
+  CONNECT` to a non-existent DB
+- cause: migration `crates/remote/migrations/
+  20251127000000_electric_support.sql` hard-executes
+  `GRANT CONNECT ON DATABASE remote TO electric_sync;` — the DB name
+  is baked into the source (checked at pinned commit `7c380708`);
+  there is no configurable variable; patching upstream is forbidden
 - workaround: —
-- fix: держать `POSTGRES_DB=remote` в `.env.example`/overlay стека
-  (имя одобрено пользователем); зафиксировано коммитом
-  "Fix database name for remote server" в репозитории стека
+- fix: keep `POSTGRES_DB=remote` in the stack's `.env.example`/overlay
+  (the name was approved by the user); enshrined by commit
+  "Fix database name for remote server" in the stack repo
 
 ## P-012: automated-browser session loss in remote-web (agent-browser)
 - hits: 3 | status: open | first: 2026-11-01 | last: 2026-11-01
-- where: vibe-kanban remote-web SPA — browser E2E через agent-browser
-- symptom: в автоматизированном браузере SPA произвольно отбрасывает
-  сессию на страницу sign-in при hard-навигациях/перезагрузках
-  страницы; в обычном браузере (проверено пользователем) всё стабильно
-- cause: не баг стека. remote-web хранит JWT-пару в IndexedDB
-  (`rf-auth`, store `tokens`, ключи `access_token`/`refresh_token`;
-  `packages/remote-web/src/shared/lib/auth.ts`); access-token живёт
-  120 c, tokenManager автообновляет каждые ~80 c
-  (`POST /v1/tokens/refresh`); токены гидрируются из IndexedDB только
-  при загрузке документа, а при некоторых reload/сбоях refresh в
-  agent-browser сессия теряется
+- where: vibe-kanban remote-web SPA — browser E2E via agent-browser
+- symptom: in the automated browser the SPA arbitrarily drops the
+  session to the sign-in page on hard navigations/page reloads;
+  in a normal browser (verified by the user) everything is stable
+- cause: not a stack bug. remote-web stores the JWT pair in IndexedDB
+  (`rf-auth`, store `tokens`, keys `access_token`/`refresh_token`;
+  `packages/remote-web/src/shared/lib/auth.ts`); the access token lives
+  120 s, tokenManager refreshes it every ~80 s
+  (`POST /v1/tokens/refresh`); tokens are hydrated from IndexedDB only
+  on document load, and after some reloads/failed refreshes in
+  agent-browser the session is lost
 - workaround: —
-- fix: E2E вести одним документом без лишних hard-навигаций; логин —
-  in-page `fetch POST /v1/auth/local/login` {email,password} → положить
-  оба токена в IndexedDB → reload → SPA гидратит сессию
-  (redirect `/account?next=%2F` → `/`); скриншот снимать сразу после
-  re-seed; событие `remote-auth-changed` состояние реактивно не
-  переключает
+- fix: run E2E in a single document without extra hard navigations; login —
+  in-page `fetch POST /v1/auth/local/login` {email,password} → put
+  both tokens into IndexedDB → reload → SPA hydrates the session
+  (redirect `/account?next=%2F` → `/`); take the screenshot right after
+  re-seed; the `remote-auth-changed` event does not switch the state
+  reactively
 
 ## P-013: sb build deletes build/**/.gitkeep; old container/volume leftovers conflict
 - hits: 2 | status: open | first: 2026-11-02 | last: 2026-11-02
@@ -321,7 +324,9 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - hits: 1 | status: fixed | first: 2026-11-04 | last: 2026-11-04
 - where: opencode-stack plugins extension (dockerfile_inline RUN loop)
 - symptom: `for s in ...; do sh "$s"; done` in dockerfile_inline — compose warns `The "s" variable is not set` and bakes an empty string into the layer
-- fix: escape shell vars in dockerfile_inline as `$$var` (same rule as healthchecks); only `${VAR:-}` forms are meant for compose interpolation; в opencode rework dockerfile_inline RUN-цикл удалён полностью — скрипты установки коммичены в `app/plugins/` и COPY-ятся в образ (`COPY entrypoint.sh plugins* /opt/plugins-build/` терпит отсутствие папки plugins)
+- fix: escape shell vars in dockerfile_inline as `$$var` (same rule as healthchecks); only `${VAR:-}` forms are meant for compose interpolation; in the opencode rework the dockerfile_inline RUN loop was removed entirely —
+install scripts are committed in `app/plugins/` and COPYed into the image
+(`COPY entrypoint.sh plugins* /opt/plugins-build/` tolerates a missing plugins folder)
 
 ## P-029: pip dependency-group installs abort all-or-nothing on py3.14 (Alpine 3.24)
 - hits: 1 | status: open | first: 2026-11-04 | last: 2026-11-04
@@ -348,31 +353,31 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - fix (workaround): re-copy the scripts from `app/plugins/` after every `sb build` (documented in `app/plugins/README.md` and `app/README.md`); root cause is sb's build-dir regeneration, not yet addressed in sb itself
 - fix: plugins redesigned as a pure base feature (commit 02e1517): install scripts moved to `app/components/base/plugins/`, and sb's copier walks the entire base component dir recursively, so `sb build` now auto-copies `plugins/` into every build dir — nothing to re-copy; the plugins extension and the manual copy step are gone
 
-## P-033: системный yq — это python jq-wrapper, sb его отвергает
+## P-033: system yq is a python jq-wrapper, sb rejects it
 - hits: 2 | status: mitigated | first: 2026-11-04 | last: 2026-11-05
 - where: sb build / host tooling (opencode-stack, navidrome stack)
-- symptom: системный `/usr/bin/yq` — это kislyuk python-обёртка над jq
-  (`yq 4.4.5 / jq-1.8.2`), а не mikefarah yq; sb отвергает его как
-  несовместимую реализацию и сборка падает
-- workaround: бинарник mikefarah yq v4.44.3 в /tmp/opencode/bin, PATH
-  prepended; проверка — `yq --version` должен показывать mikefarah v4.x
+- symptom: the system `/usr/bin/yq` is the kislyuk python wrapper over jq
+  (`yq 4.4.5 / jq-1.8.2`), not mikefarah yq; sb rejects it as an
+  incompatible implementation and the build fails
+- workaround: mikefarah yq v4.44.3 binary in /tmp/opencode/bin, PATH
+  prepended; check — `yq --version` must show mikefarah v4.x
 - fix: —
-- hits: 3 | last: 2026-11-05 (nanomcp stack: sb build снова упал без
-  /tmp/opencode/bin в PATH; `export PATH=/tmp/opencode/bin:$PATH` перед sb)
+- hits: 3 | last: 2026-11-05 (nanomcp stack: sb build failed again without
+  /tmp/opencode/bin in PATH; `export PATH=/tmp/opencode/bin:$PATH` before sb)
 
-## P-034: bun install без python/make/g++ ломает node-gyp нативные модули
+## P-034: bun install without python/make/g++ breaks node-gyp native modules
 - hits: 1 | status: fixed | first: 2026-11-04 | last: 2026-11-04
 - where: source-built images (aionui stack, Dockerfile build stage)
-- symptom: `bun install` падает на install-скрипте `better-sqlite3`:
+- symptom: `bun install` fails on the `better-sqlite3` install script:
   `gyp ERR! find Python` → `error: install script from "better-sqlite3"
-  exited with 1`; bun-образ не содержит python3 и C-тулчейн, а нативные
-  модули собираются node-gyp на этапе install
-- cause: node-gyp требует python3 + make + g++; slim/bun базовые образы их
-  не несут
-- fix: добавить `python3 make g++` в apt-get install build-стадии
-  Dockerfile (aionui, commit `fix(images): correct build for gate`); для
-  любых source-built образов на bun/node с нативными зависимостями —
-  сразу закладывать тулчейн в build-стадию
+  exited with 1`; the bun image contains no python3 or C toolchain, while
+  native modules are built by node-gyp at install time
+- cause: node-gyp requires python3 + make + g++; slim/bun base images do
+  not carry them
+- fix: add `python3 make g++` to the apt-get install of the Dockerfile
+  build stage (aionui, commit `fix(images): correct build for gate`); for
+  any source-built bun/node image with native dependencies — plan the
+  toolchain into the build stage from the start
 
 
 ## P-035: openwork-server routes are UNPREFIXED — /api/* probes all 404
@@ -381,11 +386,11 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - symptom: token positive/negative checks against `http://localhost:8787/api/info`, `/api/health`, `/api/config` etc. all return 404 with and without `Authorization: Bearer` — looks like auth is broken; the `/api/*` strings in the UI bundle and binary are client-side/mounted-elsewhere, not server routes
 - cause: server routes are registered at the ROOT (`/health`, `/status`, `/whoami`, `/capabilities`, `/workspaces`, `/tokens`, `/w/:id/...`) via `addRoute` in `apps/server/src/routes/core.ts`; there is no `/api` prefix on the server
 - fix: probe `GET /status` or `/whoami` with `Authorization: Bearer $OPENWORK_TOKEN` — 200 with correct token, 401 without/wrong; `/health` is the unauthenticated healthcheck
-- note: строка `Host token: <uuid>` в логах старта и CORS-заголовок
-  `X-OpenWork-Host-Token` — ОТДЕЛЬНЫЙ механизм (host-token auth для
-  `/tokens` и т.п.), эфемерный на каждый запуск; с ним `Authorization:
-  Bearer <uuid>` даёт 401 `Invalid bearer token`. Для HTTP-аутентификации
-  клиента использовать только `Bearer $OPENWORK_TOKEN`
+- note: the `Host token: <uuid>` line in the startup logs and the CORS
+  header `X-OpenWork-Host-Token` are a SEPARATE mechanism (host-token auth
+  for `/tokens` etc.), ephemeral per run; with it `Authorization:
+  Bearer <uuid>` gives 401 `Invalid bearer token`. For client HTTP
+  authentication use only `Bearer $OPENWORK_TOKEN`
 
 
 ## P-036: sb build for openwork stack must run from app/, not stack root
@@ -460,26 +465,26 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - cause: upstream publishes only v-prefixed tags (v0, v0.3, v0.3.2, latest)
 - fix: pin `${IMAGE:-gabehf/koito:v0}`; verified via Docker Hub API + live pull + health smoke test; row appended to UPSTREAM.md
 
-## P-046: браузерный E2E без agent-browser — dockerized headless Chromium + самописный CDP-драйвер
+## P-046: browser E2E without agent-browser — dockerized headless Chromium + hand-written CDP driver
 - hits: 1 | status: mitigated | first: 2026-11-05 | last: 2026-11-05
-- where: стек-тестирование (browser E2E gate) — koito stack Stage A
-- symptom: agent-browser CLI не установлен, `npm`/`npx` на хосте отсутствуют
-  (есть только bare `node`), браузерных бинарников нет; host package
-  installs запрещены — браузерный gate заблокирован целиком
-- cause: браузерная инфраструктура агента не доехала до этой машины; ставить
-  ничего на хост нельзя (iron rules)
-- workaround: docker-разрешено → `docker run -d --rm --network host
+- where: stack testing (browser E2E gate) — koito stack Stage A
+- symptom: agent-browser CLI not installed, `npm`/`npx` absent on the host
+  (only bare `node`), no browser binaries; host package
+  installs are forbidden — the browser gate is blocked entirely
+- cause: the agent's browser infrastructure never reached this machine;
+  installing anything on the host is forbidden (iron rules)
+- workaround: docker is allowed → `docker run -d --rm --network host
   --shm-size=512m zenika/alpine-chrome:latest --no-sandbox --headless=new
   --remote-debugging-address=0.0.0.0 --remote-debugging-port=9222 about:blank`,
-  управлять через CDP собственным dependency-free драйвером (Node 26 имеет
-  встроенные fetch + WebSocket): `/tmp/opencode/koito-e2e/cdp.mjs` —
+  driven via CDP by a custom dependency-free driver (Node 26 has
+  built-in fetch + WebSocket): `/tmp/opencode/koito-e2e/cdp.mjs` —
   connect/eval/navigate/shot + `Input.dispatchMouseEvent`/`dispatchKeyEvent`
 - fix: —
-- note: React SPA игнорирует JS-овый `.click()` на табах/кнопках — нужно
-  щёлкать настоящими CDP mouse-событиями по центру rect элемента и печатать
-  через `Input.dispatchKeyEvent`; полный токен из UI можно достать тем же
-  авторизованным fetch из контекста страницы (cookie сессии подхватывается
-  автоматически)
+- note: a React SPA ignores JS-issued `.click()` on tabs/buttons — click
+  with real CDP mouse events at the center of the element's rect and type
+  via `Input.dispatchKeyEvent`; the full token from the UI can be obtained
+  via the same authorized fetch from the page context (the cookie session
+  is picked up automatically)
 
 ## P-047: agent-browser needs `--args "--no-sandbox"` + local bun install (pnpm global bin not in PATH)
 - hits: 1 | status: fixed | first: 2026-11-05 | last: 2026-11-05
@@ -725,16 +730,17 @@ docker compose, OIDC/S3/step-ca интеграцией и тестировани
 - cause: removal/creation race in the compose project with fixed `container_name` (same root as P-013's conflict noise)
 - fix: retry `up -d` after a few seconds and confirm with `docker ps --filter name=<stack>`; the second attempt succeeds — no host-level cleanup needed
 
-## P-035: check-stack.sh и check-gitkeep.sh противоречат друг другу про .gitkeep
+## P-035: check-stack.sh and check-gitkeep.sh contradict each other about .gitkeep
 - hits: 1 | status: open | first: 2026-11-05 | last: 2026-11-05
 - where: stack-test step 0 / stack-conventions scripts (nanomcp stack)
-- symptom: check-stack.sh требует .gitkeep в ЛЮБОЙ директории без файлов
-  (app/components с 3 сабдирами — VIOLATION "missing"), а check-gitkeep.sh
-  требует УДАЛИТЬ .gitkeep там, где сабдиров > 1 ("not exactly one subdir").
-  Оба скрипта вызываются stack-test'ом с требованием "must print nothing" —
-  удовлетворить оба невозможно для одной директории
-- workaround: удовлетворён check-stack.sh (основной гейт, согласуется с
-  правилом .gitkeep в AGENTS.md); расхождение с check-gitkeep.sh записано
+- symptom: check-stack.sh demands a .gitkeep in ANY directory without files
+  (app/components with 3 subdirs — VIOLATION "missing"), while
+  check-gitkeep.sh demands DELETING the .gitkeep where there is more than
+  one subdir ("not exactly one subdir"). Both scripts are invoked by
+  stack-test with the requirement "must print nothing" — satisfying both
+  is impossible for a single directory
+- workaround: check-stack.sh satisfied (the main gate, consistent with the
+  .gitkeep rule in AGENTS.md); the discrepancy with check-gitkeep.sh recorded
 - fix: —
 
 ## P-073: nanomcp stdio extension gate gotchas — seeded entries persist in the named volume; tool names sanitize `-` to `_`
