@@ -1,4 +1,16 @@
 #!/usr/bin/env bash
+# Rewrite url to the transport (ssh/https) of the host repo's origin.
+norm_url() {
+  local u="$1" o
+  o="$(git -C "${root:-.}" remote get-url origin 2>/dev/null)" || { printf '%s' "$u"; return 0; }
+  if [[ "$o" == git@* || "$o" == ssh://* ]] && [[ "$u" =~ ^https?://([^/]+)/(.+)$ ]]; then
+    printf 'git@%s:%s' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+  elif [[ "$o" == http://* || "$o" == https://* ]] && [[ "$u" =~ ^git@([^:]+):(.+)$ ]]; then
+    printf 'https://%s/%s' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+  else
+    printf '%s' "$u"
+  fi
+}
 # .githooks/stack-sync.sh — clone missing stack repos from stacks.csv and keep
 # the managed ignore block in .git/info/exclude (local, untracked) up to date.
 # Idempotent: safe to run any number of times.
@@ -47,7 +59,7 @@ while IFS=';' read -r path url status; do
     continue
   fi
   mkdir -p "$(dirname "$path")"
-  if ! git clone --quiet "$url" "$path" < /dev/null; then
+  if ! git clone --quiet "$(norm_url "$url")" "$path" < /dev/null; then
     echo "stack-sync: WARN clone failed for '$path' ($url)" >&2
   fi
 done < "$MANIFEST"
