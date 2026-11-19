@@ -1,6 +1,7 @@
 path;url
-.opencode/plugins/graver;git@github.com:zyrakq/graver.git
-.opencode/global-plugins/scion;git@github.com:zyrakq/scion.git
-.opencode/global-plugins/fnox-secrets;git@github.com:zyrakq/fnox-secrets.git
-.opencode/global-plugins/kanidm;git@github.com:zyrakq/kanidm.git
-.opencode/global-plugins/rustfs;git@github.com:zyrakq/rustfs.git
+.opencode/plugins/graver;git@github.com:zyrakq/graver-plugin.git
+.opencode/global-plugins/scion;git@github.com:zyrakq/scion-plugin.git
+.opencode/global-plugins/fnox-secrets;git@github.com:zyrakq/fnox-secrets-plugin.git
+.opencode/global-plugins/kanidm;git@github.com:zyrakq/kanidm-plugin.git
+.opencode/global-plugins/rustfs;git@github.com:zyrakq/rustfs-plugin.git
+.opencode/global-plugins/step-ca;git@github.com:zyrakq/step-ca-plugin.git
