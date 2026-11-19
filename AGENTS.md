@@ -157,11 +157,14 @@ solution described in AGENTS.md"; replace this section to swap the solution.
 
 Infra role → project (profile = stack name):
 
-| Role | Project | Keys (profile) |
-|---|---|---|
-| Certificate manager | `step-ca-manager` | `TOP_LEVEL_DOMAIN` — the top-level domain used for all stacks (profile `step-ca-manager`) |
-| SSO / OIDC provider | `kanidm` | `KANIDM_DOMAIN`, `IDM_ADMIN_PASSWORD` (profile `kanidm`) |
-| S3 provider | `rustfs` | `RUSTFS_ACCESS_KEY`, `RUSTFS_SECRET_KEY`, endpoint/domain (profile `rustfs`) |
+| Role | Project | Keys (profile) | Admin agent / skill |
+|---|---|---|---|
+| Certificate manager | `step-ca-manager` | `TOP_LEVEL_DOMAIN` — the top-level domain used for all stacks (profile `step-ca-manager`) | — |
+| SSO / OIDC provider | `kanidm` | `KANIDM_DOMAIN`, `IDM_ADMIN_PASSWORD` (profile `kanidm`) | `kanidm-admin` / `kanidm-oidc` |
+| S3 provider | `rustfs` | `RUSTFS_ACCESS_KEY`, `RUSTFS_SECRET_KEY`, endpoint/domain (profile `rustfs`) | `rustfs-admin` / `rustfs-s3` |
+
+Plugins and skills refer to roles ("the SSO/OIDC provider", "the S3 provider"); the
+admin agent / skill for a role is the one in this table.
 
 If a key is missing, ask the user once, then store it with the skill's `secret-set.sh`.
 Key names above are the intended convention; if the stack's `.env` uses
