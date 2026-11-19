@@ -145,12 +145,15 @@ source, agents MUST follow the `source-image` skill and stack-conventions
 - Compose references the prebuilt image via
   `image: ${IMAGE:-localhost/<image>:<tag>}` — never a `build:` section.
 
-## Secrets and infra values (fnox)
+## Secrets and infra values
 
-Secrets and per-stack `.env` values live in the encrypted `secrets/fnox.toml`
-(fnox + age), one profile per stack. Load the `fnox-secrets` skill BEFORE
-asking the user for any credential/infra value or opening a stack's `.env`
-to find one, and save every secret you create/reset/rotate right away.
+Secrets solution: the `fnox-secrets` plugin (global, `.opencode/global-plugins/fnox-secrets`)
+and its `fnox-secrets` skill. Secrets and per-stack `.env` values live in the
+encrypted `secrets/fnox.toml` (fnox + age), one profile per stack. Load the
+`fnox-secrets` skill BEFORE asking the user for any credential/infra value or
+opening a stack's `.env` to find one, and save every secret you create, reset
+or rotate right away. Other plugins and agents refer only to "the secrets
+solution described in AGENTS.md"; replace this section to swap the solution.
 
 Infra role → project (profile = stack name):
 
@@ -160,6 +163,6 @@ Infra role → project (profile = stack name):
 | SSO / OIDC provider | `kanidm` | `KANIDM_DOMAIN`, `IDM_ADMIN_PASSWORD` (profile `kanidm`) |
 | S3 provider | `rustfs` | `RUSTFS_ACCESS_KEY`, `RUSTFS_SECRET_KEY`, endpoint/domain (profile `rustfs`) |
 
-If a key is missing, ask the user once, then store it with `scripts/secret-set.sh`.
+If a key is missing, ask the user once, then store it with the skill's `secret-set.sh`.
 Key names above are the intended convention; if the stack's `.env` uses
-different names, they are imported as-is by `scripts/env-push.sh`.
+different names, they are imported as-is by the skill's `env-push.sh <profile> <env-file>`.

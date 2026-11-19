@@ -936,7 +936,7 @@ install scripts are committed in `app/plugins/` and COPYed into the image
 
 ## P-104: fnox CLI missing on host — scripts/secret-get.sh fails for all profiles
 - hits: 1 | status: open | first: 2026-11-13 | last: 2026-11-13
-- where: docker-stack-collection `scripts/secret-get.sh` / `secret-set.sh` (fnox + age secrets store)
-- symptom: `scripts/secret-get.sh <profile> <KEY>` prints `missing: fnox (install it yourself, e.g. 'mise use -g fnox')` and exits 1; no profile can be read or written
+- where: fnox-secrets plugin `skills/fnox-secrets/scripts/secret-get.sh` / `secret-set.sh` (fnox + age secrets store)
+- symptom: `secret-get.sh <profile> <KEY>` prints `missing: fnox (install it yourself, e.g. 'mise use -g fnox')` and exits 1; no profile can be read or written
 - cause: fnox binary not installed on the host; agents are forbidden from installing host packages (pacman/mise), so the encrypted `secrets/fnox.toml` store is unusable from agent sessions
 - fix: (open) per fnox-secrets skill, report and stop rather than install; workarounds used so far keep stack secrets in `/tmp/opencode/*.env` (chmod 600) — session-scoped, lost on reboot; user should install fnox + age key so `secret-get.sh`/`env-push.sh` work
