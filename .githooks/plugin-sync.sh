@@ -15,7 +15,12 @@ norm_url() {
 root="$(git rev-parse --show-toplevel)" || exit 0
 [[ -f "$root/plugins.csv" ]] || exit 0
 # Rows under .opencode/global-plugins/ go to ~/.config/opencode/plugins via this symlink.
-[[ -e "$root/.opencode/global-plugins" ]] || ln -s "$HOME/.config/opencode/plugins" "$root/.opencode/global-plugins" 2>/dev/null
+gdir="$HOME/.config/opencode/plugins"
+if grep -q '^\.opencode/global-plugins/' "$root/plugins.csv"; then
+  mkdir -p "$gdir" "$root/.opencode"
+  # -L catches dangling symlinks; never mkdir over an existing link.
+  [[ -L "$root/.opencode/global-plugins" || -e "$root/.opencode/global-plugins" ]] || ln -s "$gdir" "$root/.opencode/global-plugins"
+fi
 tail -n +2 "$root/plugins.csv" | while IFS=';' read -r path url; do
   [[ -z "$path" || "$url" == "-" || -d "$root/$path/.git" ]] && continue
   mkdir -p "$(dirname "$root/$path")"
