@@ -9,7 +9,7 @@ to reconfigure. The complete allowlist of host-level actions:
 - git operations (clone into /tmp, add, commit, push, pull)
 - read-only inspection: logs, `free -h`, `df -h`, `docker ps/logs/stats`
 - `docker` / `docker compose` commands as permitted by stack-conventions
-- commands from the `kanidm-oidc` and `rustfs-s3` skills
+- commands from the skills of the configured tools
 
 Everything else on the host is FORBIDDEN, no exceptions, no improvisation:
 
@@ -147,25 +147,14 @@ source, agents MUST follow the `source-image` skill and stack-conventions
 
 ## Secrets and infra values
 
-Secrets solution: the `fnox-secrets` plugin (global, `.opencode/global-plugins/fnox-secrets`)
-and its `fnox-secrets` skill. Secrets and per-stack `.env` values live in the
-encrypted `secrets/fnox.toml` (fnox + age), one profile per stack. Load the
-`fnox-secrets` skill BEFORE asking the user for any credential/infra value or
-opening a stack's `.env` to find one, and save every secret you create, reset
-or rotate right away. Other plugins and agents refer only to "the secrets
-solution described in AGENTS.md"; replace this section to swap the solution.
-
 Infra role → project (profile = stack name):
 
-| Role | Project | Keys (profile) | Admin agent / skill |
-|---|---|---|---|
-| Certificate manager | `step-ca-manager` | `TOP_LEVEL_DOMAIN` — the top-level domain used for all stacks (profile `step-ca-manager`) | — |
-| SSO / OIDC provider | `kanidm` | `KANIDM_DOMAIN`, `IDM_ADMIN_PASSWORD` (profile `kanidm`) | `kanidm-admin` / `kanidm-oidc` |
-| S3 provider | `rustfs` | `RUSTFS_ACCESS_KEY`, `RUSTFS_SECRET_KEY`, endpoint/domain (profile `rustfs`) | `rustfs-admin` / `rustfs-s3` |
+| Role | Project | Keys (profile) |
+|---|---|---|
+| Certificate manager | `step-ca-manager` | `TOP_LEVEL_DOMAIN` — the top-level domain used for all stacks (profile `step-ca-manager`) |
+| SSO / OIDC provider | `kanidm` | `KANIDM_DOMAIN`, `IDM_ADMIN_PASSWORD` (profile `kanidm`) |
+| S3 provider | `rustfs` | `RUSTFS_ACCESS_KEY`, `RUSTFS_SECRET_KEY`, endpoint/domain (profile `rustfs`) |
 
-Plugins and skills refer to roles ("the SSO/OIDC provider", "the S3 provider"); the
-admin agent / skill for a role is the one in this table.
-
-If a key is missing, ask the user once, then store it with the skill's `secret-set.sh`.
+If a key is missing, ask the user once, then store it with the configured secrets tool.
 Key names above are the intended convention; if the stack's `.env` uses
-different names, they are imported as-is by the skill's `env-push.sh <profile> <env-file>`.
+different names, they are imported as-is.
